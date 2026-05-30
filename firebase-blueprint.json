@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Premium user profile containing identity, current balance, and stats.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the user."
+        },
+        "balance": {
+          "type": "number",
+          "description": "Current commission earnings balance in USD."
+        },
+        "referralCount": {
+          "type": "number",
+          "description": "Total number of registered referrals."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the user account was initiated."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the profile was last modified."
+        }
+      },
+      "required": ["userId", "name", "balance", "referralCount", "createdAt", "updatedAt"]
+    },
+    "ReferralLog": {
+      "title": "Referral Activity Log",
+      "description": "Individual commission event generated when another member joins via referral.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique transaction ID of the referral."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "User-friendly date and time of the event."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Earnings from the referral event (usually 10)."
+        },
+        "referrerName": {
+          "type": "string",
+          "description": "First name or full name of the newly onboarded referee member."
+        },
+        "refereeId": {
+          "type": "string",
+          "description": "User ID of the newly onboarded user."
+        },
+        "source": {
+          "type": "string",
+          "description": "Tracking source campaign moniker used during sign-up."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Audit control server-side timestamp of write."
+        }
+      },
+      "required": ["id", "timestamp", "amount", "referrerName", "refereeId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Individual premium member dashboard configurations and balances."
+    },
+    "/users/{userId}/referrals/{referralId}": {
+      "schema": "ReferralLog",
+      "description": "Specific commissions settled for a user."
+    }
+  }
+}

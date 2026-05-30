@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Helper to validate User schema
+    function isValidUser(user, userId) {
+      return user.keys().hasAll(['userId', 'name', 'createdAt', 'updatedAt'])
+        && user.keys().size() <= 6
+        && user.userId is string
+        && user.userId == userId
+        && user.name is string
+        && user.name.size() >= 2
+        && user.name.size() <= 100
+        && (!user.keys().hasAny(['avatar']) || (user.avatar is string && user.avatar.size() <= 128))
+        && (!user.keys().hasAny(['signupBonus']) || (user.signupBonus is number));
+    }
+
+    // Helper to validate ReferralLog schema representing a referral commission
+    function isValidReferralLog(log) {
+      return log.keys().hasAll(['id', 'timestamp', 'amount', 'referrerName', 'refereeId', 'createdAt'])
+        && log.keys().size() <= 8
+        && log.id is string
+        && log.id.size() <= 128
+        && log.timestamp is string
+        && log.timestamp.size() <= 100
+        && log.amount is number
+        && log.amount >= 0
+        && log.amount <= 1000
+        && log.referrerName is string
+        && log.referrerName.size() >= 1
+        && log.referrerName.size() <= 100
+        && log.refereeId is string
+        && log.refereeId.size() <= 128
+        && (!log.keys().hasAny(['refereeAvatar']) || (log.refereeAvatar is string && log.refereeAvatar.size() <= 128))
+        && (!log.keys().hasAny(['source']) || (log.source is string && log.source.size() <= 128));
+    }
+
+    // ----------------- USERS COLLECTION -----------------
+    match /users/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if isValidId(userId);
+      
+      allow create: if isValidId(userId) 
+        && isValidUser(request.resource.data, userId);
+
+      allow update: if isValidId(userId) 
+        && isValidUser(request.resource.data, userId)
+        && request.resource.data.createdAt == resource.data.createdAt; // createdAt is immortal
+
+      allow delete: if isValidId(userId); // Profiles can be deleted for resets
+
+      // ----------------- SECRETS SUBCOLLECTION -----------------
+      match /secrets/auth {
+        allow get, create, update, delete: if isValidId(userId);
+      }
+
+      // ----------------- REFERRALS SUBCOLLECTION -----------------
+      match /referrals/{referralId} {
+        allow list, get: if isValidId(userId);
+
+        allow create: if isValidId(userId)
+          && isValidId(referralId)
+          && isValidReferralLog(request.resource.data);
+
+        allow update, delete: if isValidId(userId); // Allow resets and deletions
+      }
+
+      // ----------------- DEPOSITS SUBCOLLECTION -----------------
+      match /deposits/{depositId} {
+        allow read, write: if isValidId(userId) && isValidId(depositId);
+      }
+
+      // ----------------- WITHDRAWALS SUBCOLLECTION -----------------
+      match /withdrawals/{withdrawalId} {
+        allow read, write: if isValidId(userId) && isValidId(withdrawalId);
+      }
+    }
+  }
+}

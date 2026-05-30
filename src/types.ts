@@ -1,0 +1,44 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export interface ReferralLog {
+  id: string;
+  timestamp: string;
+  amount: number;
+  referrerName: string;
+  refereeId: string;
+  createdAt: any; // can be Firestore Timestamp
+  refereeAvatar?: string;
+  source?: string;
+}
+
+export interface UserProfile {
+  userId: string;
+  name: string;
+  createdAt: any;
+  updatedAt: any;
+  avatar?: string;
+  signupBonus?: number;
+}
+
+export interface DepositLog {
+  id: string;
+  amount: number;
+  network: string;
+  txHash: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: any;
+  timestamp: string;
+}
+
+export interface WithdrawalLog {
+  id: string;
+  amount: number;
+  wallet: string;
+  network: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: any;
+  timestamp: string;
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Remix:  EarnHub",
+  "description": "A  referral and earnings tracker with elegant design, referral simulation, and secure local persistence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
