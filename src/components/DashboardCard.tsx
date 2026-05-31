@@ -25,7 +25,7 @@ import {
   Sparkles,
   RefreshCw
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -57,6 +57,8 @@ interface DashboardCardProps {
   onSignOut?: () => Promise<void> | void;
   investmentProfits?: number;
   onAddToast: (message: string, type: 'success' | 'error', sound?: any) => void;
+  userProfile?: any;
+  onClaimDailyReward?: (amount: number) => Promise<void>;
 }
 
 export default function DashboardCard({
@@ -74,10 +76,50 @@ export default function DashboardCard({
   onSignOut,
   investmentProfits = 0,
   onAddToast,
+  userProfile,
+  onClaimDailyReward,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'funding' | 'admin' | 'faq'>('overview');
   const [adminModeType, setAdminModeType] = useState<'sandbox' | 'platform_global'>('platform_global');
+
+  // Cooldown calculation for daily check-in claims
+  const [claimCooldown, setClaimCooldown] = useState('');
+
+  // Live balance counting animation using motion/react
+  const motionBalance = useMotionValue(balance);
+  const animatedBalanceDisplay = useTransform(motionBalance, (val) => val.toFixed(2));
+
+  useEffect(() => {
+    const controls = animate(motionBalance, balance, {
+      duration: 1.2,
+      ease: [0.16, 1, 0.3, 1], // easeOutExpo
+    });
+    return () => controls.stop();
+  }, [balance, motionBalance]);
+
+  useEffect(() => {
+    if (!userProfile?.lastClaimedAt) {
+      setClaimCooldown('');
+      return;
+    }
+    const updateCountdown = () => {
+      const lastTime = new Date(userProfile.lastClaimedAt).getTime();
+      const elapsed = Date.now() - lastTime;
+      const remaining = 24 * 60 * 60 * 1000 - elapsed;
+      if (remaining <= 0) {
+        setClaimCooldown('');
+      } else {
+        const h = Math.floor(remaining / (3600 * 1000));
+        const m = Math.floor((remaining % (3600 * 1000)) / (60 * 1000));
+        const s = Math.floor((remaining % (60 * 1000)) / 1000);
+        setClaimCooldown(`${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`);
+      }
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [userProfile?.lastClaimedAt]);
 
   // Crypto deposit address database configuration
   const depositAddresses: Record<string, string> = {
@@ -553,7 +595,7 @@ export default function DashboardCard({
                     </div>
                   </div>
                   <div className="my-1 text-2xl font-serif text-[#D4AF37] tracking-tight z-10 flex items-baseline">
-                    ${balance.toFixed(2)}
+                    $<motion.span>{animatedBalanceDisplay}</motion.span>
                   </div>
                   <div className="text-[8.5px] text-emerald-400 font-medium flex items-center gap-1 z-10 leading-normal">
                     <TrendingUp className="w-2.5 h-2.5 shrink-0" /> Real-time active ledger
@@ -754,7 +796,7 @@ export default function DashboardCard({
               <div className="bg-white/[0.02] rounded-2xl border border-white/5 p-5 space-y-2.5">
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-wider font-sans">
                   <span className="font-semibold text-white/40">Target Reward Milestone</span>
-                  <span className="font-bold text-[#D4AF37]">${balance.toFixed(2)} / ${nextMilestone.toFixed(2)}</span>
+                  <span className="font-bold text-[#D4AF37]">$<motion.span>{animatedBalanceDisplay}</motion.span> / ${nextMilestone.toFixed(2)}</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                   <div 
@@ -765,6 +807,67 @@ export default function DashboardCard({
                 <div className="flex justify-between items-center text-[9px] text-white/30 uppercase tracking-[0.15em] pt-0.5">
                   <span>Diamond tier progress</span>
                   <span>Next milestone at ${nextMilestone}</span>
+                </div>
+              </div>
+
+              {/* Premium Daily Active Yield Claim Matrix */}
+              <div className="bg-gradient-to-br from-[#1c1c16] to-[#121212] border border-[#D4AF37]/20 rounded-2xl p-5 relative overflow-hidden space-y-4">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
+                
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-[#D4AF37]">
+                      <Sparkles className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+                      <span className="text-[9px] uppercase font-bold tracking-[0.2em] font-sans">Active Dividends Portal</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white tracking-wide">
+                      Daily Staking Check-In Rewards
+                    </h3>
+                    <p className="text-xs text-white/50 leading-relaxed max-w-md">
+                      Onboard daily to claim active mining yield boosts! Maintain your daily streak to access higher premium dividend tiers. (Streak: <strong className="text-[#D4AF37]">{userProfile?.claimStreak || 0} days</strong>)
+                    </p>
+                  </div>
+                  
+                  <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-lg py-1 px-3 text-right">
+                    <span className="text-[8px] text-white/45 uppercase block">Total Dividends</span>
+                    <span className="text-xs font-mono font-bold text-[#D4AF37]">+${(userProfile?.dailyBonusEarnings || 0).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 justify-between pt-2 border-t border-white/[0.03]">
+                  {/* Cooldown Timer */}
+                  <div className="text-left flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${claimCooldown ? 'bg-[#D4AF37]/40' : 'bg-emerald-400 animate-ping'}`} />
+                    <div>
+                      <span className="text-[8px] uppercase tracking-wider text-white/30 block leading-none mb-1">Claim Status</span>
+                      <span className="text-[11px] font-mono text-white/70">
+                        {claimCooldown ? `Cooldown: ${claimCooldown}` : "Ready to disburse dividend!"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Claim Button */}
+                  <button
+                    disabled={!!claimCooldown}
+                    onClick={async () => {
+                      if (onClaimDailyReward) {
+                        const currentStreak = userProfile?.claimStreak || 0;
+                        const minAmt = currentStreak >= 5 ? 0.40 : 0.15;
+                        const maxAmt = currentStreak >= 5 ? 0.60 : 0.35;
+                        const claimAmt = Number((Math.random() * (maxAmt - minAmt) + minAmt).toFixed(2));
+                        
+                        await onClaimDailyReward(claimAmt);
+                        onAddToast(`Daily dividends of $${claimAmt.toFixed(2)} credited! Keep checking in daily! 🪙`, 'success', 'new_referral');
+                      }
+                    }}
+                    className={`px-5 py-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-200 outline-none cursor-pointer w-full sm:w-auto ${
+                      claimCooldown 
+                        ? 'bg-white/5 border-white/5 text-white/30 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-[#D4AF37] to-[#B29430] hover:brightness-110 active:scale-[0.98] border-transparent text-black shadow-lg shadow-[#D4AF37]/10'
+                    }`}
+                  >
+                    <span>{claimCooldown ? 'Claimed Today' : 'Claim Daily Yield'}</span>
+                  </button>
                 </div>
               </div>
 

@@ -55,11 +55,9 @@ export default function App() {
   useEffect(() => {
     async function testConnection() {
       try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
+        await getDoc(doc(db, 'test', 'connection'));
       } catch (error) {
-        if (error instanceof Error && error.message.includes('the client is offline')) {
-          console.error("Please check your Firebase configuration or network status.");
-        }
+        console.warn("Firestore connection check info:", error);
       }
     }
     testConnection();
@@ -151,6 +149,10 @@ export default function App() {
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
           avatar: data.avatar,
+          signupBonus: data.signupBonus,
+          lastClaimedAt: data.lastClaimedAt,
+          claimStreak: data.claimStreak,
+          dailyBonusEarnings: data.dailyBonusEarnings,
         });
       } else {
         setUserProfile(null);
@@ -358,6 +360,25 @@ export default function App() {
     }
   };
 
+  // Claim passive daily rewards in database
+  const handleClaimDailyReward = async (amount: number) => {
+    if (!currentUid || !userProfile) return;
+    try {
+      const userRef = doc(db, 'users', currentUid);
+      const currentEarnings = userProfile.dailyBonusEarnings || 0;
+      const currentStreak = userProfile.claimStreak || 0;
+      
+      await setDoc(userRef, {
+        dailyBonusEarnings: Number((currentEarnings + amount).toFixed(2)),
+        claimStreak: currentStreak + 1,
+        lastClaimedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (error) {
+      console.error("Error claiming daily reward:", error);
+      addToast("Failed to lock daily dividends inside cloud nodes.", "error");
+    }
+  };
+
   // Sign out handler using custom session persistence
   const handleSignOut = async () => {
     try {
@@ -406,6 +427,7 @@ export default function App() {
   const approvedDepositsList = deposits.filter(d => d.status === 'approved');
   const approvedDeposits = approvedDepositsList.reduce((sum, d) => sum + d.amount, 0);
   const approvedWithdrawals = withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + w.amount, 0);
+  const dailyBonusEarnings = userProfile?.dailyBonusEarnings !== undefined ? userProfile.dailyBonusEarnings : 0;
 
   // Calculate real-time profit accrued on each approved deposit of $5+
   // Rule: $5 deposit = $0.5/day profit (Cycle = 24 hours) => $0.5 return per day per $5 package
@@ -423,7 +445,7 @@ export default function App() {
     return sum + (profit > 0 ? profit : 0);
   }, 0);
 
-  const balance = signupBonus + referralEarnings + approvedDeposits - approvedWithdrawals + investmentProfits;
+  const balance = signupBonus + referralEarnings + approvedDeposits - approvedWithdrawals + investmentProfits + dailyBonusEarnings;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans flex flex-col justify-between antialiased selection:bg-[#D4AF37]/20 selection:text-[#D4AF37]">
@@ -635,6 +657,8 @@ export default function App() {
                 onSignOut={handleSignOut}
                 investmentProfits={investmentProfits}
                 onAddToast={addToast}
+                userProfile={userProfile}
+                onClaimDailyReward={handleClaimDailyReward}
               />
               <ReferralHistory logs={logs} />
             </div>

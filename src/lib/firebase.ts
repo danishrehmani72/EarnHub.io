@@ -5,13 +5,16 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 
-// CRITICAL: Must pass firestoreDatabaseId if specified
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+// CRITICAL: Force long polling to bypass WebSocket restrictions in proxy/sandbox environments
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, firebaseConfig.firestoreDatabaseId);
+
 export const auth = getAuth();
 
 export enum OperationType {

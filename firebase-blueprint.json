@@ -13,13 +13,13 @@
           "type": "string",
           "description": "Full name of the user."
         },
-        "balance": {
-          "type": "number",
-          "description": "Current commission earnings balance in USD."
+        "avatar": {
+          "type": "string",
+          "description": "Moniker of the chosen badge avatar."
         },
-        "referralCount": {
+        "signupBonus": {
           "type": "number",
-          "description": "Total number of registered referrals."
+          "description": "Starting USD bonus credential."
         },
         "createdAt": {
           "type": "string",
@@ -34,9 +34,22 @@
         "blocked": {
           "type": "boolean",
           "description": "True if the user's account has been administratively suspended."
+        },
+        "lastClaimedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp of the user's last daily check-in."
+        },
+        "claimStreak": {
+          "type": "number",
+          "description": "Consecutive days the user has claimed staking yields."
+        },
+        "dailyBonusEarnings": {
+          "type": "number",
+          "description": "Cumulative earnings claimed from check-in yields."
         }
       },
-      "required": ["userId", "name", "balance", "referralCount", "createdAt", "updatedAt"]
+      "required": ["userId", "name", "createdAt", "updatedAt"]
     },
     "ReferralLog": {
       "title": "Referral Activity Log",

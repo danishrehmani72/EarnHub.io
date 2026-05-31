@@ -37,8 +37,8 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       setError('Please select a unique User ID.');
       return;
     }
-    if (!/^[a-zA-Z0-9_\-]+$/.test(userId.trim())) {
-      setError('User ID can only contain letters, numbers, underscores, or hyphens.');
+    if (!/^[a-zA-Z0-9_\- .@]+$/.test(userId.trim())) {
+      setError('User ID can only contain letters, numbers, spaces, underscores, hyphens, dots, or @ symbols.');
       return;
     }
     if (!name.trim()) {
@@ -180,7 +180,15 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       }, 1000);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Authentication failed. Please verify credentials.');
+      const isPermissionErr = err.message && (
+        err.message.toLowerCase().includes('permission') || 
+        err.message.toLowerCase().includes('insufficient')
+      );
+      if (isPermissionErr) {
+        setError('❌ Invalid User ID or Password format');
+      } else {
+        setError(err.message || 'Authentication failed. Please verify credentials.');
+      }
     } finally {
       setIsLoading(false);
     }

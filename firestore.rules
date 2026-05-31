@@ -8,13 +8,13 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\- .@]+$');
     }
 
     // Helper to validate User schema
     function isValidUser(user, userId) {
       return user.keys().hasAll(['userId', 'name', 'createdAt', 'updatedAt'])
-        && user.keys().size() <= 8
+        && user.keys().size() <= 12
         && user.userId is string
         && user.userId == userId
         && user.name is string
@@ -22,7 +22,10 @@ service cloud.firestore {
         && user.name.size() <= 100
         && (!user.keys().hasAny(['avatar']) || (user.avatar is string && user.avatar.size() <= 128))
         && (!user.keys().hasAny(['signupBonus']) || (user.signupBonus is number))
-        && (!user.keys().hasAny(['blocked']) || (user.blocked is bool));
+        && (!user.keys().hasAny(['blocked']) || (user.blocked is bool))
+        && (!user.keys().hasAny(['lastClaimedAt']) || (user.lastClaimedAt is string && user.lastClaimedAt.size() <= 64))
+        && (!user.keys().hasAny(['claimStreak']) || (user.claimStreak is number))
+        && (!user.keys().hasAny(['dailyBonusEarnings']) || (user.dailyBonusEarnings is number));
     }
 
     // Helper to validate ReferralLog schema representing a referral commission
@@ -48,7 +51,7 @@ service cloud.firestore {
     // ----------------- USERS COLLECTION -----------------
     match /users/{userId} {
       allow get: if isValidId(userId);
-      allow list: if isValidId(userId);
+      allow list: if true;
       
       allow create: if isValidId(userId) 
         && isValidUser(request.resource.data, userId);
@@ -77,18 +80,24 @@ service cloud.firestore {
 
       // ----------------- DEPOSITS SUBCOLLECTION -----------------
       match /deposits/{depositId} {
-        allow read, write: if isValidId(userId) && isValidId(depositId);
+        allow get: if isValidId(userId) && isValidId(depositId);
+        allow list: if isValidId(userId);
+        allow create, update, delete: if isValidId(userId) && isValidId(depositId);
       }
 
       // ----------------- WITHDRAWALS SUBCOLLECTION -----------------
       match /withdrawals/{withdrawalId} {
-        allow read, write: if isValidId(userId) && isValidId(withdrawalId);
+        allow get: if isValidId(userId) && isValidId(withdrawalId);
+        allow list: if isValidId(userId);
+        allow create, update, delete: if isValidId(userId) && isValidId(withdrawalId);
       }
     }
 
     // ----------------- AUDIT LOGS ROOT COLLECTION -----------------
     match /audit_logs/{logId} {
-      allow read, write: if isValidId(logId);
+      allow get: if isValidId(logId);
+      allow list: if true;
+      allow create, update, delete: if isValidId(logId);
     }
   }
 }

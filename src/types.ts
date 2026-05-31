@@ -21,6 +21,9 @@ export interface UserProfile {
   updatedAt: any;
   avatar?: string;
   signupBonus?: number;
+  lastClaimedAt?: string;
+  claimStreak?: number;
+  dailyBonusEarnings?: number;
 }
 
 export interface DepositLog {
