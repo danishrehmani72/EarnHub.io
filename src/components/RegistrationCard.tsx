@@ -9,7 +9,30 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AVATAR_PRESETS } from '../lib/avatars';
 import earnhubLogo from '../assets/images/earnhub_logo_1780161493423.png';
 import { db } from '../lib/firebase';
-import { doc, setDoc, serverTimestamp, getDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc, collection, getDocFromServer } from 'firebase/firestore';
+
+const getDocWithRetry = async (docRef: any, maxRetries = 2): Promise<any> => {
+  let attempt = 0;
+  while (true) {
+    try {
+      return await getDoc(docRef);
+    } catch (err: any) {
+      attempt++;
+      const isOffline = err.message && err.message.toLowerCase().includes('offline');
+      if (isOffline && attempt <= maxRetries) {
+        console.warn(`Firestore getDoc offline warning, retrying attempt ${attempt}...`);
+        try {
+          return await getDocFromServer(docRef);
+        } catch (serverErr) {
+          // fallback to standard delay or error propagation
+        }
+        await new Promise((res) => setTimeout(res, 600 * attempt));
+        continue;
+      }
+      throw err;
+    }
+  }
+};
 
 interface RegistrationCardProps {
   referredBy: string | null;
@@ -60,11 +83,28 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
     try {
       // 1. Check if the User profile document already exists in Firestore to prevent collision
       const userRef = doc(db, 'users', cleanUserId);
-      const userSnap = await getDoc(userRef);
+      const userSnap = await getDocWithRetry(userRef);
       if (userSnap.exists()) {
         setError('This User ID is already occupied by another VIP member.');
         setIsLoading(false);
         return;
+      }
+
+      // Determine signup bonus: standard is $0.10, but if referred by a valid user, they get $0.30 (invitee bonus)
+      let signupBonusAmount = 0.10;
+      let isReferralValid = false;
+
+      if (referredBy && referredBy !== cleanUserId) {
+        try {
+          const inviterRef = doc(db, 'users', referredBy);
+          const inviterSnap = await getDocWithRetry(inviterRef);
+          if (inviterSnap.exists()) {
+            isReferralValid = true;
+            signupBonusAmount = 0.30;
+          }
+        } catch (inviteErr) {
+          console.warn('Silent invitation tracking failure verification:', inviteErr);
+        }
       }
 
       // 2. Store full profile database record in Firestore under the custom User ID
@@ -72,7 +112,8 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         userId: cleanUserId,
         name: cleanName,
         avatar: selectedAvatar,
-        signupBonus: 0.5,
+        signupBonus: signupBonusAmount,
+        referredBy: isReferralValid ? referredBy : null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -84,33 +125,85 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       });
 
       // 4. Handle conversion ledger event if user joined via valid referrer invite link
-      if (referredBy && referredBy !== cleanUserId) {
+      if (isReferralValid && referredBy) {
         try {
-          const inviterRef = doc(db, 'users', referredBy);
-          const inviterSnap = await getDoc(inviterRef);
-          if (inviterSnap.exists()) {
-            const now = new Date();
-            const timestampStr = now.toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric'
-            }) + ' ' + now.toLocaleTimeString(undefined, {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit'
-            });
+          const now = new Date();
+          const timestampStr = now.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          }) + ' ' + now.toLocaleTimeString(undefined, {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
 
-            const referralLogRef = doc(collection(db, 'users', referredBy, 'referrals'));
-            await setDoc(referralLogRef, {
-              id: referralLogRef.id,
-              timestamp: timestampStr,
-              amount: 0.8,
-              referrerName: cleanName,
-              refereeId: cleanUserId,
-              refereeAvatar: selectedAvatar,
-              source: referredSource || 'default',
-              createdAt: serverTimestamp(),
-            });
+          // Level 1 Reward ($0.05)
+          const level1LogRef = doc(collection(db, 'users', referredBy, 'referrals'));
+          await setDoc(level1LogRef, {
+            id: level1LogRef.id,
+            timestamp: timestampStr,
+            amount: 0.05,
+            level: 1,
+            refereeId: cleanUserId,
+            refereeName: cleanName,
+            refereeAvatar: selectedAvatar,
+            source: referredSource || 'default',
+            referredBy: referredBy,
+            createdAt: serverTimestamp(),
+          });
+
+          // Fetch Level 1 parent elements to check for Level 2 Parent
+          const parent1Ref = doc(db, 'users', referredBy);
+          const parent1Snap = await getDocWithRetry(parent1Ref);
+          if (parent1Snap.exists()) {
+            const parent1Data = parent1Snap.data();
+            const parent2Id = parent1Data.referredBy; // Level 2 Parent
+
+            if (parent2Id && parent2Id !== cleanUserId) {
+              const parent2Ref = doc(db, 'users', parent2Id);
+              const parent2Snap = await getDocWithRetry(parent2Ref);
+              if (parent2Snap.exists()) {
+                // Level 2 Reward ($0.03)
+                const level2LogRef = doc(collection(db, 'users', parent2Id, 'referrals'));
+                await setDoc(level2LogRef, {
+                  id: level2LogRef.id,
+                  timestamp: timestampStr,
+                  amount: 0.03,
+                  level: 2,
+                  refereeId: cleanUserId,
+                  refereeName: cleanName,
+                  refereeAvatar: selectedAvatar,
+                  source: referredSource || 'default',
+                  referredBy: referredBy,
+                  createdAt: serverTimestamp(),
+                });
+
+                const parent2Data = parent2Snap.data();
+                const parent3Id = parent2Data.referredBy; // Level 3 Parent
+
+                if (parent3Id && parent3Id !== cleanUserId && parent3Id !== parent2Id) {
+                  const parent3Ref = doc(db, 'users', parent3Id);
+                  const parent3Snap = await getDocWithRetry(parent3Ref);
+                  if (parent3Snap.exists()) {
+                    // Level 3 Reward ($0.01)
+                    const level3LogRef = doc(collection(db, 'users', parent3Id, 'referrals'));
+                    await setDoc(level3LogRef, {
+                      id: level3LogRef.id,
+                      timestamp: timestampStr,
+                      amount: 0.01,
+                      level: 3,
+                      refereeId: cleanUserId,
+                      refereeName: cleanName,
+                      refereeAvatar: selectedAvatar,
+                      source: referredSource || 'default',
+                      referredBy: parent2Id,
+                      createdAt: serverTimestamp(),
+                    });
+                  }
+                }
+              }
+            }
           }
         } catch (inviteErr) {
           console.warn('Silent invitation tracking failure:', inviteErr);
@@ -155,7 +248,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
     try {
       // 1. Fetch user profile
       const userRef = doc(db, 'users', cleanUserId);
-      const userSnap = await getDoc(userRef);
+      const userSnap = await getDocWithRetry(userRef);
       if (!userSnap.exists()) {
         setError('❌ Invalid User ID or Password');
         setIsLoading(false);
@@ -164,7 +257,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
       // 2. Fetch secure credentials check to authenticate custom login session
       const secretsRef = doc(db, 'users', cleanUserId, 'secrets', 'auth');
-      const secretsSnap = await getDoc(secretsRef);
+      const secretsSnap = await getDocWithRetry(secretsRef);
       
       if (!secretsSnap.exists() || secretsSnap.data().password !== password) {
         setError('❌ Invalid User ID or Password');
@@ -430,7 +523,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           <div>
             <h4 className="text-xs font-semibold text-white/80 font-sans">Elite Distribution Model</h4>
             <p className="text-[11px] text-white/40 leading-normal">
-              Get $0.50 starting bonus upon registration. Earn $0.80 premium commission for every successful referral.
+              Get $0.10 starting bonus upon registration (boosted to $0.30 if invited via a referral link). Earn $0.50 premium commission for every successful referral you invite.
             </p>
           </div>
         </div>

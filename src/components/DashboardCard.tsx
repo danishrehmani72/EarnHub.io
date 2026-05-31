@@ -59,6 +59,7 @@ interface DashboardCardProps {
   onAddToast: (message: string, type: 'success' | 'error', sound?: any) => void;
   userProfile?: any;
   onClaimDailyReward?: (amount: number) => Promise<void>;
+  virtualDays?: number;
 }
 
 export default function DashboardCard({
@@ -78,6 +79,7 @@ export default function DashboardCard({
   onAddToast,
   userProfile,
   onClaimDailyReward,
+  virtualDays = 0,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'funding' | 'admin' | 'faq'>('overview');
@@ -216,12 +218,22 @@ export default function DashboardCard({
       setWithdrawError('Please enter a valid positive withdrawal amount.');
       return;
     }
+    if (amt < 10) {
+      setWithdrawError('Payout request amount too low. Transaction threshold not met.');
+      return;
+    }
     if (amt > balance) {
       setWithdrawError(`Insufficient funds. Your live balance is $${balance.toFixed(2)}.`);
       return;
     }
-    if (!withdrawWallet.trim() || withdrawWallet.trim().length < 10) {
-      setWithdrawError('Please enter a valid destination crypto wallet address.');
+    const isEasyPaisaOrJazzCash = withdrawNetwork === 'EASYPAISA' || withdrawNetwork === 'JAZZCASH';
+    const minWalletLength = isEasyPaisaOrJazzCash ? 5 : 10;
+    if (!withdrawWallet.trim() || withdrawWallet.trim().length < minWalletLength) {
+      if (isEasyPaisaOrJazzCash) {
+        setWithdrawError(`Please enter a valid ${withdrawNetwork === 'EASYPAISA' ? 'EasyPaisa' : 'JazzCash'} account number and title (at least 5 characters).`);
+      } else {
+        setWithdrawError('Please enter a valid destination crypto wallet address (at least 10 characters).');
+      }
       return;
     }
 
@@ -261,9 +273,20 @@ export default function DashboardCard({
     return approvedDeposits.reduce((sum, d) => sum + d.amount, 0);
   }, [approvedDeposits]);
 
-  const hasActivePlan = totalApprovedDepositsSum >= 5;
+  const hasActivePlan = approvedDeposits.some(d => d.amount >= 5);
   const activePlanStatus = hasActivePlan ? 'Active Plan' : 'Inactive Plan';
-  const dailyProfitRate = Math.floor(totalApprovedDepositsSum / 5) * 0.5;
+
+  // Calculate sum of daily performance percentages of all approved deposits
+  const dailyProfitRate = useMemo(() => {
+    return approvedDeposits.reduce((sum, dep) => {
+      let percent = 0;
+      if (dep.amount >= 100) percent = 7;
+      else if (dep.amount >= 50) percent = 5;
+      else if (dep.amount >= 15) percent = 4;
+      else if (dep.amount >= 5) percent = 3;
+      return sum + (dep.amount * (percent / 100));
+    }, 0);
+  }, [approvedDeposits]);
 
   const earliestApprovedDeposit = useMemo(() => {
     if (approvedDeposits.length === 0) return null;
@@ -325,7 +348,7 @@ export default function DashboardCard({
         events.push({
           timestamp: ts,
           dateStr: log.timestamp,
-          amount: log.amount !== undefined ? log.amount : 0.8,
+          amount: log.amount !== undefined ? log.amount : 0.05,
           label: 'Referral Sign-up'
         });
       });
@@ -350,18 +373,25 @@ export default function DashboardCard({
           // Generate Daily Profit event payouts for this approved deposit
           const elapsedMs = Date.now() - depTime;
           const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
-          const totalDays = elapsedDaysReal;
-          const units = Math.floor(dep.amount / 5);
+          const totalDays = elapsedDaysReal + virtualDays;
 
-          if (units > 0) {
+          let percent = 0;
+          if (dep.amount >= 100) percent = 7;
+          else if (dep.amount >= 50) percent = 5;
+          else if (dep.amount >= 15) percent = 4;
+          else if (dep.amount >= 5) percent = 3;
+
+          const dailyRate = dep.amount * (percent / 100);
+
+          if (dailyRate > 0) {
             for (let i = 1; i <= totalDays; i++) {
               const payoutTime = depTime + i * 24 * 60 * 60 * 1000;
               const payoutDate = new Date(payoutTime);
               events.push({
                 timestamp: payoutTime,
                 dateStr: payoutDate.toLocaleDateString(),
-                amount: units * 0.5,
-                label: `Daily Return (+${units * 0.5})`
+                amount: dailyRate,
+                label: `Daily Return (+${dailyRate.toFixed(2)})`
               });
             }
           }
@@ -385,7 +415,7 @@ export default function DashboardCard({
         });
     }
 
-    const signupVal = 0.5;
+    const signupVal = userProfile?.signupBonus !== undefined ? userProfile.signupBonus : 0.10;
 
     if (events.length === 0) {
       return [
@@ -413,7 +443,7 @@ export default function DashboardCard({
     });
 
     return points;
-  }, [logs, deposits, withdrawals]);
+  }, [logs, deposits, withdrawals, virtualDays]);
 
   // Compute Referrals Data for the last 7 days for the new bar chart
   const referralChartData = useMemo(() => {
@@ -432,7 +462,7 @@ export default function DashboardCard({
 
     if (logs && logs.length > 0) {
       logs.forEach((log) => {
-        const amount = log.amount !== undefined ? log.amount : 0.8;
+        const amount = log.amount !== undefined ? log.amount : 0.05;
         const ts = log.createdAt?.seconds ? log.createdAt.seconds * 1000 : new Date(log.timestamp).getTime() || 0;
         
         const logDate = new Date(ts);
@@ -672,6 +702,105 @@ export default function DashboardCard({
                   </div>
                 </div>
 
+              </div>
+
+              {/* Premium Performance Tier Levels Banner */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between col-span-1">
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-5 h-5 text-[#D4AF37]" id="premiums-icon-sparkle" />
+                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-white">Premium Tier Stakes</h4>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-extrabold px-3 py-1 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+                    Accruing Yields Live
+                  </span>
+                </div>
+                
+                <div className="space-y-4 col-span-1">
+                  {/* Tier 1: Bronze */}
+                  <div className="bg-[#121212] border border-amber-500/20 rounded-2xl p-6 md:p-8 flex items-center justify-between gap-6 hover:border-amber-500/40 hover:bg-[#151515] transition-all duration-300 shadow-[0_4px_20px_rgba(245,158,11,0.02)]">
+                    <div className="flex items-center gap-4 md:gap-8">
+                      <div className="text-5xl md:text-7xl font-mono font-black text-amber-500/25 select-none shrink-0 w-12 md:w-16 text-center">
+                        1
+                      </div>
+                      <div className="space-y-2">
+                        <h5 className="text-lg md:text-2xl font-extrabold text-amber-500 uppercase tracking-wide">Level 1 - Bronze</h5>
+                        <p className="text-sm md:text-lg text-white/80 font-medium">
+                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">$5 - $14</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] md:text-xs uppercase font-extrabold text-white/40 tracking-widest block mb-1">Daily Yield</span>
+                      <span className="text-lg md:text-3xl font-black text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl block text-center min-w-[70px] md:min-w-[110px]">
+                        3.0%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tier 2: Silver */}
+                  <div className="bg-[#121212] border border-indigo-500/20 rounded-2xl p-6 md:p-8 flex items-center justify-between gap-6 hover:border-indigo-500/40 hover:bg-[#151515] transition-all duration-300 shadow-[0_4px_20px_rgba(99,102,241,0.02)]">
+                    <div className="flex items-center gap-4 md:gap-8">
+                      <div className="text-5xl md:text-7xl font-mono font-black text-indigo-500/25 select-none shrink-0 w-12 md:w-16 text-center">
+                        2
+                      </div>
+                      <div className="space-y-2">
+                        <h5 className="text-lg md:text-2xl font-extrabold text-indigo-400 uppercase tracking-wide">Level 2 - Silver</h5>
+                        <p className="text-sm md:text-lg text-white/80 font-medium">
+                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">$15 - $49</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] md:text-xs uppercase font-extrabold text-white/40 tracking-widest block mb-1">Daily Yield</span>
+                      <span className="text-lg md:text-3xl font-black text-indigo-400 font-mono bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl block text-center min-w-[70px] md:min-w-[110px]">
+                        4.0%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tier 3: Gold */}
+                  <div className="bg-[#121212] border border-yellow-500/20 rounded-2xl p-6 md:p-8 flex items-center justify-between gap-6 hover:border-yellow-500/40 hover:bg-[#151515] transition-all duration-300 shadow-[0_4px_20px_rgba(234,179,8,0.02)]">
+                    <div className="flex items-center gap-4 md:gap-8">
+                      <div className="text-5xl md:text-7xl font-mono font-black text-yellow-500/25 select-none shrink-0 w-12 md:w-16 text-center">
+                        3
+                      </div>
+                      <div className="space-y-2">
+                        <h5 className="text-lg md:text-2xl font-extrabold text-yellow-500 uppercase tracking-wide">Level 3 - Gold</h5>
+                        <p className="text-sm md:text-lg text-white/80 font-medium">
+                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">$50 - $99</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] md:text-xs uppercase font-extrabold text-white/40 tracking-widest block mb-1">Daily Yield</span>
+                      <span className="text-lg md:text-3xl font-black text-yellow-400 font-mono bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl block text-center min-w-[70px] md:min-w-[110px]">
+                        5.0%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tier 4: Platinum */}
+                  <div className="bg-[#121212] border border-[#D4AF37]/30 rounded-2xl p-6 md:p-8 flex items-center justify-between gap-6 hover:border-[#D4AF37]/50 hover:bg-[#1c1a14]/60 transition-all duration-300 shadow-[0_4px_24px_rgba(212,175,55,0.03)]">
+                    <div className="flex items-center gap-4 md:gap-8">
+                      <div className="text-5xl md:text-7xl font-mono font-black text-[#D4AF37]/25 select-none shrink-0 w-12 md:w-16 text-center">
+                        4
+                      </div>
+                      <div className="space-y-2">
+                        <h5 className="text-lg md:text-2xl font-extrabold text-[#D4AF37] uppercase tracking-wide">Level 4 - Platinum</h5>
+                        <p className="text-sm md:text-lg text-white/80 font-medium">
+                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">$100+</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] md:text-xs uppercase font-extrabold text-[#D4AF37]/50 tracking-widest block mb-1">Daily Yield</span>
+                      <span className="text-lg md:text-3xl font-black text-[#D4AF37] font-mono bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl block text-center min-w-[70px] md:min-w-[110px]">
+                        7.0%
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Dynamic Earnings Growth Over Time Chart */}
@@ -1078,15 +1207,25 @@ export default function DashboardCard({
                         <option value="BNB">BNB (BEP20)</option>
                         <option value="TRX">USDT TRON (TRC20)</option>
                         <option value="MATIC">Polygon (MATIC)</option>
+                        <option value="EASYPAISA">EasyPaisa (PKR)</option>
+                        <option value="JAZZCASH">JazzCash (PKR)</option>
                       </select>
                     </div>
 
                     {/* Destination Address */}
                     <div className="space-y-1.5">
-                      <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Your Private Crypto Wallet Address</label>
+                      <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">
+                        {withdrawNetwork === 'EASYPAISA' ? 'EasyPaisa Account Details' : 
+                         withdrawNetwork === 'JAZZCASH' ? 'JazzCash Account Details' : 
+                         'Your Private Crypto Wallet Address'}
+                      </label>
                       <input
                         type="text"
-                        placeholder="Paste receiver address here"
+                        placeholder={
+                          withdrawNetwork === 'EASYPAISA' ? 'e.g., 03001234567 - Muhammad Ali' : 
+                          withdrawNetwork === 'JAZZCASH' ? 'e.g., 03001234567 - Muhammad Ali' : 
+                          'Paste receiver address here'
+                        }
                         value={withdrawWallet}
                         onChange={(e) => setWithdrawWallet(e.target.value)}
                         className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-3 text-xs text-white font-mono placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/50"
@@ -1107,11 +1246,10 @@ export default function DashboardCard({
                       </div>
                       <input
                         type="number"
-                        placeholder="Min amount $1.00"
+                        placeholder="0.00"
                         value={withdrawAmount}
                         onChange={(e) => setWithdrawAmount(e.target.value)}
                         className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/50"
-                        min="1"
                         step="any"
                       />
                     </div>
@@ -1190,7 +1328,7 @@ export default function DashboardCard({
 
                   {/* Withdrawals list */}
                   <div>
-                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider mb-2.5">Cryptographic Withdrawal Statements</p>
+                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider mb-2.5">Payout & Withdrawal Statements</p>
                     {(!withdrawals || withdrawals.length === 0) ? (
                       <div className="p-4 bg-white/[0.01] border border-dashed border-white/5 rounded-xl text-center text-[10px] text-white/30 uppercase tracking-widest">
                         No payout withdrawal payouts logged.
@@ -1201,8 +1339,8 @@ export default function DashboardCard({
                           <thead>
                             <tr className="border-b border-white/5 text-white/40 uppercase text-[8px] tracking-widest">
                               <th className="pb-2 font-semibold">Requested Timestamp</th>
-                              <th className="pb-2 font-semibold">Protocol Token</th>
-                              <th className="pb-2 font-semibold">Destination Wallet</th>
+                              <th className="pb-2 font-semibold">Method</th>
+                              <th className="pb-2 font-semibold">Destination Address/Account</th>
                               <th className="pb-2 font-semibold">Payout Value</th>
                               <th className="pb-2 font-semibold text-right">Approval State</th>
                             </tr>
@@ -1344,11 +1482,16 @@ export default function DashboardCard({
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <span className="text-rose-400 bg-rose-400/10 border border-rose-400/20 px-2 py-0.5 rounded-sm text-[8px] font-extrabold uppercase tracking-wider">Outbound Withdrawal</span>
-                                <span className="text-white/80 font-bold uppercase tracking-wider">{wit.network} Network</span>
+                                <span className="text-white/80 font-bold uppercase tracking-wider">
+                                  {wit.network === 'EASYPAISA' ? 'EasyPaisa' : wit.network === 'JAZZCASH' ? 'JazzCash' : `${wit.network} Network`}
+                                </span>
                                 <span className="text-white/40 font-mono text-[9px]">{wit.timestamp}</span>
                               </div>
                               <p className="text-sm font-black font-mono text-rose-400">${wit.amount.toFixed(2)} USD requested</p>
-                              <p className="text-[9px] font-mono text-white/40 break-all select-all" title="Receiver">Destination wallet: {wit.wallet}</p>
+                              <p className="text-[9px] font-mono text-white/40 break-all select-all" title="Receiver">
+                                {wit.network === 'EASYPAISA' || wit.network === 'JAZZCASH' ? 'Receiver Account/Title: ' : 'Destination wallet: '}
+                                {wit.wallet}
+                              </p>
                             </div>
 
                             <div className="flex items-center gap-2 self-end md:self-center">

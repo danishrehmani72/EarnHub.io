@@ -10,9 +10,8 @@ import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 
-// CRITICAL: Force long polling and memory cache to bypass WebSocket and iframe third-party cookie/IndexedDB restrictions in sandbox environments
+// CRITICAL: Force memory cache to bypass iframe third-party cookie/IndexedDB restrictions in sandbox environments
 export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
   localCache: memoryLocalCache(),
 }, firebaseConfig.firestoreDatabaseId);
 

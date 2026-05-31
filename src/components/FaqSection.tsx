@@ -10,7 +10,18 @@ interface FaqItemConfig {
 const faqs: FaqItemConfig[] = [
   {
     question: 'How do deposit cycles and earnings work?',
-    answer: 'Each $5 deposit corresponds to one active package. For every $5 deposited, you earn a fixed daily profit of $0.50. The cycle resets every 24 hours from the time your deposit is approved.'
+    answer: (
+      <div className="space-y-2">
+        <p>Your daily profit of approved deposits is distributed every 24 hours based on the tier levels:</p>
+        <ol className="space-y-1 list-decimal list-inside text-white/50 pl-1">
+          <li><strong className="text-amber-500">Level 1: Bronze ($5 - $14)</strong> - earns <span className="text-emerald-400 font-semibold">3% daily</span></li>
+          <li><strong className="text-indigo-400">Level 2: Silver ($15 - $49)</strong> - earns <span className="text-emerald-400 font-semibold">4% daily</span></li>
+          <li><strong className="text-yellow-400">Level 3: Gold ($50 - $99)</strong> - earns <span className="text-emerald-400 font-semibold">5% daily</span></li>
+          <li><strong className="text-emerald-400">Level 4: Platinum Star ($100+)</strong> - earns <span className="text-emerald-400 font-semibold">7% daily</span></li>
+        </ol>
+        <p className="text-[11px] text-white/40 italic">Note: The cycle restarts every 24 hours from the time your deposit is validated.</p>
+      </div>
+    )
   },
   {
     question: 'How do referral earnings work?',

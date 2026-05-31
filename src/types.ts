@@ -12,6 +12,9 @@ export interface ReferralLog {
   createdAt: any; // can be Firestore Timestamp
   refereeAvatar?: string;
   source?: string;
+  level?: number;
+  referredBy?: string;
+  refereeName?: string;
 }
 
 export interface UserProfile {

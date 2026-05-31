@@ -55,7 +55,7 @@ export default function App() {
   useEffect(() => {
     async function testConnection() {
       try {
-        await getDoc(doc(db, 'test', 'connection'));
+        await getDocFromServer(doc(db, 'test', 'connection'));
       } catch (error) {
         console.warn("Firestore connection check info:", error);
       }
@@ -189,7 +189,8 @@ export default function App() {
         snapshot.docChanges().forEach((change) => {
           if (change.type === 'added') {
             const data = change.doc.data();
-            addToast(`New partner registered: ${data.name || 'Anonymous User'}! +$0.80 referral commission!`, 'success', 'new_referral');
+            const commission = data.amount !== undefined ? data.amount : 0.50;
+            addToast(`New partner registered: ${data.name || 'Anonymous User'}! +$${commission.toFixed(2)} referral commission!`, 'success', 'new_referral');
           }
         });
       } else {
@@ -422,15 +423,19 @@ export default function App() {
   const isRegistered = !!userProfile;
 
   // Real-time ledger balance calculation
-  const signupBonus = userProfile?.signupBonus !== undefined ? userProfile.signupBonus : 0.5;
-  const referralEarnings = logs.reduce((sum, log) => sum + (log.amount !== undefined ? log.amount : 0.8), 0);
+  const signupBonus = userProfile?.signupBonus !== undefined ? userProfile.signupBonus : 0.10;
+  const referralEarnings = logs.reduce((sum, log) => sum + (typeof log.amount === 'number' ? log.amount : 0.05), 0);
   const approvedDepositsList = deposits.filter(d => d.status === 'approved');
   const approvedDeposits = approvedDepositsList.reduce((sum, d) => sum + d.amount, 0);
   const approvedWithdrawals = withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + w.amount, 0);
   const dailyBonusEarnings = userProfile?.dailyBonusEarnings !== undefined ? userProfile.dailyBonusEarnings : 0;
 
   // Calculate real-time profit accrued on each approved deposit of $5+
-  // Rule: $5 deposit = $0.5/day profit (Cycle = 24 hours) => $0.5 return per day per $5 package
+  // - $5 to $14.99: 3% daily rate
+  // - $15 to $49.99: 4% daily rate
+  // - $50 to $99.99: 5% daily rate
+  // - $100+: 7% daily rate
+  // Dynamic percentages respect virtual/advanced days simulator instantly.
   const nowTime = Date.now();
   const investmentProfits = approvedDepositsList.reduce((sum, dep) => {
     const depTime = dep.createdAt?.seconds 
@@ -438,10 +443,16 @@ export default function App() {
       : new Date(dep.timestamp).getTime() || nowTime;
     const elapsedMs = nowTime - depTime;
     const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
-    const totalDays = elapsedDaysReal;
+    const totalDays = elapsedDaysReal + virtualDays;
     
-    const units = Math.floor(dep.amount / 5);
-    const profit = totalDays * units * 0.5;
+    let percent = 0;
+    if (dep.amount >= 100) percent = 7;
+    else if (dep.amount >= 50) percent = 5;
+    else if (dep.amount >= 15) percent = 4;
+    else if (dep.amount >= 5) percent = 3;
+    
+    const dailyRate = dep.amount * (percent / 100);
+    const profit = totalDays * dailyRate;
     return sum + (profit > 0 ? profit : 0);
   }, 0);
 
@@ -614,12 +625,12 @@ export default function App() {
                 {/* Live Stats Indicators */}
                 <div className="pt-4 flex items-center gap-8 md:gap-12 text-[10px] text-white/30 uppercase tracking-widest font-semibold flex-wrap">
                   <div>
-                    <p className="text-white text-xl md:text-2xl font-bold font-mono tracking-tight">$0.50</p>
+                    <p className="text-white text-xl md:text-2xl font-bold font-mono tracking-tight">$0.10</p>
                     <p className="mt-0.5">Signup Reward</p>
                   </div>
                   <div className="hidden sm:block w-px h-8 bg-white/10" />
                   <div>
-                    <p className="text-white text-xl md:text-2xl font-bold font-mono tracking-tight">$0.80</p>
+                    <p className="text-white text-xl md:text-2xl font-bold font-mono tracking-tight">$0.50</p>
                     <p className="mt-0.5">Referral Bonus</p>
                   </div>
                   <div className="hidden sm:block w-px h-8 bg-white/10" />
@@ -659,8 +670,9 @@ export default function App() {
                 onAddToast={addToast}
                 userProfile={userProfile}
                 onClaimDailyReward={handleClaimDailyReward}
+                virtualDays={virtualDays}
               />
-              <ReferralHistory logs={logs} />
+              <ReferralHistory logs={logs} userId={currentUid || ''} walletBalance={balance} />
             </div>
           )}
         </AnimatePresence>

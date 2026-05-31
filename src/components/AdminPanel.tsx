@@ -215,7 +215,7 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
           name: userData.name || 'Anonymous VIP',
           avatar: userData.avatar,
           blocked: userData.blocked || false,
-          signupBonus: userData.signupBonus !== undefined ? userData.signupBonus : 0.5,
+          signupBonus: userData.signupBonus !== undefined ? userData.signupBonus : 0.10,
           createdAt: userData.createdAt,
           deposits: userDeps,
           withdrawals: userWits,
@@ -802,7 +802,27 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
             {filteredUsers.map((user, idx) => {
               const approvedD = user.deposits.filter(d => d.status === 'approved').reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
               const approvedW = user.withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
-              const calculatedBalance = user.signupBonus + (user.referrals.length * 0.8) + approvedD - approvedW;
+              const referralEarnings = user.referrals.reduce((sum, ref: any) => sum + (ref.amount !== undefined ? ref.amount : 0.05), 0);
+
+              const investmentProfits = user.deposits.filter((d: any) => d.status === 'approved').reduce((sum: number, dep: any) => {
+                const ts = dep.createdAt?.seconds 
+                  ? dep.createdAt.seconds * 1000 
+                  : new Date(dep.timestamp).getTime() || Date.now();
+                const elapsedMs = Date.now() - ts;
+                const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
+                
+                let percent = 0;
+                if (dep.amount >= 100) percent = 7;
+                else if (dep.amount >= 50) percent = 5;
+                else if (dep.amount >= 15) percent = 4;
+                else if (dep.amount >= 5) percent = 3;
+                
+                const dailyRate = dep.amount * (percent / 100);
+                const profit = elapsedDaysReal * dailyRate;
+                return sum + (profit > 0 ? profit : 0);
+              }, 0);
+
+              const calculatedBalance = user.signupBonus + referralEarnings + approvedD - approvedW + investmentProfits + (user.dailyBonusEarnings || 0);
 
               return (
                 <div key={idx} className="bg-[#070707] border border-white/5 rounded-xl p-4 space-y-3 flex flex-col justify-between">
