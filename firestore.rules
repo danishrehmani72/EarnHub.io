@@ -14,14 +14,15 @@ service cloud.firestore {
     // Helper to validate User schema
     function isValidUser(user, userId) {
       return user.keys().hasAll(['userId', 'name', 'createdAt', 'updatedAt'])
-        && user.keys().size() <= 6
+        && user.keys().size() <= 8
         && user.userId is string
         && user.userId == userId
         && user.name is string
         && user.name.size() >= 2
         && user.name.size() <= 100
         && (!user.keys().hasAny(['avatar']) || (user.avatar is string && user.avatar.size() <= 128))
-        && (!user.keys().hasAny(['signupBonus']) || (user.signupBonus is number));
+        && (!user.keys().hasAny(['signupBonus']) || (user.signupBonus is number))
+        && (!user.keys().hasAny(['blocked']) || (user.blocked is bool));
     }
 
     // Helper to validate ReferralLog schema representing a referral commission
@@ -83,6 +84,11 @@ service cloud.firestore {
       match /withdrawals/{withdrawalId} {
         allow read, write: if isValidId(userId) && isValidId(withdrawalId);
       }
+    }
+
+    // ----------------- AUDIT LOGS ROOT COLLECTION -----------------
+    match /audit_logs/{logId} {
+      allow read, write: if isValidId(logId);
     }
   }
 }

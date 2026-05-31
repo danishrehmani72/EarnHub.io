@@ -25,6 +25,7 @@ import ReferralHistory from './components/ReferralHistory';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
 import earnhubLogo from './assets/images/earnhub_logo_1780161493423.png';
+import { playSound } from './lib/sounds';
 
 
 export default function App() {
@@ -66,9 +67,29 @@ export default function App() {
 
   // Toast Notification System
   const [toasts, setToasts] = useState<{id: string; message: string; type: 'success' | 'error'}[]>([]);
-  const addToast = (message: string, type: 'success' | 'error') => {
+  const addToast = (
+    message: string, 
+    type: 'success' | 'error', 
+    sound?: 'deposit_submitted' | 'withdrawal_approved' | 'new_referral'
+  ) => {
     const id = Date.now().toString() + Math.random().toString();
     setToasts(prev => [...prev, { id, message, type }]);
+
+    // Trigger Web Audio API synthesized sound
+    if (sound) {
+      playSound(sound);
+    } else {
+      // Inline automatic detection based on message text
+      const msgLower = message.toLowerCase();
+      if (msgLower.includes('deposit') && (msgLower.includes('submit') || msgLower.includes('validation') || msgLower.includes('proof'))) {
+        playSound('deposit_submitted');
+      } else if (msgLower.includes('withdrawal') && (msgLower.includes('approve') || msgLower.includes('dispatched') || msgLower.includes('processed'))) {
+        playSound('withdrawal_approved');
+      } else if (msgLower.includes('referral') || msgLower.includes('partner') || msgLower.includes('onboard')) {
+        playSound('new_referral');
+      }
+    }
+
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 5000);
@@ -95,7 +116,7 @@ export default function App() {
       withdrawals.forEach(newWit => {
         const oldWit = prevWithdrawalsRef.current.find(w => w.id === newWit.id);
         if (oldWit && oldWit.status === 'pending') {
-          if (newWit.status === 'approved') addToast(`Your withdrawal of $${newWit.amount} was approved!`, 'success');
+          if (newWit.status === 'approved') addToast(`Your withdrawal of $${newWit.amount} was approved!`, 'success', 'withdrawal_approved');
           if (newWit.status === 'rejected') addToast(`Your withdrawal of $${newWit.amount} was rejected.`, 'error');
         }
       });
@@ -145,6 +166,7 @@ export default function App() {
     const referralsRef = collection(db, 'users', currentUid, 'referrals');
     const referralsQuery = query(referralsRef, orderBy('createdAt', 'desc'));
 
+    let isFirstReferralsSnapshot = true;
     const unsubReferrals = onSnapshot(referralsQuery, (snapshot) => {
       const list: ReferralLog[] = [];
       snapshot.forEach((docSnap) => {
@@ -160,6 +182,18 @@ export default function App() {
           ...data,
         });
       });
+
+      if (!isFirstReferralsSnapshot) {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const data = change.doc.data();
+            addToast(`New partner registered: ${data.name || 'Anonymous User'}! +$0.80 referral commission!`, 'success', 'new_referral');
+          }
+        });
+      } else {
+        isFirstReferralsSnapshot = false;
+      }
+
       setLogs(list);
     }, (error) => {
       console.warn("Referrals snapshot fallback:", error);
@@ -276,6 +310,7 @@ export default function App() {
         createdAt: serverTimestamp(),
         timestamp: timestampStr
       });
+      addToast(`Deposit of $${amount} submitted successfully! Auditing ledger verification started.`, 'success', 'deposit_submitted');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${currentUid}/deposits`);
     }
@@ -306,6 +341,7 @@ export default function App() {
         createdAt: serverTimestamp(),
         timestamp: timestampStr
       });
+      addToast(`Withdrawal of $${amount} requested successfully! Admin routing queue initiated.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${currentUid}/withdrawals`);
     }
@@ -598,6 +634,7 @@ export default function App() {
                 onUpdateTxStatus={handleUpdateTxStatus}
                 onSignOut={handleSignOut}
                 investmentProfits={investmentProfits}
+                onAddToast={addToast}
               />
               <ReferralHistory logs={logs} />
             </div>

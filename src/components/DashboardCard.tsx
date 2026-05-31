@@ -22,7 +22,8 @@ import {
   Layers,
   LogOut,
   HelpCircle,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -39,6 +40,7 @@ import {
 import { FaqSection } from './FaqSection';
 import { ReferralLog, DepositLog, WithdrawalLog } from '../types';
 import { AvatarIcon, getAvatarConfig } from '../lib/avatars';
+import AdminPanel from './AdminPanel';
 
 interface DashboardCardProps {
   name: string;
@@ -54,6 +56,7 @@ interface DashboardCardProps {
   onUpdateTxStatus?: (type: 'deposit' | 'withdrawal', txId: string, status: 'approved' | 'rejected') => Promise<void>;
   onSignOut?: () => Promise<void> | void;
   investmentProfits?: number;
+  onAddToast: (message: string, type: 'success' | 'error', sound?: any) => void;
 }
 
 export default function DashboardCard({
@@ -70,9 +73,11 @@ export default function DashboardCard({
   onUpdateTxStatus,
   onSignOut,
   investmentProfits = 0,
+  onAddToast,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'funding' | 'admin' | 'faq'>('overview');
+  const [adminModeType, setAdminModeType] = useState<'sandbox' | 'platform_global'>('platform_global');
 
   // Crypto deposit address database configuration
   const depositAddresses: Record<string, string> = {
@@ -1121,117 +1126,149 @@ export default function DashboardCard({
                 </div>
               </div>
             </motion.div>
-          )}
-
-          {activeTab === 'admin' && (
+          )}          {activeTab === 'admin' && (
             <motion.div
               key="admin-tab"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="space-y-6"
+              className="space-y-6 text-left"
             >
-              <div className="bg-[#121212] border border-[#D4AF37]/30 rounded-2xl p-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
-                <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37]">Admin Approvals sandbox panel</h3>
+              {/* ADMIN MODE SELECTOR BUTTONS */}
+              <div className="flex border border-white/5 bg-[#080808] p-1.5 rounded-2xl gap-1.5 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setAdminModeType('platform_global')}
+                  className={`flex-1 py-2.5 px-3 rounded-xl text-[9px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+                    adminModeType === 'platform_global'
+                      ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
+                      : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  🏆 Super Ultimate Console (Database-wide)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdminModeType('sandbox')}
+                  className={`flex-1 py-2.5 px-3 rounded-xl text-[9px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+                    adminModeType === 'sandbox'
+                      ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
+                      : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
+                  }`}
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-sky-400" />
+                  Sandbox Approvals (Own Account Demo)
+                </button>
+              </div>
+
+              {adminModeType === 'platform_global' ? (
+                <AdminPanel onAddToast={onAddToast} currentUserId={userId} />
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-[#121212] border border-[#D4AF37]/30 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37]">Admin Approvals sandbox panel</h3>
+                    </div>
+                    <p className="text-[10px] text-white/40 leading-relaxed font-sans max-w-xl">
+                      Simulate the administrator verification of deposits and payouts. Approving deposits adds funds to the ledger balance, and approving payout withdrawals subtracts from it, refreshing the live Growth Curve in real-time.
+                    </p>
+                  </div>
+
+                  {/* PENDING DEPOSIT VERIFICATIONS */}
+                  <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 space-y-4">
+                    <h4 className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center justify-between">
+                      <span>Awaiting Deposit Proof Verifications</span>
+                      <span className="text-[#D4AF37] font-mono font-medium">({deposits.filter(d => d.status === 'pending').length} items)</span>
+                    </h4>
+
+                    {deposits.filter(d => d.status === 'pending').length === 0 ? (
+                      <div className="p-8 bg-white/[0.01] border border-dashed border-white/5 rounded-xl text-center text-[10.5px] text-white/30 uppercase tracking-[0.15em]">
+                        All deposit submissions validated. No actions required.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {deposits.filter(d => d.status === 'pending').map((dep) => (
+                          <div key={dep.id} className="bg-[#0C0C0C] border border-white/5 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 font-sans text-xs">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-sm text-[8px] font-extrabold uppercase tracking-wider">Inbound Deposit</span>
+                                <span className="text-white/80 font-bold uppercase tracking-wider">{dep.network} Network</span>
+                                <span className="text-white/40 font-mono text-[9px]">{dep.timestamp}</span>
+                              </div>
+                              <p className="text-sm font-black font-mono text-[#D4AF37]">${dep.amount.toFixed(2)} USD value</p>
+                              <p className="text-[9px] font-mono text-white/40 break-all select-all focus:bg-white/5" title="TXHSID">TXHash: {dep.txHash}</p>
+                            </div>
+
+                            <div className="flex items-center gap-2 self-end md:self-center">
+                              <button
+                                onClick={() => handleApproveReject('deposit', dep.id, 'approved')}
+                                className="px-3.5 py-1.5 rounded-lg border border-emerald-500/35 text-emerald-400 hover:bg-emerald-500/10 active:scale-95 transition-all text-[9px] font-extrabold uppercase tracking-wider cursor-pointer"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleApproveReject('deposit', dep.id, 'rejected')}
+                                className="px-3.5 py-1.5 rounded-lg border border-rose-500/35 text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all text-[9px] font-extrabold uppercase tracking-wider cursor-pointer"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PENDING WITHDRAWALS VERIFICATIONS */}
+                  <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 space-y-4">
+                    <h4 className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center justify-between">
+                      <span>Awaiting Withdrawal Payout Approvals</span>
+                      <span className="text-[#D4AF37] font-mono font-medium">({withdrawals.filter(w => w.status === 'pending').length} items)</span>
+                    </h4>
+
+                    {withdrawals.filter(w => w.status === 'pending').length === 0 ? (
+                      <div className="p-8 bg-white/[0.01] border border-dashed border-white/5 rounded-xl text-center text-[10.5px] text-white/30 uppercase tracking-[0.15em]">
+                        All Payout requests verified. No actions required.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {withdrawals.filter(w => w.status === 'pending').map((wit) => (
+                          <div key={wit.id} className="bg-[#0C0C0C] border border-white/5 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 font-sans text-xs">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-rose-400 bg-rose-400/10 border border-rose-400/20 px-2 py-0.5 rounded-sm text-[8px] font-extrabold uppercase tracking-wider">Outbound Withdrawal</span>
+                                <span className="text-white/80 font-bold uppercase tracking-wider">{wit.network} Network</span>
+                                <span className="text-white/40 font-mono text-[9px]">{wit.timestamp}</span>
+                              </div>
+                              <p className="text-sm font-black font-mono text-rose-400">${wit.amount.toFixed(2)} USD requested</p>
+                              <p className="text-[9px] font-mono text-white/40 break-all select-all" title="Receiver">Destination wallet: {wit.wallet}</p>
+                            </div>
+
+                            <div className="flex items-center gap-2 self-end md:self-center">
+                              <button
+                                onClick={() => handleApproveReject('withdrawal', wit.id, 'approved')}
+                                className="px-3.5 py-1.5 rounded-lg border border-emerald-500/35 text-emerald-400 hover:bg-emerald-500/10 active:scale-95 transition-all text-[9px] font-extrabold uppercase tracking-wider cursor-pointer"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleApproveReject('withdrawal', wit.id, 'rejected')}
+                                className="px-3.5 py-1.5 rounded-lg border border-rose-500/35 text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all text-[9px] font-extrabold uppercase tracking-wider cursor-pointer"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-[10px] text-white/40 leading-relaxed font-sans max-w-xl">
-                  Simulate the administrator verification of deposits and payouts. Approving deposits adds funds to the ledger balance, and approving payout withdrawals subtracts from it, refreshing the live Growth Curve in real-time.
-                </p>
-              </div>
-
-              {/* PENDING DEPOSIT VERIFICATIONS */}
-              <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 space-y-4">
-                <h4 className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center justify-between">
-                  <span>Awaiting Deposit Proof Verifications</span>
-                  <span className="text-[#D4AF37] font-mono font-medium">({deposits.filter(d => d.status === 'pending').length} items)</span>
-                </h4>
-
-                {deposits.filter(d => d.status === 'pending').length === 0 ? (
-                  <div className="p-8 bg-white/[0.01] border border-dashed border-white/5 rounded-xl text-center text-[10.5px] text-white/30 uppercase tracking-[0.15em]">
-                    All deposit submissions validated. No actions required.
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {deposits.filter(d => d.status === 'pending').map((dep) => (
-                      <div key={dep.id} className="bg-[#0C0C0C] border border-white/5 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 font-sans text-xs">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-sm text-[8px] font-extrabold uppercase tracking-wider">Inbound Deposit</span>
-                            <span className="text-white/80 font-bold uppercase tracking-wider">{dep.network} Network</span>
-                            <span className="text-white/40 font-mono text-[9px]">{dep.timestamp}</span>
-                          </div>
-                          <p className="text-sm font-black font-mono text-[#D4AF37]">${dep.amount.toFixed(2)} USD value</p>
-                          <p className="text-[9px] font-mono text-white/40 break-all select-all focus:bg-white/5" title="TXHSID">TXHash: {dep.txHash}</p>
-                        </div>
-
-                        <div className="flex items-center gap-2 self-end md:self-center">
-                          <button
-                            onClick={() => handleApproveReject('deposit', dep.id, 'approved')}
-                            className="px-3.5 py-1.5 rounded-lg border border-emerald-500/35 text-emerald-400 hover:bg-emerald-500/10 active:scale-95 transition-all text-[9px] font-extrabold uppercase tracking-wider cursor-pointer"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleApproveReject('deposit', dep.id, 'rejected')}
-                            className="px-3.5 py-1.5 rounded-lg border border-rose-500/35 text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all text-[9px] font-extrabold uppercase tracking-wider cursor-pointer"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* PENDING WITHDRAWALS VERIFICATIONS */}
-              <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 space-y-4">
-                <h4 className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center justify-between">
-                  <span>Awaiting Withdrawal Payout Approvals</span>
-                  <span className="text-[#D4AF37] font-mono font-medium">({withdrawals.filter(w => w.status === 'pending').length} items)</span>
-                </h4>
-
-                {withdrawals.filter(w => w.status === 'pending').length === 0 ? (
-                  <div className="p-8 bg-white/[0.01] border border-dashed border-white/5 rounded-xl text-center text-[10.5px] text-white/30 uppercase tracking-[0.15em]">
-                    All Payout requests verified. No actions required.
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {withdrawals.filter(w => w.status === 'pending').map((wit) => (
-                      <div key={wit.id} className="bg-[#0C0C0C] border border-white/5 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 font-sans text-xs">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-rose-400 bg-rose-400/10 border border-rose-400/20 px-2 py-0.5 rounded-sm text-[8px] font-extrabold uppercase tracking-wider">Outbound Withdrawal</span>
-                            <span className="text-white/80 font-bold uppercase tracking-wider">{wit.network} Network</span>
-                            <span className="text-white/40 font-mono text-[9px]">{wit.timestamp}</span>
-                          </div>
-                          <p className="text-sm font-black font-mono text-rose-400">${wit.amount.toFixed(2)} USD requested</p>
-                          <p className="text-[9px] font-mono text-white/40 break-all select-all" title="Receiver">Destination wallet: {wit.wallet}</p>
-                        </div>
-
-                        <div className="flex items-center gap-2 self-end md:self-center">
-                          <button
-                            onClick={() => handleApproveReject('withdrawal', wit.id, 'approved')}
-                            className="px-3.5 py-1.5 rounded-lg border border-emerald-500/35 text-emerald-400 hover:bg-emerald-500/10 active:scale-95 transition-all text-[9px] font-extrabold uppercase tracking-wider cursor-pointer"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleApproveReject('withdrawal', wit.id, 'rejected')}
-                            className="px-3.5 py-1.5 rounded-lg border border-rose-500/35 text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all text-[9px] font-extrabold uppercase tracking-wider cursor-pointer"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
             </motion.div>
           )}
 
