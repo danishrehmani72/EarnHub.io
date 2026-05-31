@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
 import earnhubLogo from './assets/images/earnhub_logo_1780161493423.png';
 import { playSound } from './lib/sounds';
+import { Analytics } from '@vercel/analytics/react';
 
 
 export default function App() {
@@ -675,6 +676,7 @@ export default function App() {
           <span className="text-[#D4AF37]/50">Server Status: Optimal</span>
         </div>
       </footer>
+      <Analytics />
     </div>
   );
 }
