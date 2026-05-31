@@ -84,8 +84,8 @@ interface AuditLog {
 export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProps) {
   // Authentication states
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
-  const [adminEmail, setAdminEmail] = useState('admin@gmail.com');
-  const [adminPassword, setAdminPassword] = useState('admin123');
+  const [adminUserId, setAdminUserId] = useState('');
+  const [adminCode, setAdminCode] = useState('');
   const [authError, setAuthError] = useState('');
   
   // Database-wide state
@@ -134,7 +134,7 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
       const logData = {
         action,
         time: timeStr,
-        admin: adminEmail,
+        admin: adminUserId || 'Danish',
         type,
         ip: '192.168.1.' + Math.floor(Math.random() * 254 + 1),
         createdAt: serverTimestamp()
@@ -152,21 +152,37 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
     e.preventDefault();
     setAuthError('');
 
-    const cleanEmail = adminEmail.trim().toLowerCase();
-    if (!ADMIN_EMAILS.includes(cleanEmail)) {
-      setAuthError('❌ Access Denied: Unauthorized admin email vector');
+    const cleanId = adminUserId.trim().toLowerCase();
+    const cleanCode = adminCode.trim();
+
+    // STRICT IDENTITY & PASSWORD MATCH
+    const isAuthorizedId = 
+      cleanId === 'danish' || 
+      cleanId === 'danishrehmani72' || 
+      cleanId === 'danishrehmani72@gmail.com' ||
+      cleanId === 'adminearnhub';
+      
+    const isAuthorizedCode = 
+      cleanCode === '7272' || 
+      cleanCode === 'danish7272' || 
+      cleanCode === 'danish123' ||
+      cleanCode === 'Rehmani7602@';
+
+    if (!isAuthorizedId) {
+      setAuthError('❌ Access Denied: Unauthorized admin user ID');
       playSound('deposit_submitted'); // Warning drone tone
       return;
     }
-    if (adminPassword !== 'admin123') {
-      setAuthError('❌ Security Error: Invalid cryptographic secret passphrase.');
+    
+    if (!isAuthorizedCode) {
+      setAuthError('❌ Security Error: Invalid secret verification code.');
       return;
     }
 
     setIsAdminAuthenticated(true);
-    onAddToast(`Admin Portal unlocked: Welcome back ${cleanEmail}! 🔐`, 'success');
-    logAuditAction(`Administrator security session initiated via ${cleanEmail}`, 'auth');
-    logTelegramNotify(`🔐 Security Node: Admin session initialized for ${cleanEmail}`);
+    onAddToast(`Admin Portal unlocked: Welcome back Danish! 🔐`, 'success');
+    logAuditAction(`Administrative session initiated by Danish (${cleanId})`, 'auth');
+    logTelegramNotify(`🔐 Security Node: Admin session initialized for ${cleanId}`);
     fetchAllData();
   };
 
@@ -450,22 +466,22 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
 
         <form onSubmit={handleAdminVerify} className="space-y-4 font-sans">
           <div className="space-y-1">
-            <label className="text-[10px] text-white/50 uppercase tracking-wide font-semibold">Admin Account Email</label>
+            <label className="text-[10px] text-white/50 uppercase tracking-wide font-semibold">Special Admin User ID</label>
             <input 
-              type="email" 
-              value={adminEmail} 
-              onChange={e => setAdminEmail(e.target.value)}
-              placeholder="e.g. admin@gmail.com"
+              type="text" 
+              value={adminUserId} 
+              onChange={e => setAdminUserId(e.target.value)}
+              placeholder="e.g. danish"
               className="w-full bg-[#070707] border border-white/5 focus:border-[#D4AF37]/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] text-white/50 uppercase tracking-wide font-semibold">Passphrase Key</label>
+            <label className="text-[10px] text-white/50 uppercase tracking-wide font-semibold">Secret Access Code</label>
             <input 
               type="password" 
-              value={adminPassword} 
-              onChange={e => setAdminPassword(e.target.value)}
+              value={adminCode} 
+              onChange={e => setAdminCode(e.target.value)}
               placeholder="••••••••"
               className="w-full bg-[#070707] border border-white/5 focus:border-[#D4AF37]/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all"
             />
@@ -481,8 +497,7 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
 
         <div className="pt-4 border-t border-white/5 text-center">
           <p className="text-[9px] text-white/30 leading-relaxed font-sans">
-            Authorized administrator logs are strictly audited under SEC compliant ledger protocols. Authorized test emails: <br />
-            <strong className="text-white/60">admin@gmail.com</strong> / <strong className="text-white/60">danishrehmani72@gmail.com</strong> (Pass: <span className="font-mono text-emerald-400">admin123</span>)
+            Authorized administrator logs are strictly audited. Access is restricted exclusively to the chief developer (Danish) using a private ID and code combination.
           </p>
         </div>
       </div>
