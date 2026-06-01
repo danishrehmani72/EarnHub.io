@@ -47,7 +47,8 @@ import {
   doc, 
   setDoc, 
   updateDoc, 
-  addDoc, 
+  addDoc,
+  deleteDoc, 
   serverTimestamp, 
   query, 
   orderBy, 
@@ -58,11 +59,13 @@ import { playSound } from '../lib/sounds';
 interface AdminPanelProps {
   onAddToast: (message: string, type: 'success' | 'error', sound?: any) => void;
   currentUserId: string;
+  isBypassed?: boolean;
 }
 
 interface AdminUser {
   userId: string;
   name: string;
+  email?: string;
   avatar?: string;
   blocked?: boolean;
   signupBonus?: number;
@@ -70,6 +73,7 @@ interface AdminUser {
   deposits: any[];
   withdrawals: any[];
   referrals: any[];
+  dailyBonusEarnings?: number;
 }
 
 interface AuditLog {
@@ -81,12 +85,19 @@ interface AuditLog {
   ip?: string;
 }
 
-export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProps) {
+export default function AdminPanel({ onAddToast, currentUserId, isBypassed = false }: AdminPanelProps) {
   // Authentication states
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(isBypassed);
   const [adminUserId, setAdminUserId] = useState('');
   const [adminCode, setAdminCode] = useState('');
   const [authError, setAuthError] = useState('');
+
+  useEffect(() => {
+    if (isBypassed) {
+      setIsAdminAuthenticated(true);
+      fetchAllData();
+    }
+  }, [isBypassed]);
   
   // Database-wide state
   const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
@@ -213,13 +224,15 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
         fetchedUsers.push({
           userId,
           name: userData.name || 'Anonymous VIP',
+          email: userData.email || 'no-email@earnhub.com',
           avatar: userData.avatar,
           blocked: userData.blocked || false,
           signupBonus: userData.signupBonus !== undefined ? userData.signupBonus : 0.10,
           createdAt: userData.createdAt,
           deposits: userDeps,
           withdrawals: userWits,
-          referrals: userRefs
+          referrals: userRefs,
+          dailyBonusEarnings: userData.dailyBonusEarnings || 0
         });
       }
 
@@ -329,6 +342,22 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
     }
   };
 
+  // Permanently delete user document from database
+  const handleDeleteUser = async (userId: string) => {
+    if (window.confirm(`⚠️ CRITICAL ACTION: Are you sure you want to permanently delete user #${userId}? This cannot be undone.`)) {
+      try {
+        await deleteDoc(doc(db, 'users', userId));
+        onAddToast(`User profile [#${userId}] deleted successfully.`, 'success');
+        logAuditAction(`Administrative action: permanently deleted user profile #${userId}`, 'security');
+        logTelegramNotify(`⚠️ Data Purge: User #${userId} permanently deleted by administrator.`);
+        fetchAllData();
+      } catch (e) {
+        console.error(e);
+        onAddToast("Failed to delete user profile from Firestore.", "error");
+      }
+    }
+  };
+
   // Administrative verification of tx (Deposit or Withdrawal Payout)
   const handleAdminVerifyTx = async (
     type: 'deposit' | 'withdrawal',
@@ -374,8 +403,17 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
     let totalWithdrawalsSum = 0;
     let pendingDepositsSum = 0;
     let pendingWithdrawalsSum = 0;
+    let totalReferralRewardsSum = 0;
+    let activeUsersCount = 0;
 
     allUsers.forEach(u => {
+      if (!u.blocked) {
+        activeUsersCount++;
+      }
+
+      const referralEarnings = u.referrals.reduce((sum, ref: any) => sum + (ref.amount !== undefined ? ref.amount : 0.05), 0);
+      totalReferralRewardsSum += referralEarnings;
+
       u.deposits.forEach(d => {
         const amt = Number(d.amount) || 0;
         if (d.status === 'approved') {
@@ -403,6 +441,8 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
       totalWithdrawalsSum,
       pendingDepositsSum,
       pendingWithdrawalsSum,
+      totalReferralRewardsSum,
+      activeUsersCount,
       netReserves
     };
   }, [allUsers]);
@@ -512,15 +552,14 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
     <div className="space-y-6 w-full text-left">
       
       {/* GLOBAL STATS GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 animate-fade-in">
         <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 space-y-1 relative overflow-hidden">
           <div className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/[0.02] flex items-center justify-center text-white/30">
             <Users className="w-4 h-4" />
           </div>
-          <p className="text-[9px] font-semibold text-white/40 uppercase tracking-widest font-sans">Total Registrations</p>
+          <p className="text-[9px] font-semibold text-white/40 uppercase tracking-widest font-sans">Total Users</p>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-black font-mono text-white">{globalAggregates.totalUsersCount}</span>
-            <span className="text-[10px] text-emerald-400 font-bold font-mono">100% real</span>
           </div>
           <p className="text-[9px] text-white/25">Global premium user accounts</p>
         </div>
@@ -529,27 +568,27 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
           <div className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/[0.02] flex items-center justify-center text-emerald-400/20">
             <DollarSign className="w-4 h-4" />
           </div>
-          <p className="text-[9px] font-semibold text-white/40 uppercase tracking-widest font-sans">Corporate Deposits</p>
+          <p className="text-[9px] font-semibold text-white/40 uppercase tracking-widest font-sans">Total Deposits</p>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-black font-mono text-[#D4AF37]">${globalAggregates.totalDepositsSum.toFixed(2)}</span>
             {globalAggregates.pendingDepositsSum > 0 && (
-              <span className="text-[8px] text-amber-500 font-bold px-1.5 py-0.5 rounded bg-amber-500/10">
+              <span className="text-[8px] text-amber-500 font-bold px-1.5 py-0.5 rounded bg-amber-500/10 block mt-1">
                 +${globalAggregates.pendingDepositsSum.toFixed(0)} Pending Proofs
               </span>
             )}
           </div>
-          <p className="text-[9px] text-emerald-400 font-medium">Approved funding capital inside matrix</p>
+          <p className="text-[9px] text-emerald-400 font-medium">Approved funding capital</p>
         </div>
 
         <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 space-y-1 relative overflow-hidden">
           <div className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/[0.02] flex items-center justify-center text-rose-500/20">
             <ArrowUpRight className="w-4 h-4" />
           </div>
-          <p className="text-[9px] font-semibold text-[#E5E7EB]/40 uppercase tracking-widest font-sans">Outbound Withdrawals</p>
+          <p className="text-[9px] font-semibold text-[#E5E7EB]/40 uppercase tracking-widest font-sans">Total Withdrawals</p>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-black font-mono text-rose-400">${globalAggregates.totalWithdrawalsSum.toFixed(2)}</span>
             {globalAggregates.pendingWithdrawalsSum > 0 && (
-              <span className="text-[8px] text-rose-500 font-bold px-1.5 py-0.5 rounded bg-rose-500/10">
+              <span className="text-[8px] text-rose-500 font-bold px-1.5 py-0.5 rounded bg-rose-500/10 block mt-1">
                 +${globalAggregates.pendingWithdrawalsSum.toFixed(0)} Pending payout
               </span>
             )}
@@ -559,16 +598,24 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
 
         <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 space-y-1 relative overflow-hidden">
           <div className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/[0.02] flex items-center justify-center text-[#D4AF37]/20">
-            <Layers className="w-4 h-4" />
+            <Zap className="w-4 h-4 text-[#D4AF37]" />
           </div>
-          <p className="text-[9px] font-semibold text-white/40 uppercase tracking-widest font-sans">System Reserves Liquidity</p>
+          <p className="text-[9px] font-semibold text-white/40 uppercase tracking-widest font-sans">Total Referral Rewards</p>
           <div className="flex items-baseline gap-2">
-            <span className={`text-2xl font-black font-mono ${globalAggregates.netReserves >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-              ${globalAggregates.netReserves.toFixed(2)}
-            </span>
-            <span className="text-[9px] text-[#D4AF37] font-mono">USD Net</span>
+            <span className="text-2xl font-black font-mono text-indigo-400">${globalAggregates.totalReferralRewardsSum.toFixed(2)}</span>
           </div>
-          <p className="text-[9px] text-white/25">Platform liquid treasury capital</p>
+          <p className="text-[9px] text-white/25">Affiliate and level system payouts</p>
+        </div>
+
+        <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 space-y-1 relative overflow-hidden">
+          <div className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/[0.02] flex items-center justify-center text-emerald-400/20">
+            <Activity className="w-4 h-4 text-emerald-400" />
+          </div>
+          <p className="text-[9px] font-semibold text-white/40 uppercase tracking-widest font-sans">Active Users</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black font-mono text-emerald-400">{globalAggregates.activeUsersCount}</span>
+          </div>
+          <p className="text-[9px] text-white/25">Non-suspended standard accounts</p>
         </div>
       </div>
 
@@ -838,7 +885,8 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
                         </div>
                         <div className="text-left leading-tight">
                           <p className="text-xs font-bold text-white leading-none">{user.name}</p>
-                          <p className="text-[9px] text-white/40 font-mono inline-block">ID: #{user.userId}</p>
+                          <p className="text-[9px] text-[#D4AF37] font-mono mt-0.5 leading-none break-all max-w-[150px] sm:max-w-xs">{user.email || 'no-email@earnhub.com'}</p>
+                          <p className="text-[8px] text-white/45 font-mono leading-none mt-1">ID: #{user.userId}</p>
                         </div>
                       </div>
 
@@ -867,20 +915,29 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] pt-1 leading-none">
+                  <div className="flex items-center justify-between text-[10px] pt-1 leading-none gap-2 flex-wrap">
                     <span className="text-white/30 font-mono text-[9px]">Partners Joined: {user.referrals.length}</span>
                     
-                    <button
-                      onClick={() => handleToggleBlock(user.userId, user.blocked || false)}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[8.5px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer border ${
-                        user.blocked 
-                          ? 'bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 border-emerald-500/25' 
-                          : 'bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 border-rose-500/25'
-                      }`}
-                    >
-                      {user.blocked ? <Unlock className="w-2.5 h-2.5" /> : <Lock className="w-2.5 h-2.5" />}
-                      {user.blocked ? 'Unblock User' : 'Block User'}
-                    </button>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        onClick={() => handleToggleBlock(user.userId, user.blocked || false)}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer border ${
+                          user.blocked 
+                            ? 'bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 border-emerald-500/25' 
+                            : 'bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 border-rose-500/25'
+                        }`}
+                      >
+                        {user.blocked ? <Unlock className="w-2 h-2" /> : <Lock className="w-2 h-2" />}
+                        {user.blocked ? 'Unsuspend' : 'Suspend'}
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteUser(user.userId)}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-wider transition-all duration-150 cursor-pointer border bg-rose-500/5 hover:bg-rose-500/15 text-rose-400 border-rose-500/20"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

@@ -22,6 +22,7 @@ import { UserProfile, ReferralLog, DepositLog, WithdrawalLog } from './types';
 import RegistrationCard from './components/RegistrationCard';
 import DashboardCard from './components/DashboardCard';
 import ReferralHistory from './components/ReferralHistory';
+import AdminPanel from './components/AdminPanel';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
 import earnhubLogo from './assets/images/earnhub_logo_1780161493423.png';
@@ -36,7 +37,10 @@ import {
   Sparkles,
   TrendingUp,
   Award,
-  User
+  User,
+  Lock,
+  ShieldCheck,
+  RefreshCw
 } from 'lucide-react';
 
 
@@ -53,8 +57,16 @@ export default function App() {
 
   // Load and manage simulated days offset
   const [virtualDays, setVirtualDays] = useState<number>(0);
-  const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'admin' | 'faq'>('overview');
+  const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'faq'>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+
+  // Hidden Super Admin access states
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [showSecretPasscodePopup, setShowSecretPasscodePopup] = useState(false);
+  const [isSuperAdminBypassed, setIsSuperAdminBypassed] = useState(() => {
+    return localStorage.getItem('earnhub_super_admin_unlocked') === 'true';
+  });
 
   useEffect(() => {
     if (currentUid) {
@@ -406,10 +418,28 @@ export default function App() {
     }
   };
 
+  // Handle secret 7-clicks on website logo
+  const handleLogoClick = () => {
+    setLogoClicks(prev => {
+      const next = prev + 1;
+      if (next >= 7) {
+        setShowSecretPasscodePopup(true);
+        addToast("🔐 Governance Protocol Activation Detected.", "success");
+        return 0;
+      }
+      return next;
+    });
+  };
+
   // Handle click on top navbar or mobile drawer menu items
-  const handleNavClick = (target: 'deposit' | 'withdraw' | 'helpline' | 'faq' | 'dashboard') => {
+  const handleNavClick = (target: 'deposit' | 'withdraw' | 'helpline' | 'faq' | 'dashboard' | 'admin') => {
     setMobileMenuOpen(false); // Close mobile drawer if open
     
+    if (target === 'admin') {
+      setShowAdminModal(true);
+      return;
+    }
+
     if (target === 'helpline') {
       window.open('https://t.me/EarnHubSupportTeam', '_blank');
       addToast('Opening EarnHub Official Support on Telegram...', 'success');
@@ -597,13 +627,14 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Header and Branding */}
+       {/* Header and Branding */}
       <header className="sticky top-0 z-50 border-b border-white/10 flex items-center justify-between px-6 md:px-10 bg-[#0C0C0C]/95 backdrop-blur-md h-20">
         <div className="flex items-center gap-3">
           <img 
             src={earnhubLogo} 
             alt="EarnHub Gold Logo Icon" 
-            className="w-10 h-10 object-contain rounded-lg border border-[#D4AF37]/15 shadow-[0_0_15px_rgba(212,175,55,0.15)] bg-black"
+            onClick={handleLogoClick}
+            className="w-10 h-10 object-contain rounded-lg border border-[#D4AF37]/15 shadow-[0_0_15px_rgba(212,175,55,0.15)] bg-black cursor-pointer active:scale-95 transition-transform"
             referrerPolicy="no-referrer"
           />
           <button 
@@ -899,6 +930,129 @@ export default function App() {
           <span className="text-[#D4AF37]/50">Server Status: Optimal</span>
         </div>
       </footer>
+
+      {/* Admin Access Control Console Modal Overlay */}
+      <AnimatePresence>
+        {showAdminModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative w-full max-w-6xl bg-[#090909] border border-[#D4AF37]/20 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.15)] flex flex-col my-8 max-h-[90vh]"
+            >
+              {/* Modal Top Bar header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0C0C0C]">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center justify-center text-[#D4AF37]">
+                    <ShieldCheck className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <h2 className="text-xs uppercase font-bold tracking-[0.2em] text-[#D4AF37] font-serif">Governance Console</h2>
+                    <p className="text-[8px] text-white/30 uppercase tracking-widest leading-none mt-0.5">Secure Cloud Administrator Core</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowAdminModal(false)}
+                  className="p-2 rounded-xl border border-white/5 bg-transparent hover:bg-white/5 text-white/50 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+                  aria-label="Close governance window"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modal Core Area */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+                <AdminPanel 
+                  onAddToast={addToast} 
+                  currentUserId={currentUid || 'anonymous-operator'} 
+                  isBypassed={isSuperAdminBypassed}
+                />
+              </div>
+
+              {/* Admin Footer Banner info */}
+              <div className="px-6 py-3 border-t border-white/5 bg-[#050505] text-[8px] text-center text-white/20 uppercase tracking-[0.2em] font-sans flex flex-col sm:flex-row items-center justify-between gap-2">
+                <span>EarnHub Audit Log: Enabled</span>
+                <span className="text-[#D4AF37]/35 font-mono">Operator ID: {currentUid ? currentUid.slice(0, 16) : 'anonymous'}</span>
+                <span>SECURE SESSION TYPE: TLS 1.3 AES-256</span>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Hidden Secret Passcode Prompt Dialog Overlay */}
+      <AnimatePresence>
+        {showSecretPasscodePopup && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-sm bg-[#0C0C0C] border border-[#D4AF37]/35 rounded-2xl p-6 space-y-5 shadow-[0_0_50px_rgba(212,175,55,0.15)] text-left"
+            >
+              <div className="text-center space-y-2">
+                <div className="w-12 h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-xl flex items-center justify-center mx-auto text-[#D4AF37] animate-pulse">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <h3 className="text-xs uppercase tracking-[0.22em] text-[#D4AF37] font-black">Governance Node Access</h3>
+                <p className="text-[8px] text-white/30 uppercase tracking-[0.1em] font-sans">Authorization Security Screen</p>
+              </div>
+
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget;
+                  const passcode = (form.elements.namedItem('secretPasscode') as HTMLInputElement).value.trim();
+                  
+                  const correctPasscode = import.meta.env.VITE_ADMIN_PASSCODE || 'EARNHUB2026ADMIN';
+                  
+                  if (passcode === correctPasscode) {
+                    localStorage.setItem('earnhub_super_admin_unlocked', 'true');
+                    setIsSuperAdminBypassed(true);
+                    setShowSecretPasscodePopup(false);
+                    setShowAdminModal(true); // Fire up Super Admin Console
+                    addToast('🔐 Secret Access Granted: Super Admin Node Unlocked.', 'success');
+                  } else {
+                    addToast('❌ Security Warning: Passcode validation failed.', 'error');
+                  }
+                }}
+                className="space-y-4 font-sans"
+              >
+                <div className="space-y-1.5">
+                  <span className="text-[9px] text-white/40 uppercase tracking-wider font-extrabold block">Governance Passcode</span>
+                  <input 
+                    name="secretPasscode"
+                    type="password" 
+                    required
+                    placeholder="Enter Security Admin Passcode"
+                    autoFocus
+                    className="w-full bg-[#070707] border border-white/5 focus:border-[#D4AF37]/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all text-center font-mono tracking-widest uppercase"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 text-[9px] uppercase font-black tracking-widest font-sans">
+                  <button 
+                    type="submit"
+                    className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-black shadow-lg shadow-[#D4AF37]/10 cursor-pointer border-0"
+                  >
+                    Authenticate
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setShowSecretPasscodePopup(false)}
+                    className="px-4 py-3 border border-white/5 bg-transparent hover:bg-white/5 active:scale-[0.98] transition-all rounded-xl text-white/50 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
