@@ -18,7 +18,8 @@ import {
   Wallet,
   Activity,
   ArrowUpRight,
-  ShieldAlert
+  ShieldAlert,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from '../lib/avatars';
@@ -265,10 +266,8 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                         className="flex items-center justify-between p-4 rounded-2xl bg-[#161616] border border-white/5 hover:border-[#D4AF37]/15 transition-all duration-150"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
-                            getAvatarConfig(log.refereeAvatar).color
-                          }`}>
-                            <AvatarIcon id={log.refereeAvatar} className="w-4 h-4" />
+                          <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-[#D4AF37]">
+                            <User className="w-4 h-4" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
@@ -344,8 +343,8 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                             <CornerDownRight className="w-3.5 h-3.5 text-[#D4AF37]/30 shrink-0 absolute -left-4 top-1.5" />
                             <div className="flex-1 bg-[#1A1A1A] border border-[#D4AF37]/15 rounded-xl p-3 flex items-center justify-between shadow-inner ml-1.5 max-w-md">
                               <div className="flex items-center gap-2.5">
-                                <div className={`w-6 h-6 rounded flex items-center justify-center border text-[10px] ${getAvatarConfig(lvl1.refereeAvatar).color}`}>
-                                  <AvatarIcon id={lvl1.refereeAvatar} className="w-3.5 h-3.5" />
+                                <div className="w-6 h-6 rounded flex items-center justify-center border border-white/10 bg-white/5 text-[#D4AF37] text-[10px]">
+                                  <User className="w-3.5 h-3.5" />
                                 </div>
                                 <div>
                                   <span className="text-[10.5px] font-extrabold text-white block">{lvl1.refereeName}</span>
@@ -370,8 +369,8 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                                       <CornerDownRight className="w-3.5 h-3.5 text-indigo-500/30 shrink-0 absolute -left-4 top-1.5" />
                                       <div className="flex-1 bg-[#1A1A1A] border border-indigo-500/15 rounded-xl p-3 flex items-center justify-between shadow-inner ml-1.5 max-w-sm">
                                         <div className="flex items-center gap-2.5">
-                                          <div className={`w-6 h-6 rounded flex items-center justify-center border text-[10px] ${getAvatarConfig(lvl2.refereeAvatar).color}`}>
-                                            <AvatarIcon id={lvl2.refereeAvatar} className="w-3.5 h-3.5" />
+                                          <div className="w-6 h-6 rounded flex items-center justify-center border border-white/10 bg-white/5 text-[#D4AF37] text-[10px]">
+                                            <User className="w-3.5 h-3.5" />
                                           </div>
                                           <div>
                                             <span className="text-[10.5px] font-extrabold text-white block">{lvl2.refereeName}</span>
@@ -390,8 +389,8 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                                             <CornerDownRight className="w-3.5 h-3.5 text-sky-500/30 shrink-0 absolute -left-4 top-1.5" />
                                             <div className="flex-1 bg-[#1A1A1A] border border-sky-400/15 rounded-xl p-2.5 flex items-center justify-between shadow-sm ml-1.5 max-w-xs">
                                               <div className="flex items-center gap-2">
-                                                <div className={`w-5 h-5 rounded flex items-center justify-center border text-[9px] ${getAvatarConfig(lvl3.refereeAvatar).color}`}>
-                                                  <AvatarIcon id={lvl3.refereeAvatar} className="w-3 h-3" />
+                                                <div className="w-5 h-5 rounded flex items-center justify-center border border-white/10 bg-white/5 text-[#D4AF37] text-[9px]">
+                                                  <User className="w-3 h-3" />
                                                 </div>
                                                 <div>
                                                   <span className="text-[10px] font-extrabold text-white/80 block leading-none">{lvl3.refereeName}</span>

@@ -35,7 +35,8 @@ import {
   X,
   Sparkles,
   TrendingUp,
-  Award
+  Award,
+  User
 } from 'lucide-react';
 
 
@@ -672,10 +673,8 @@ export default function App() {
                 <p className="text-[9px] text-[#D4AF37] uppercase tracking-[0.2em] font-semibold">Premium Member</p>
                 <p className="text-xs font-semibold text-white/90">{userProfile.name}</p>
               </div>
-              <div className={`w-8 h-8 rounded-lg border flex items-center justify-center ${
-                getAvatarConfig(userProfile.avatar).color
-              }`}>
-                <AvatarIcon id={userProfile.avatar} className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-[#D4AF37]">
+                <User className="w-4 h-4" />
               </div>
             </div>
           ) : (

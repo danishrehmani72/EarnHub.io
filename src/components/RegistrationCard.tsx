@@ -6,7 +6,6 @@
 import React, { useState } from 'react';
 import { UserPlus, Sparkles, TrendingUp, HelpCircle, Key, LogIn, UserCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AVATAR_PRESETS } from '../lib/avatars';
 import earnhubLogo from '../assets/images/earnhub_logo_1780161493423.png';
 import { db } from '../lib/firebase';
 import { doc, setDoc, serverTimestamp, getDoc, collection, getDocFromServer } from 'firebase/firestore';
@@ -404,38 +403,6 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                   }}
                   className="w-full px-4 py-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-[#E5E7EB] placeholder-white/20 font-sans focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all duration-200"
                 />
-              </div>
-
-              {/* Avatar Preset Grid */}
-              <div className="space-y-2.5">
-                <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-[0.2em] mb-2 font-sans">
-                  Select Your Elite Badge Avatar
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {AVATAR_PRESETS.map((avatar) => {
-                    const IconComponent = avatar.icon;
-                    const isSelected = selectedAvatar === avatar.id;
-                    return (
-                      <button
-                        key={avatar.id}
-                        type="button"
-                        onClick={() => setSelectedAvatar(avatar.id)}
-                        className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all duration-200 cursor-pointer text-center group ${
-                          isSelected
-                            ? `${avatar.color} border-white/20 ring-1 ring-white/10`
-                            : 'border-white/5 bg-[#0C0C0C] text-white/30 hover:text-white/80 hover:border-white/10'
-                        }`}
-                      >
-                        <IconComponent className={`w-5 h-5 mb-1 transition-transform group-hover:scale-110 ${
-                          isSelected ? 'scale-110' : ''
-                        }`} />
-                        <span className="text-[8px] font-semibold uppercase tracking-wider block truncate max-w-full">
-                          {avatar.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
             </motion.div>
           )}

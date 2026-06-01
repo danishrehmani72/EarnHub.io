@@ -566,10 +566,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.05)] ${
-              getAvatarConfig(avatar).color
-            }`}>
-              <AvatarIcon id={avatar} className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.05)]">
+              <User className="w-5 h-5" />
             </div>
             <div>
               <p className="text-[10px] text-white/40 font-semibold tracking-[0.25em] uppercase">Premium Member</p>
@@ -1052,8 +1050,21 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 </label>
                 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div className="flex-1 bg-[#0A0A0A] border border-white/10 rounded-2xl px-5 py-3.5 text-sm text-[#D4AF37] font-mono tracking-wider overflow-x-auto whitespace-nowrap scrollbar-none flex items-center justify-between">
+                  <div className="flex-1 bg-[#0A0A0A] border border-white/10 rounded-2xl px-5 py-3.5 text-sm text-[#D4AF37] font-mono tracking-wider overflow-x-auto whitespace-nowrap scrollbar-none flex items-center justify-between gap-3">
                     <span>{referralLink}</span>
+                    <AnimatePresence>
+                      {copied && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.5, x: 5 }}
+                          animate={{ opacity: 1, scale: 1, x: 0 }}
+                          exit={{ opacity: 0, scale: 0.5, x: 5 }}
+                          className="flex items-center gap-1 text-emerald-400 shrink-0 select-none pb-0.5"
+                        >
+                          <Check className="w-4 h-4 animate-bounce" />
+                          <span className="text-[9px] font-black uppercase tracking-wider font-sans">Copied</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   
                   <button
