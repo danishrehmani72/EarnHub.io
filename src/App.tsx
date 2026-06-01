@@ -714,7 +714,7 @@ export default function App() {
             onClick={() => handleNavClick('dashboard')} 
             className="text-lg font-bold tracking-[0.25em] uppercase font-serif text-white hover:brightness-110 transition-all text-left bg-transparent border-0 cursor-pointer"
           >
-            EarnHub
+            WEALTH HUB
           </button>
         </div>
 

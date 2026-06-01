@@ -574,6 +574,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
         }}
       >
 
+        <div className="mb-6 z-10 relative">
+          <h1 className="text-3xl font-bold font-serif text-white">Wealth Hub</h1>
+        </div>
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.05)]">
@@ -626,38 +630,38 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       <div className="grid grid-cols-3 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+          className={`py-4 px-2 sm:py-5 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
             activeTab === 'overview'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
           <TrendingUp className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="truncate hidden sm:inline">Overview</span>
+          <span className="text-center leading-tight">Dashboard</span>
         </button>
         
         <button
           onClick={() => setActiveTab('funding')}
-          className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+          className={`py-4 px-2 sm:py-5 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
             activeTab === 'funding'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
           <Wallet className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="truncate hidden sm:inline">Funding</span>
+          <span className="text-center leading-tight">Withdraw & Deposit</span>
         </button>
 
         <button
           onClick={() => setActiveTab('faq')}
-          className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`py-4 px-2 sm:py-5 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
             activeTab === 'faq'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="truncate hidden sm:inline">FAQ</span>
+          <span className="text-center leading-tight">FAQ Section</span>
         </button>
       </div>
 

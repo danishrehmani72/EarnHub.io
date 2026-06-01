@@ -91,6 +91,13 @@ service cloud.firestore {
         allow list: if isValidId(userId);
         allow create, update, delete: if isValidId(userId) && isValidId(withdrawalId);
       }
+
+      // ----------------- INVESTMENTS SUBCOLLECTION -----------------
+      match /investments/{investmentId} {
+        allow get: if isValidId(userId) && isValidId(investmentId);
+        allow list: if isValidId(userId);
+        allow create, update, delete: if isValidId(userId) && isValidId(investmentId);
+      }
     }
 
     // ----------------- AUDIT LOGS ROOT COLLECTION -----------------
