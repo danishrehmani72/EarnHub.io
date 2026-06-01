@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Copy, 
   Check, 
@@ -98,6 +98,26 @@ export default function DashboardCard({
   // Live balance counting animation using motion/react
   const motionBalance = useMotionValue(balance);
   const animatedBalanceDisplay = useTransform(motionBalance, (val) => val.toFixed(2));
+
+  // Balance change visual flash effects
+  const [flashType, setFlashType] = useState<'up' | 'down' | null>(null);
+  const prevBalanceRef = useRef(balance);
+
+  useEffect(() => {
+    const prev = prevBalanceRef.current;
+    if (balance > prev) {
+      setFlashType('up');
+      const timer = setTimeout(() => setFlashType(null), 1200);
+      prevBalanceRef.current = balance;
+      return () => clearTimeout(timer);
+    } else if (balance < prev) {
+      setFlashType('down');
+      const timer = setTimeout(() => setFlashType(null), 1200);
+      prevBalanceRef.current = balance;
+      return () => clearTimeout(timer);
+    }
+    prevBalanceRef.current = balance;
+  }, [balance]);
 
   useEffect(() => {
     const controls = animate(motionBalance, balance, {
@@ -621,21 +641,57 @@ export default function DashboardCard({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 
                 {/* 1. Live Wallet Balance */}
-                <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden shadow-inner">
-                  <div className="absolute -top-4 -right-4 text-[#D4AF37]/5 pointer-events-none">
+                <div id="live-wallet-balance-card" className={`p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden shadow-inner border transition-all duration-500 ${
+                  flashType === 'up'
+                    ? 'border-emerald-500/30 bg-emerald-950/20 shadow-[0_0_25px_rgba(16,185,129,0.15)] scale-[1.01]'
+                    : flashType === 'down'
+                    ? 'border-rose-500/30 bg-rose-950/20 shadow-[0_0_25px_rgba(244,63,94,0.15)] scale-[0.99]'
+                    : 'bg-[#161616] border-white/5'
+                }`}>
+                  <div className={`absolute -top-4 -right-4 pointer-events-none transition-colors duration-500 ${
+                    flashType === 'up'
+                      ? 'text-emerald-500/10'
+                      : flashType === 'down'
+                      ? 'text-rose-500/10'
+                      : 'text-[#D4AF37]/5'
+                  }`}>
                     <DollarSign className="w-20 h-20" />
                   </div>
                   <div className="flex items-center justify-between z-10">
-                    <span className="text-[10px] uppercase tracking-[0.12em] text-white/40 font-bold">Wallet Balance</span>
-                    <div className="w-6 h-6 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] flex items-center justify-center">
+                    <span className="text-[10px] uppercase tracking-[0.12em] text-white/40 font-bold font-sans">Wallet Balance</span>
+                    <div className={`w-6 h-6 rounded border flex items-center justify-center transition-all duration-300 ${
+                      flashType === 'up'
+                        ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                        : flashType === 'down'
+                        ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
+                        : 'bg-[#D4AF37]/10 border-[#D4AF37]/20 text-[#D4AF37]'
+                    }`}>
                       <DollarSign className="w-3 h-3" />
                     </div>
                   </div>
-                  <div className="my-1 text-2xl font-serif text-[#D4AF37] tracking-tight z-10 flex items-baseline">
+                  <div className={`my-1 text-2xl font-serif tracking-tight z-10 flex items-baseline transition-all duration-300 ${
+                    flashType === 'up'
+                      ? 'text-emerald-400 drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                      : flashType === 'down'
+                      ? 'text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+                      : 'text-[#D4AF37]'
+                  }`}>
                     $<motion.span>{animatedBalanceDisplay}</motion.span>
                   </div>
-                  <div className="text-[8.5px] text-emerald-400 font-medium flex items-center gap-1 z-10 leading-normal">
-                    <TrendingUp className="w-2.5 h-2.5 shrink-0" /> Real-time active ledger
+                  <div className={`text-[8.5px] font-medium flex items-center gap-1 z-10 leading-normal transition-all duration-300 ${
+                    flashType === 'up'
+                      ? 'text-emerald-300 animate-pulse'
+                      : flashType === 'down'
+                      ? 'text-rose-300 animate-pulse'
+                      : 'text-emerald-400'
+                  }`}>
+                    <TrendingUp className="w-2.5 h-2.5 shrink-0" /> {
+                      flashType === 'up'
+                        ? 'Yield auto-ledger updated'
+                        : flashType === 'down'
+                        ? 'Funds debited successfully'
+                        : 'Real-time active ledger'
+                    }
                   </div>
                 </div>
 
@@ -932,11 +988,23 @@ export default function DashboardCard({
               <div className="bg-white/[0.02] rounded-2xl border border-white/5 p-5 space-y-2.5">
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-wider font-sans">
                   <span className="font-semibold text-white/40">Target Reward Milestone</span>
-                  <span className="font-bold text-[#D4AF37]">$<motion.span>{animatedBalanceDisplay}</motion.span> / ${nextMilestone.toFixed(2)}</span>
+                  <span className={`font-bold transition-all duration-300 ${
+                    flashType === 'up'
+                      ? 'text-emerald-400'
+                      : flashType === 'down'
+                      ? 'text-rose-400'
+                      : 'text-[#D4AF37]'
+                  }`}>$<motion.span>{animatedBalanceDisplay}</motion.span> / ${nextMilestone.toFixed(2)}</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-[#D4AF37] rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(212,175,55,0.4)]"
+                    className={`h-full rounded-full transition-all duration-500 ease-out ${
+                      flashType === 'up'
+                        ? 'bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                        : flashType === 'down'
+                        ? 'bg-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.5)]'
+                        : 'bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.4)]'
+                    }`}
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
