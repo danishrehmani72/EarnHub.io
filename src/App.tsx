@@ -26,6 +26,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
 import earnhubLogo from './assets/images/earnhub_logo_1780161493423.png';
 import { playSound } from './lib/sounds';
+import { 
+  ArrowDownLeft, 
+  ArrowUpRight, 
+  HelpCircle, 
+  MessageSquare, 
+  Menu, 
+  X,
+  Sparkles,
+  TrendingUp,
+  Award
+} from 'lucide-react';
 
 
 export default function App() {
@@ -41,6 +52,8 @@ export default function App() {
 
   // Load and manage simulated days offset
   const [virtualDays, setVirtualDays] = useState<number>(0);
+  const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'admin' | 'faq'>('overview');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (currentUid) {
@@ -380,6 +393,61 @@ export default function App() {
     }
   };
 
+  // Handle click on top navbar or mobile drawer menu items
+  const handleNavClick = (target: 'deposit' | 'withdraw' | 'helpline' | 'faq' | 'dashboard') => {
+    setMobileMenuOpen(false); // Close mobile drawer if open
+    
+    if (target === 'helpline') {
+      window.open('https://t.me/EarnHubSupportTeam', '_blank');
+      addToast('Opening EarnHub Official Support on Telegram...', 'success');
+      return;
+    }
+
+    if (!isRegistered) {
+      if (target === 'faq') {
+        addToast('Please login or register to access FAQs and other premium features!', 'error');
+      } else {
+        addToast(`Please login or register to access the ${target === 'deposit' ? 'Deposit' : 'Withdrawal'} Portal!`, 'error');
+      }
+      
+      const regEl = document.getElementById('registration-container');
+      if (regEl) {
+        regEl.scrollIntoView({ behavior: 'smooth' });
+        // Visual indicator border glow
+        regEl.classList.add('ring-2', 'ring-[#D4AF37]/50');
+        setTimeout(() => regEl.classList.remove('ring-2', 'ring-[#D4AF37]/50'), 2500);
+      }
+      return;
+    }
+
+    // Interactive updates if user is Onboarded / Registered
+    if (target === 'dashboard') {
+      setDashboardTab('overview');
+      setTimeout(() => {
+        const el = document.getElementById('dashboard-container');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else if (target === 'deposit') {
+      setDashboardTab('funding');
+      setTimeout(() => {
+        const el = document.getElementById('deposit-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 200);
+    } else if (target === 'withdraw') {
+      setDashboardTab('funding');
+      setTimeout(() => {
+        const el = document.getElementById('withdraw-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 200);
+    } else if (target === 'faq') {
+      setDashboardTab('faq');
+      setTimeout(() => {
+        const el = document.getElementById('faq-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+    }
+  };
+
   // Sign out handler using custom session persistence
   const handleSignOut = async () => {
     try {
@@ -517,7 +585,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Header and Branding */}
-      <header className="h-20 border-b border-white/10 flex items-center justify-between px-6 md:px-10 bg-[#0C0C0C]">
+      <header className="sticky top-0 z-50 border-b border-white/10 flex items-center justify-between px-6 md:px-10 bg-[#0C0C0C]/95 backdrop-blur-md h-20">
         <div className="flex items-center gap-3">
           <img 
             src={earnhubLogo} 
@@ -525,23 +593,70 @@ export default function App() {
             className="w-10 h-10 object-contain rounded-lg border border-[#D4AF37]/15 shadow-[0_0_15px_rgba(212,175,55,0.15)] bg-black"
             referrerPolicy="no-referrer"
           />
-          <span className="text-lg font-bold tracking-[0.25em] uppercase font-serif text-white">EarnHub</span>
+          <button 
+            onClick={() => handleNavClick('dashboard')} 
+            className="text-lg font-bold tracking-[0.25em] uppercase font-serif text-white hover:brightness-110 transition-all text-left bg-transparent border-0 cursor-pointer"
+          >
+            EarnHub
+          </button>
         </div>
 
-        <div className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.2em] font-semibold text-white/50">
-          <span className="text-white border-b border-[#D4AF37] pb-1 cursor-default">Dashboard</span>
-          <span className="hover:text-white transition-colors cursor-default">Network</span>
-          <span className="hover:text-white transition-colors cursor-default">Payouts</span>
-          <span className="text-[#D4AF37]/80 hover:text-white transition-colors cursor-default flex items-center gap-1.5" title="Live Google Cloud Firestore Connection Active">
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-6 text-[11px] uppercase tracking-[0.22em] font-bold text-white/50">
+          <button 
+            type="button"
+            onClick={() => handleNavClick('dashboard')}
+            className={`transition-all pb-1 cursor-pointer bg-transparent border-0 ${isRegistered && dashboardTab === 'overview' ? 'text-white border-b border-[#D4AF37]' : 'hover:text-white/90'}`}
+          >
+            Dashboard
+          </button>
+          
+          <button 
+            type="button"
+            onClick={() => handleNavClick('deposit')}
+            className={`transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 ${isRegistered && dashboardTab === 'funding' ? 'text-emerald-400 font-extrabold' : 'hover:text-white/90'}`}
+          >
+            <ArrowDownLeft className="w-4 h-4 text-emerald-400" />
+            Deposit
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => handleNavClick('withdraw')}
+            className={`transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 ${isRegistered && dashboardTab === 'funding' ? 'text-[#D4AF37] font-extrabold' : 'hover:text-white/90'}`}
+          >
+            <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
+            Withdraw
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => handleNavClick('helpline')}
+            className="hover:text-sky-300 pb-1 transition-all cursor-pointer flex items-center gap-1.5 text-sky-400 font-extrabold bg-transparent border-0"
+          >
+            <MessageSquare className="w-4 h-4 text-sky-400 animate-pulse" />
+            Helpline
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => handleNavClick('faq')}
+            className={`transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 ${isRegistered && dashboardTab === 'faq' ? 'text-white border-b border-[#D4AF37]' : 'hover:text-white/90'}`}
+          >
+            <HelpCircle className="w-4 h-4 text-white" />
+            FAQ
+          </button>
+
+          <span className="text-[#D4AF37]/85 hover:text-white transition-all cursor-default flex items-center gap-1.5 ml-2" title="Live Google Cloud Firestore Connection Active">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             Firestore Live
           </span>
         </div>
 
-        <div className="flex items-center gap-3 animate-fade-in">
+        <div className="flex items-center gap-3">
           {isRegistered ? (
             <div className="flex items-center gap-3">
-              <div className="text-right">
+              <div className="text-right hidden sm:block">
                 <p className="text-[9px] text-[#D4AF37] uppercase tracking-[0.2em] font-semibold">Premium Member</p>
                 <p className="text-xs font-semibold text-white/90">{userProfile.name}</p>
               </div>
@@ -557,8 +672,92 @@ export default function App() {
               <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-semibold">Ready to Onboard</span>
             </div>
           )}
+
+          {/* Mobile menu trigger */}
+          <button 
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg border border-white/10 md:hidden hover:bg-white/5 active:scale-95 transition-all text-white/80 cursor-pointer bg-transparent"
+            aria-label="Toggle Mobile Menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5 text-[#D4AF37]" /> : <Menu className="w-5 h-5 text-white" />}
+          </button>
         </div>
       </header>
+
+      {/* Mobile Menu Dropdown Bar */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="md:hidden bg-[#0C0C0C] border-b border-white/10 z-50 overflow-hidden w-full"
+          >
+            <div className="px-6 py-5 flex flex-col gap-4 font-sans text-sm font-semibold tracking-wide text-white/70">
+              <button 
+                type="button"
+                onClick={() => handleNavClick('dashboard')}
+                className={`py-2 text-left flex items-center justify-between border-b border-white/[0.03] transition-all cursor-pointer bg-transparent border-0 ${isRegistered && dashboardTab === 'overview' ? 'text-white font-extrabold border-[#D4AF37]/50' : 'hover:text-white'}`}
+              >
+                <span>Dashboard Overview</span>
+                <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-[#D4AF37] uppercase">Growth</span>
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => handleNavClick('deposit')}
+                className="py-2 text-left flex items-center justify-between border-b border-white/[0.03] transition-all cursor-pointer text-emerald-400 font-extrabold hover:brightness-110 bg-transparent border-0"
+              >
+                <span className="flex items-center gap-2">
+                  <ArrowDownLeft className="w-4 h-4" />
+                  Deposit Funds
+                </span>
+                <span className="text-[10px] bg-emerald-500/10 px-2.5 py-0.5 rounded text-emerald-400 border border-emerald-500/20 uppercase tracking-widest text-[8px] font-black">Daily Yield</span>
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => handleNavClick('withdraw')}
+                className="py-2 text-left flex items-center justify-between border-b border-white/[0.03] transition-all cursor-pointer text-[#D4AF37] font-extrabold hover:brightness-110 bg-transparent border-0"
+              >
+                <span className="flex items-center gap-2">
+                  <ArrowUpRight className="w-4 h-4" />
+                  Withdraw Funds
+                </span>
+                <span className="text-[10px] bg-[#D4AF37]/10 px-2.5 py-0.5 rounded text-[#D4AF37] border border-[#D4AF37]/20 uppercase tracking-widest text-[8px] font-black">Withdraw</span>
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => handleNavClick('helpline')}
+                className="py-2 text-left flex items-center gap-2 border-b border-white/[0.03] transition-all text-sky-400 hover:text-sky-300 font-extrabold cursor-pointer bg-transparent border-0"
+              >
+                <MessageSquare className="w-4 h-4 animate-pulse" />
+                <span>Customer Telegram Helpline</span>
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => handleNavClick('faq')}
+                className={`py-2 text-left flex items-center gap-2 border-b border-white/[0.03] transition-all cursor-pointer bg-transparent border-0 ${isRegistered && dashboardTab === 'faq' ? 'text-white font-extrabold' : 'hover:text-white'}`}
+              >
+                <HelpCircle className="w-4 h-4 text-white/50" />
+                <span>Frequently Asked Questions (FAQ)</span>
+              </button>
+
+              <div className="flex items-center justify-between pt-2 text-[10px] font-medium text-white/40 uppercase tracking-widest">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Firestore Ledger Core Live</span>
+                </div>
+                <span>v3.5 Optimal</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Workspace Frame */}
       <main className="flex-1 py-12 px-4 md:px-8 flex flex-col items-center justify-center gap-8 max-w-7xl mx-auto w-full">
@@ -642,7 +841,7 @@ export default function App() {
               </div>
 
               {/* Secure Registration / Access Form Column */}
-              <div className="lg:col-span-5 flex justify-center lg:justify-end w-full">
+              <div id="registration-container" className="lg:col-span-5 flex justify-center lg:justify-end w-full scroll-mt-24 transition-all duration-300 rounded-3xl">
                 <RegistrationCard 
                   referredBy={referredBy} 
                   referredSource={referredSource}
@@ -652,7 +851,7 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <div key="dashboard" className="w-full flex flex-col items-center gap-8">
+            <div key="dashboard" id="dashboard-container" className="scroll-mt-24 w-full flex flex-col items-center gap-8">
               <DashboardCard
                 name={userProfile.name}
                 userId={userProfile.userId}
@@ -671,6 +870,8 @@ export default function App() {
                 userProfile={userProfile}
                 onClaimDailyReward={handleClaimDailyReward}
                 virtualDays={virtualDays}
+                activeTab={dashboardTab}
+                onActiveTabChange={setDashboardTab}
               />
               <ReferralHistory logs={logs} userId={currentUid || ''} walletBalance={balance} />
             </div>

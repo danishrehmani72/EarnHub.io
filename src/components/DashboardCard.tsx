@@ -60,6 +60,8 @@ interface DashboardCardProps {
   userProfile?: any;
   onClaimDailyReward?: (amount: number) => Promise<void>;
   virtualDays?: number;
+  activeTab?: 'overview' | 'funding' | 'admin' | 'faq';
+  onActiveTabChange?: (tab: 'overview' | 'funding' | 'admin' | 'faq') => void;
 }
 
 export default function DashboardCard({
@@ -80,9 +82,14 @@ export default function DashboardCard({
   userProfile,
   onClaimDailyReward,
   virtualDays = 0,
+  activeTab: activeTabProp,
+  onActiveTabChange,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'funding' | 'admin' | 'faq'>('overview');
+  const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'admin' | 'faq'>('overview');
+  
+  const activeTab = activeTabProp !== undefined ? activeTabProp : activeTabLocal;
+  const setActiveTab = onActiveTabChange !== undefined ? onActiveTabChange : setActiveTabLocal;
   const [adminModeType, setAdminModeType] = useState<'sandbox' | 'platform_global'>('platform_global');
 
   // Cooldown calculation for daily check-in claims
@@ -1102,7 +1109,7 @@ export default function DashboardCard({
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 1. DEPOSIT PORTAL */}
-                <div className="bg-[#161616] border border-white/5 rounded-2xl p-6 space-y-4">
+                <div id="deposit-section" className="bg-[#161616] border border-white/5 rounded-2xl p-6 space-y-4 scroll-mt-24">
                   <div className="flex items-center gap-2 mb-2">
                     <ArrowDownLeft className="w-5 h-5 text-emerald-400" />
                     <h3 className="text-sm font-bold uppercase tracking-wider text-white">Deposit Crypto</h3>
@@ -1185,7 +1192,7 @@ export default function DashboardCard({
                 </div>
 
                 {/* 2. WITHDRAW PORTAL */}
-                <div className="bg-[#161616] border border-white/5 rounded-2xl p-6 space-y-4">
+                <div id="withdraw-section" className="bg-[#161616] border border-white/5 rounded-2xl p-6 space-y-4 scroll-mt-24">
                   <div className="flex items-center gap-2 mb-2">
                     <ArrowUpRight className="w-5 h-5 text-[#D4AF37]" />
                     <h3 className="text-sm font-bold uppercase tracking-wider text-white">Withdraw Funds</h3>
@@ -1525,7 +1532,8 @@ export default function DashboardCard({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className="space-y-6"
+              className="space-y-6 scroll-mt-24"
+              id="faq-section"
             >
               <FaqSection />
             </motion.div>
