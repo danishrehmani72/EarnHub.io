@@ -616,41 +616,41 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-6 md:mx-8 mt-5 gap-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`flex-1 py-3 px-3 rounded-xl text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+          className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
             activeTab === 'overview'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
-          <TrendingUp className="w-3.5 h-3.5" />
-          Overview
+          <TrendingUp className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
+          <span className="truncate">Overview</span>
         </button>
         
         <button
           onClick={() => setActiveTab('funding')}
-          className={`flex-1 py-3 px-3 rounded-xl text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+          className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
             activeTab === 'funding'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
-          <Wallet className="w-3.5 h-3.5" />
-          Funding
+          <Wallet className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
+          <span className="truncate">Funding</span>
         </button>
 
         <button
           onClick={() => setActiveTab('admin')}
-          className={`flex-1 py-3 px-3 rounded-xl text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer relative ${
+          className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer relative ${
             activeTab === 'admin'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          Admin Approvals
+          <ShieldCheck className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
+          <span className="truncate">Approvals</span>
           {((deposits || []).filter(d => d.status === 'pending').length + (withdrawals || []).filter(w => w.status === 'pending').length) > 0 && (
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-[#111111] animate-pulse" />
           )}
@@ -658,14 +658,14 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
         <button
           onClick={() => setActiveTab('faq')}
-          className={`flex-1 py-3 px-3 rounded-xl text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
             activeTab === 'faq'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
-          <HelpCircle className="w-3.5 h-3.5" />
-          FAQ
+          <HelpCircle className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
+          <span className="truncate">FAQ</span>
         </button>
       </div>
 
@@ -1436,30 +1436,30 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               className="space-y-6 text-left"
             >
               {/* ADMIN MODE SELECTOR BUTTONS */}
-              <div className="flex border border-white/5 bg-[#080808] p-1.5 rounded-2xl gap-1.5 mb-2">
+              <div className="flex flex-col sm:flex-row border border-white/5 bg-[#080808] p-1.5 rounded-2xl gap-1.5 mb-2">
                 <button
                   type="button"
                   onClick={() => setAdminModeType('platform_global')}
-                  className={`flex-1 py-2.5 px-3 rounded-xl text-[9px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`w-full sm:flex-1 py-2.5 px-3 rounded-xl text-[9px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
                     adminModeType === 'platform_global'
                       ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
                       : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
                   }`}
                 >
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  🏆 Super Ultimate Console (Database-wide)
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                  <span className="truncate">🏆 Super Console (Database-wide)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setAdminModeType('sandbox')}
-                  className={`flex-1 py-2.5 px-3 rounded-xl text-[9px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`w-full sm:flex-1 py-2.5 px-3 rounded-xl text-[9px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
                     adminModeType === 'sandbox'
                       ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
                       : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
                   }`}
                 >
-                  <RefreshCw className="w-3.5 h-3.5 text-sky-400" />
-                  Sandbox Approvals (Own Account Demo)
+                  <RefreshCw className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                  <span className="truncate">Sandbox Approvals (Own Demo)</span>
                 </button>
               </div>
 
