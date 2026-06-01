@@ -272,28 +272,40 @@ export default function App() {
   // Handle URL invitation referral links
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const refId = params.get('ref');
-      const src = params.get('src');
-      if (refId) {
-        setReferredBy(refId);
-        if (src) {
-          setReferredSource(src);
-        }
+      try {
+        const params = new URLSearchParams(window.location.search);
+        let refId = params.get('ref')?.trim() || null;
+        const src = params.get('src')?.trim() || null;
         
-        // Fetch the genuine referrer profile state to display welcoming message
-        const fetchReferrer = async () => {
-          try {
-            const inviterRef = doc(db, 'users', refId);
-            const inviterSnap = await getDoc(inviterRef);
-            if (inviterSnap.exists()) {
-              setInviterName(inviterSnap.data().name);
+        if (refId) {
+          // Remove trailing slashes and spaces often appended by messaging clients (e.g. WhatsApp, Facebook)
+          refId = refId.replace(/\/+$/, '').trim();
+          
+          // Verify ID only contains valid characters (no spaces, no slashes, matching standard format)
+          const isValidFormat = /^[a-zA-Z0-9_\-.@]+$/.test(refId);
+          if (isValidFormat && refId.length > 0) {
+            setReferredBy(refId);
+            if (src) {
+              setReferredSource(src);
             }
-          } catch (e) {
-            console.error("Could not fetch welcome partner data:", e);
+            
+            // Fetch the genuine referrer profile state to display welcoming message
+            const fetchReferrer = async () => {
+              try {
+                const inviterRef = doc(db, 'users', refId!);
+                const inviterSnap = await getDoc(inviterRef);
+                if (inviterSnap.exists()) {
+                  setInviterName(inviterSnap.data().name);
+                }
+              } catch (e) {
+                console.error("Could not fetch welcome partner data:", e);
+              }
+            };
+            fetchReferrer();
           }
-        };
-        fetchReferrer();
+        }
+      } catch (err) {
+        console.error("Error parsing referral link parameter safely:", err);
       }
     }
   }, []);

@@ -95,9 +95,51 @@ export default function DashboardCard({
   // Cooldown calculation for daily check-in claims
   const [claimCooldown, setClaimCooldown] = useState('');
 
+type CurrencyCode = 'USD' | 'PKR' | 'AFN' | 'INR' | 'EUR' | 'GBP' | 'IDR' | 'OMR' | 'MYR' | 'PHP';
+
+const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number }> = {
+  USD: { symbol: '$', rate: 1 },
+  PKR: { symbol: '₨ ', rate: 280 },
+  AFN: { symbol: '؋', rate: 70 },
+  INR: { symbol: '₹', rate: 83.5 },
+  EUR: { symbol: '€', rate: 0.92 },
+  GBP: { symbol: '£', rate: 0.78 },
+  IDR: { symbol: 'Rp ', rate: 16200 },
+  OMR: { symbol: 'OMR ', rate: 0.38 },
+  MYR: { symbol: 'RM ', rate: 4.70 },
+  PHP: { symbol: '₱', rate: 58.5 },
+};
+
+  // Currency conversion configuration (persistent via localStorage)
+  const [currency, setCurrency] = useState<CurrencyCode>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('currency_preference') as CurrencyCode) || 'USD';
+    }
+    return 'USD';
+  });
+
+  const activeConf = SUPPORTED_CURRENCIES[currency] || SUPPORTED_CURRENCIES.USD;
+  const conversionRate = activeConf.rate;
+  const currencySymbol = activeConf.symbol;
+
+  const currencyRef = useRef(currency);
+  useEffect(() => {
+    currencyRef.current = currency;
+  }, [currency]);
+
+  const changeCurrency = (curr: CurrencyCode) => {
+    setCurrency(curr);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('currency_preference', curr);
+    }
+  };
+
   // Live balance counting animation using motion/react
   const motionBalance = useMotionValue(balance);
-  const animatedBalanceDisplay = useTransform(motionBalance, (val) => val.toFixed(2));
+  const animatedBalanceDisplay = useTransform(motionBalance, (val) => {
+    const activeConf = SUPPORTED_CURRENCIES[currencyRef.current] || SUPPORTED_CURRENCIES.USD;
+    return (val * activeConf.rate).toFixed(2);
+  });
 
   // Balance change visual flash effects
   const [flashType, setFlashType] = useState<'up' | 'down' | null>(null);
@@ -207,11 +249,12 @@ export default function DashboardCard({
     setDepError('');
     setDepSuccess('');
 
-    const amt = parseFloat(depAmount);
-    if (!amt || amt <= 0) {
+    const amtInput = parseFloat(depAmount);
+    if (!amtInput || amtInput <= 0) {
       setDepError('Please enter a valid positive deposit amount.');
       return;
     }
+    const amtUSD = amtInput / conversionRate;
     if (!depTxHash.trim()) {
       setDepError('Please provide the transaction hash / TXHash for validation.');
       return;
@@ -220,7 +263,7 @@ export default function DashboardCard({
     setSubmitting(true);
     try {
       if (onCreateDeposit) {
-        await onCreateDeposit(amt, depNetwork, depTxHash.trim());
+        await onCreateDeposit(amtUSD, depNetwork, depTxHash.trim());
         setDepSuccess('Transaction Proof Submitted! Admin approval pending.');
         setDepAmount('');
         setDepTxHash('');
@@ -240,17 +283,18 @@ export default function DashboardCard({
     setWithdrawError('');
     setWithdrawSuccess('');
 
-    const amt = parseFloat(withdrawAmount);
-    if (!amt || amt <= 0) {
+    const amtInput = parseFloat(withdrawAmount);
+    if (!amtInput || amtInput <= 0) {
       setWithdrawError('Please enter a valid positive withdrawal amount.');
       return;
     }
-    if (amt < 10) {
-      setWithdrawError('Payout request amount too low. Transaction threshold not met.');
+    const amtUSD = amtInput / conversionRate;
+    if (amtUSD < 10) {
+      setWithdrawError(`Payout request amount too low. Transaction threshold not met (min $10.00 / ${currencySymbol}${(10 * conversionRate).toFixed(0)}).`);
       return;
     }
-    if (amt > balance) {
-      setWithdrawError(`Insufficient funds. Your live balance is $${balance.toFixed(2)}.`);
+    if (amtUSD > balance) {
+      setWithdrawError(`Insufficient funds. Your live balance is ${currencySymbol}${(balance * conversionRate).toFixed(2)}.`);
       return;
     }
     const isEasyPaisaOrJazzCash = withdrawNetwork === 'EASYPAISA' || withdrawNetwork === 'JAZZCASH';
@@ -267,7 +311,7 @@ export default function DashboardCard({
     setSubmitting(true);
     try {
       if (onCreateWithdrawal) {
-        await onCreateWithdrawal(amt, withdrawNetwork, withdrawWallet.trim());
+        await onCreateWithdrawal(amtUSD, withdrawNetwork, withdrawWallet.trim());
         setWithdrawSuccess('Withdrawal Request Saved! Admin approval pending.');
         setWithdrawAmount('');
         setWithdrawWallet('');
@@ -538,15 +582,35 @@ export default function DashboardCard({
             </div>
           </div>
 
-          {onSignOut && (
-            <button
-              onClick={onSignOut}
-              className="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-white/60 hover:text-red-400 transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center bg-black/40"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              Sign Out
-            </button>
-          )}
+          <div className="flex items-center gap-3 self-start sm:self-center">
+            {/* Currency Selector */}
+            <div className="flex items-center gap-1.5 bg-black/50 border border-white/10 rounded-xl px-2.5 h-8 text-[9px] font-extrabold select-none shadow-inner relative hover:border-[#D4AF37]/35 active:border-[#D4AF37]/50 transition-all text-white/80">
+              <span className="text-[#D4AF37]">🌐</span>
+              <select
+                value={currency}
+                onChange={(e) => changeCurrency(e.target.value as CurrencyCode)}
+                className="bg-transparent border-none outline-none pr-2.5 py-1 text-white uppercase text-[9px] font-extrabold cursor-pointer appearance-none transition-all flex items-center justify-center leading-none"
+                style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+              >
+                {Object.keys(SUPPORTED_CURRENCIES).map((code) => (
+                  <option key={code} value={code} className="bg-[#111111] text-white/90 py-1 text-xs">
+                    {code} ({SUPPORTED_CURRENCIES[code as CurrencyCode].symbol.trim()})
+                  </option>
+                ))}
+              </select>
+              <span className="text-white/30 text-[7px] pointer-events-none absolute right-2">▼</span>
+            </div>
+
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                className="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-white/60 hover:text-red-400 transition-all cursor-pointer flex items-center gap-1.5 bg-black/40 h-8"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                Sign Out
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -676,7 +740,7 @@ export default function DashboardCard({
                       ? 'text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]'
                       : 'text-[#D4AF37]'
                   }`}>
-                    $<motion.span>{animatedBalanceDisplay}</motion.span>
+                    {currencySymbol}<motion.span key={currency}>{animatedBalanceDisplay}</motion.span>
                   </div>
                   <div className={`text-[8.5px] font-medium flex items-center gap-1 z-10 leading-normal transition-all duration-300 ${
                     flashType === 'up'
@@ -715,14 +779,17 @@ export default function DashboardCard({
                     </span>
                   </div>
                   <div className="my-1 font-serif text-white/90 text-2xl tracking-tight z-10 leading-none">
-                    ${totalApprovedDepositsSum.toFixed(2)}
+                    {currencySymbol}{(totalApprovedDepositsSum * conversionRate).toFixed(2)}
                     <span className="block text-[8.5px] font-sans text-white/30 tracking-widest uppercase font-semibold mt-1">
                       Active Deposit Plan
                     </span>
                   </div>
                   <div className="text-[8.5px] text-[#D4AF37] font-semibold flex items-center gap-1 z-10 leading-normal">
                     <Coins className="w-2.5 h-2.5 text-[#D4AF37] shrink-0" /> 
-                    {hasActivePlan ? `Payout: +$${dailyProfitRate.toFixed(2)} / 24h` : "Requires min $5 deposit"}
+                    {hasActivePlan 
+                      ? `Payout: +${currencySymbol}${(dailyProfitRate * conversionRate).toFixed(2)} / 24h` 
+                      : `Requires min ${currencySymbol}${(5 * conversionRate).toFixed(0)} deposit`
+                    }
                   </div>
                 </div>
 
@@ -789,7 +856,7 @@ export default function DashboardCard({
                       <div className="space-y-2">
                         <h5 className="text-lg md:text-2xl font-extrabold text-amber-500 uppercase tracking-wide">Level 1 - Bronze</h5>
                         <p className="text-sm md:text-lg text-white/80 font-medium">
-                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">$5 - $14</strong>
+                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">{currencySymbol}{(5 * conversionRate).toFixed(0)} - {currencySymbol}{(14 * conversionRate).toFixed(0)}</strong>
                         </p>
                       </div>
                     </div>
@@ -810,7 +877,7 @@ export default function DashboardCard({
                       <div className="space-y-2">
                         <h5 className="text-lg md:text-2xl font-extrabold text-indigo-400 uppercase tracking-wide">Level 2 - Silver</h5>
                         <p className="text-sm md:text-lg text-white/80 font-medium">
-                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">$15 - $49</strong>
+                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">{currencySymbol}{(15 * conversionRate).toFixed(0)} - {currencySymbol}{(49 * conversionRate).toFixed(0)}</strong>
                         </p>
                       </div>
                     </div>
@@ -831,7 +898,7 @@ export default function DashboardCard({
                       <div className="space-y-2">
                         <h5 className="text-lg md:text-2xl font-extrabold text-yellow-500 uppercase tracking-wide">Level 3 - Gold</h5>
                         <p className="text-sm md:text-lg text-white/80 font-medium">
-                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">$50 - $99</strong>
+                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">{currencySymbol}{(50 * conversionRate).toFixed(0)} - {currencySymbol}{(99 * conversionRate).toFixed(0)}</strong>
                         </p>
                       </div>
                     </div>
@@ -852,7 +919,7 @@ export default function DashboardCard({
                       <div className="space-y-2">
                         <h5 className="text-lg md:text-2xl font-extrabold text-[#D4AF37] uppercase tracking-wide">Level 4 - Platinum</h5>
                         <p className="text-sm md:text-lg text-white/80 font-medium">
-                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">$100+</strong>
+                          Deposit: <strong className="text-white font-mono text-base md:text-xl font-bold">{currencySymbol}{(100 * conversionRate).toFixed(0)}+</strong>
                         </p>
                       </div>
                     </div>
@@ -892,7 +959,7 @@ export default function DashboardCard({
                         fontSize={9} 
                         tickLine={false} 
                         axisLine={false}
-                        tickFormatter={(val) => `$${val}`}
+                        tickFormatter={(val) => `${currencySymbol.trim()}${(val * conversionRate).toFixed(0)}`}
                       />
                       <Tooltip 
                         cursor={{ stroke: 'rgba(212, 175, 55, 0.1)', strokeWidth: 1 }}
@@ -904,7 +971,7 @@ export default function DashboardCard({
                                   {payload[0].payload.label}
                                 </p>
                                 <p className="text-[#D4AF37] font-bold font-mono text-xs">
-                                  Balance: ${Number(payload[0].value).toFixed(2)}
+                                  Balance: {currencySymbol}{Number(Number(payload[0].value) * conversionRate).toFixed(2)}
                                 </p>
                               </div>
                             );
@@ -952,7 +1019,7 @@ export default function DashboardCard({
                         fontSize={9} 
                         tickLine={false} 
                         axisLine={false}
-                        tickFormatter={(val) => `$${val}`}
+                        tickFormatter={(val) => `${currencySymbol.trim()}${(val * conversionRate).toFixed(0)}`}
                       />
                       <Tooltip 
                         cursor={{ fill: 'rgba(255, 255, 255, 0.02)' }}
@@ -964,7 +1031,7 @@ export default function DashboardCard({
                                   {payload[0].payload.fullDate}
                                 </p>
                                 <p className="text-emerald-400 font-bold font-mono text-xs">
-                                  Referrals: ${Number(payload[0].value).toFixed(2)}
+                                  Referrals: {currencySymbol}{Number(Number(payload[0].value) * conversionRate).toFixed(2)}
                                 </p>
                               </div>
                             );
@@ -994,7 +1061,7 @@ export default function DashboardCard({
                       : flashType === 'down'
                       ? 'text-rose-400'
                       : 'text-[#D4AF37]'
-                  }`}>$<motion.span>{animatedBalanceDisplay}</motion.span> / ${nextMilestone.toFixed(2)}</span>
+                  }`}>{currencySymbol}<motion.span key={currency}>{animatedBalanceDisplay}</motion.span> / {currencySymbol}{(nextMilestone * conversionRate).toFixed(2)}</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                   <div 
@@ -1010,7 +1077,7 @@ export default function DashboardCard({
                 </div>
                 <div className="flex justify-between items-center text-[9px] text-white/30 uppercase tracking-[0.15em] pt-0.5">
                   <span>Diamond tier progress</span>
-                  <span>Next milestone at ${nextMilestone}</span>
+                  <span>Next milestone at {currencySymbol}{(nextMilestone * conversionRate).toFixed(0)}</span>
                 </div>
               </div>
 
@@ -1034,7 +1101,7 @@ export default function DashboardCard({
                   
                   <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-lg py-1 px-3 text-right">
                     <span className="text-[8px] text-white/45 uppercase block">Total Dividends</span>
-                    <span className="text-xs font-mono font-bold text-[#D4AF37]">+${(userProfile?.dailyBonusEarnings || 0).toFixed(2)}</span>
+                    <span className="text-xs font-mono font-bold text-[#D4AF37]">+{currencySymbol}{((userProfile?.dailyBonusEarnings || 0) * conversionRate).toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -1061,7 +1128,7 @@ export default function DashboardCard({
                         const claimAmt = Number((Math.random() * (maxAmt - minAmt) + minAmt).toFixed(2));
                         
                         await onClaimDailyReward(claimAmt);
-                        onAddToast(`Daily dividends of $${claimAmt.toFixed(2)} credited! Keep checking in daily! 🪙`, 'success', 'new_referral');
+                        onAddToast(`Daily dividends of ${currencySymbol}${(claimAmt * conversionRate).toFixed(2)} credited! Keep checking in daily! 🪙`, 'success', 'new_referral');
                       }
                     }}
                     className={`px-5 py-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-200 outline-none cursor-pointer w-full sm:w-auto ${
@@ -1221,10 +1288,10 @@ export default function DashboardCard({
 
                     {/* Amount Block */}
                     <div className="space-y-1.5">
-                      <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Amount ($ / USDT Equiv.)</label>
+                      <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Amount ({currencySymbol} Equiv.)</label>
                       <input
                         type="number"
-                        placeholder="Enter amount eg: 100"
+                        placeholder={`Enter amount eg: ${(100 * conversionRate).toFixed(0)}`}
                         value={depAmount}
                         onChange={(e) => setDepAmount(e.target.value)}
                         className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/50"
@@ -1310,13 +1377,13 @@ export default function DashboardCard({
                     {/* Amount Block */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center mb-1">
-                        <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Amount to Withdraw ($)</label>
+                        <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Amount to Withdraw ({currency})</label>
                         <button
                           type="button"
-                          onClick={() => setWithdrawAmount(balance.toFixed(2))}
+                          onClick={() => setWithdrawAmount((balance * conversionRate).toFixed(2))}
                           className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-wider hover:underline"
                         >
-                          Max Value: ${balance.toFixed(2)}
+                          Max Value: {currencySymbol}{(balance * conversionRate).toFixed(2)}
                         </button>
                       </div>
                       <input
@@ -1384,7 +1451,7 @@ export default function DashboardCard({
                               <tr key={dep.id} className="text-white/80">
                                 <td className="py-2.5 text-[10px] font-mono text-white/40">{dep.timestamp}</td>
                                 <td className="py-2.5 font-bold uppercase text-white">{dep.network}</td>
-                                <td className="py-2.5 font-medium text-[#D4AF37]">${dep.amount.toFixed(2)}</td>
+                                <td className="py-2.5 font-medium text-[#D4AF37]">{currencySymbol}{(dep.amount * conversionRate).toFixed(2)}</td>
                                 <td className="py-2.5 font-mono text-white/40 text-[9px] truncate max-w-[120px]" title={dep.txHash}>{dep.txHash}</td>
                                 <td className="py-2.5 text-right font-bold uppercase tracking-wider text-[9px]">
                                   {dep.status === 'pending' && <span className="text-amber-500 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">Pending Validation</span>}
@@ -1426,7 +1493,7 @@ export default function DashboardCard({
                                 <td className="py-2.5 text-[10px] font-mono text-white/40">{wit.timestamp}</td>
                                 <td className="py-2.5 font-bold uppercase text-white">{wit.network}</td>
                                 <td className="py-2.5 font-mono text-white/40 text-[9px] truncate max-w-[120px]" title={wit.wallet}>{wit.wallet}</td>
-                                <td className="py-2.5 font-medium text-[#D4AF37]">${wit.amount.toFixed(2)}</td>
+                                <td className="py-2.5 font-medium text-[#D4AF37]">{currencySymbol}{(wit.amount * conversionRate).toFixed(2)}</td>
                                 <td className="py-2.5 text-right font-bold uppercase tracking-wider text-[9px]">
                                   {wit.status === 'pending' && <span className="text-amber-500 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">Pending Approval</span>}
                                   {wit.status === 'approved' && <span className="text-emerald-400 font-semibold bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-md">Disbursed</span>}
@@ -1515,7 +1582,7 @@ export default function DashboardCard({
                                 <span className="text-white/80 font-bold uppercase tracking-wider">{dep.network} Network</span>
                                 <span className="text-white/40 font-mono text-[9px]">{dep.timestamp}</span>
                               </div>
-                              <p className="text-sm font-black font-mono text-[#D4AF37]">${dep.amount.toFixed(2)} USD value</p>
+                              <p className="text-sm font-black font-mono text-[#D4AF37]">{currencySymbol}{(dep.amount * conversionRate).toFixed(2)} {currency} Equiv</p>
                               <p className="text-[9px] font-mono text-white/40 break-all select-all focus:bg-white/5" title="TXHSID">TXHash: {dep.txHash}</p>
                             </div>
 
@@ -1562,7 +1629,7 @@ export default function DashboardCard({
                                 </span>
                                 <span className="text-white/40 font-mono text-[9px]">{wit.timestamp}</span>
                               </div>
-                              <p className="text-sm font-black font-mono text-rose-400">${wit.amount.toFixed(2)} USD requested</p>
+                              <p className="text-sm font-black font-mono text-rose-400">{currencySymbol}{(wit.amount * conversionRate).toFixed(2)} {currency} Equiv</p>
                               <p className="text-[9px] font-mono text-white/40 break-all select-all" title="Receiver">
                                 {wit.network === 'EASYPAISA' || wit.network === 'JAZZCASH' ? 'Receiver Account/Title: ' : 'Destination wallet: '}
                                 {wit.wallet}
