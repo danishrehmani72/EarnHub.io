@@ -560,9 +560,12 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       className="w-full max-w-2xl bg-[#111111] rounded-3xl border border-white/5 shadow-2xl shadow-[#020202]/80 overflow-hidden text-[#E5E7EB]"
     >
       {/* Header with User summary */}
-      <div className="bg-[#0C0C0C] border-b border-white/5 p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-24 h-24 bg-[#8A6D3B]/5 rounded-full blur-2xl pointer-events-none" />
+      <div 
+        className="bg-[#0C0C0C] border-b border-white/5 p-6 md:p-8 relative overflow-hidden"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(212, 175, 55, 0.05) 0%, rgba(0, 0, 0, 0) 70%), radial-gradient(circle at 30% 100%, rgba(138, 109, 59, 0.03) 0%, rgba(0, 0, 0, 0) 60%)'
+        }}
+      >
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-4">

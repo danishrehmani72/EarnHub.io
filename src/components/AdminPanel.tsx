@@ -447,8 +447,12 @@ export default function AdminPanel({ onAddToast, currentUserId }: AdminPanelProp
   // Render Login state first
   if (!isAdminAuthenticated) {
     return (
-      <div className="max-w-md mx-auto bg-[#111111] border border-white/10 rounded-2xl p-6 md:p-8 space-y-6 text-left shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+      <div 
+        className="max-w-md mx-auto bg-[#111111] border border-white/10 rounded-2xl p-6 md:p-8 space-y-6 text-left shadow-2xl relative overflow-hidden"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(212, 175, 55, 0.05) 0%, rgba(0, 0, 0, 0) 70%)'
+        }}
+      >
         
         <div className="text-center space-y-2">
           <div className="w-12 h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-2xl flex items-center justify-center mx-auto text-[#D4AF37] shadow-xl">
