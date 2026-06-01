@@ -60,8 +60,12 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       setError('Please select a unique User ID.');
       return;
     }
-    if (!/^[a-zA-Z0-9_\- .@]+$/.test(userId.trim())) {
-      setError('User ID can only contain letters, numbers, spaces, underscores, hyphens, dots, or @ symbols.');
+    if (userId.includes(' ')) {
+      setError('User ID cannot contain space characters.');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_\-.@]+$/.test(userId.trim())) {
+      setError('User ID can only contain letters, numbers, underscores, hyphens, dots, or @ symbols.');
       return;
     }
     if (!name.trim()) {
@@ -360,11 +364,12 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             <input
               id="userid-input"
               type="text"
-              placeholder="e.g. alex_miller"
+              placeholder="e.g. Alexmiller123"
               value={userId}
               onChange={(e) => {
-                setUserId(e.target.value);
-                if (e.target.value.trim()) setError('');
+                const cleanVal = e.target.value.replace(/\s+/g, '');
+                setUserId(cleanVal);
+                if (cleanVal) setError('');
               }}
               className="w-full px-4 py-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-[#E5E7EB] placeholder-white/20 font-sans focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all duration-200"
             />
