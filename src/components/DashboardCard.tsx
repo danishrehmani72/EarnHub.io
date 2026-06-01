@@ -334,21 +334,53 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     }
   };
 
-  // --- Investment & Plan calculations ---
+  // --- Investment & Plan calculations (proportional adjustment based on withdrawals) ---
   const approvedDeposits = useMemo(() => {
     return (deposits || []).filter(d => d.status === 'approved');
   }, [deposits]);
 
-  const totalApprovedDepositsSum = useMemo(() => {
-    return approvedDeposits.reduce((sum, d) => sum + d.amount, 0);
-  }, [approvedDeposits]);
+  // FIFO Deduction of approved withdrawals to adjust active remaining plan deposits
+  const activeRemainingDeposits = useMemo(() => {
+    const approvedWithdrawalsSum = (withdrawals || [])
+      .filter(w => w.status === 'approved')
+      .reduce((sum, w) => sum + w.amount, 0);
 
-  const hasActivePlan = approvedDeposits.some(d => d.amount >= 5);
+    let remainingWithdrawalsToDeduct = approvedWithdrawalsSum;
+    
+    // Deep copies to avoid side-effects on props
+    const activeDeps = approvedDeposits.map(d => ({ ...d }));
+
+    // Sort ascending by timestamp (FIFO)
+    const sortedActiveDeps = [...activeDeps].sort((a, b) => {
+      const aTime = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.timestamp).getTime() || 0;
+      const bTime = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.timestamp).getTime() || 0;
+      return aTime - bTime;
+    });
+
+    for (const dep of sortedActiveDeps) {
+      if (remainingWithdrawalsToDeduct <= 0) break;
+      if (dep.amount <= remainingWithdrawalsToDeduct) {
+        remainingWithdrawalsToDeduct -= dep.amount;
+        dep.amount = 0;
+      } else {
+        dep.amount -= remainingWithdrawalsToDeduct;
+        remainingWithdrawalsToDeduct = 0;
+      }
+    }
+
+    return sortedActiveDeps.filter(d => d.amount > 0);
+  }, [approvedDeposits, withdrawals]);
+
+  const totalApprovedDepositsSum = useMemo(() => {
+    return activeRemainingDeposits.reduce((sum, d) => sum + d.amount, 0);
+  }, [activeRemainingDeposits]);
+
+  const hasActivePlan = activeRemainingDeposits.some(d => d.amount >= 5);
   const activePlanStatus = hasActivePlan ? 'Active Plan' : 'Inactive Plan';
 
-  // Calculate sum of daily performance percentages of all approved deposits
+  // Calculate sum of daily performance percentages of all surviving active plan deposits
   const dailyProfitRate = useMemo(() => {
-    return approvedDeposits.reduce((sum, dep) => {
+    return activeRemainingDeposits.reduce((sum, dep) => {
       let percent = 0;
       if (dep.amount >= 100) percent = 7;
       else if (dep.amount >= 50) percent = 5;
@@ -356,16 +388,16 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       else if (dep.amount >= 5) percent = 3;
       return sum + (dep.amount * (percent / 100));
     }, 0);
-  }, [approvedDeposits]);
+  }, [activeRemainingDeposits]);
 
   const earliestApprovedDeposit = useMemo(() => {
-    if (approvedDeposits.length === 0) return null;
-    return [...approvedDeposits].sort((a, b) => {
+    if (activeRemainingDeposits.length === 0) return null;
+    return [...activeRemainingDeposits].sort((a, b) => {
       const aTime = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.timestamp).getTime() || 0;
       const bTime = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.timestamp).getTime() || 0;
       return aTime - bTime;
     })[0];
-  }, [approvedDeposits]);
+  }, [activeRemainingDeposits]);
 
   const [timeRemaining, setTimeRemaining] = useState('24h 00m 00s');
 

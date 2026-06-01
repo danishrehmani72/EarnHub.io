@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   doc, 
   collection, 
@@ -541,14 +541,42 @@ export default function App() {
   const approvedWithdrawals = withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + w.amount, 0);
   const dailyBonusEarnings = userProfile?.dailyBonusEarnings !== undefined ? userProfile.dailyBonusEarnings : 0;
 
-  // Calculate real-time profit accrued on each approved deposit of $5+
+  // FIFO Deduction of approved withdrawals to adjust active remaining plan deposits
+  const activeRemainingDepositsList = useMemo(() => {
+    let remainingWithdrawalsToDeduct = approvedWithdrawals;
+    
+    // Deep copies to avoid side-effects
+    const activeDeps = approvedDepositsList.map(d => ({ ...d }));
+
+    // Sort ascending by timestamp (FIFO)
+    const sortedActiveDeps = [...activeDeps].sort((a, b) => {
+      const aTime = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.timestamp).getTime() || 0;
+      const bTime = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.timestamp).getTime() || 0;
+      return aTime - bTime;
+    });
+
+    for (const dep of sortedActiveDeps) {
+      if (remainingWithdrawalsToDeduct <= 0) break;
+      if (dep.amount <= remainingWithdrawalsToDeduct) {
+        remainingWithdrawalsToDeduct -= dep.amount;
+        dep.amount = 0;
+      } else {
+        dep.amount -= remainingWithdrawalsToDeduct;
+        remainingWithdrawalsToDeduct = 0;
+      }
+    }
+
+    return sortedActiveDeps.filter(d => d.amount > 0);
+  }, [approvedDepositsList, approvedWithdrawals]);
+
+  // Calculate real-time profit accrued on each remaining active approved deposit of $5+
   // - $5 to $14.99: 3% daily rate
   // - $15 to $49.99: 4% daily rate
   // - $50 to $99.99: 5% daily rate
   // - $100+: 7% daily rate
   // Dynamic percentages respect virtual/advanced days simulator instantly.
   const nowTime = Date.now();
-  const investmentProfits = approvedDepositsList.reduce((sum, dep) => {
+  const investmentProfits = activeRemainingDepositsList.reduce((sum, dep) => {
     const depTime = dep.createdAt?.seconds 
       ? dep.createdAt.seconds * 1000 
       : new Date(dep.timestamp).getTime() || nowTime;

@@ -363,8 +363,17 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
     type: 'deposit' | 'withdrawal',
     userUid: string,
     txId: string,
-    action: 'approved' | 'rejected'
+    action: 'approved' | 'rejected',
+    amount?: number,
+    userName?: string
   ) => {
+    const actionLabel = action === 'approved' ? 'APPROVE' : 'REJECT / DENY';
+    const amountStr = amount !== undefined ? ` of $${amount.toFixed(2)}` : '';
+    const userStr = userName ? ` for ${userName}` : '';
+    if (!window.confirm(`⚠️ CONFIRMATION REQUIRED:\n\nAre you sure you want to ${actionLabel} this ${type} verification request${amountStr}${userStr}?\n\nThis action will update the ledger live.`)) {
+      return;
+    }
+
     setProcessingTxId(txId);
     setBlockchainHash(null);
 
@@ -804,14 +813,14 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                       
                       <button
                         disabled={isProcessing}
-                        onClick={() => handleAdminVerifyTx(item.type, item.userUid, tx.id, 'approved')}
+                        onClick={() => handleAdminVerifyTx(item.type, item.userUid, tx.id, 'approved', Number(tx.amount), item.userName)}
                         className="w-full sm:w-auto px-4 py-2 rounded-lg border border-emerald-500/35 text-emerald-400 hover:bg-emerald-500/10 active:scale-95 transition-all text-[9px] font-black uppercase tracking-[0.15em] cursor-pointer disabled:opacity-50"
                       >
                         {isDeposit ? 'Approve Token Credit' : 'Disburse Outbound'}
                       </button>
                       <button
                         disabled={isProcessing}
-                        onClick={() => handleAdminVerifyTx(item.type, item.userUid, tx.id, 'rejected')}
+                        onClick={() => handleAdminVerifyTx(item.type, item.userUid, tx.id, 'rejected', Number(tx.amount), item.userName)}
                         className="w-full sm:w-auto px-4 py-2 rounded-lg border border-rose-500/35 text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all text-[9px] font-black uppercase tracking-[0.15em] cursor-pointer disabled:opacity-50"
                       >
                         Deny / Flag Status
