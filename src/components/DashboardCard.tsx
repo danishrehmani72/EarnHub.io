@@ -64,8 +64,8 @@ interface DashboardCardProps {
   userProfile?: any;
   onClaimDailyReward?: (amount: number) => Promise<void>;
   virtualDays?: number;
-  activeTab?: 'overview' | 'funding' | 'faq' | 'plans';
-  onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq' | 'plans') => void;
+  activeTab?: 'overview' | 'funding' | 'faq';
+  onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq') => void;
 }
 
 export default function DashboardCard({
@@ -93,7 +93,7 @@ export default function DashboardCard({
   onActiveTabChange,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
-  const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq' | 'plans'>('overview');
+  const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq'>('overview');
   
   const activeTab = activeTabProp !== undefined ? activeTabProp : activeTabLocal;
   const setActiveTab = onActiveTabChange !== undefined ? onActiveTabChange : setActiveTabLocal;
@@ -623,7 +623,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       </div>
 
       {/* Navigation Tabs */}
-      <div className="grid grid-cols-4 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
+      <div className="grid grid-cols-3 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
         <button
           onClick={() => setActiveTab('overview')}
           className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
@@ -636,18 +636,6 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           <span className="truncate hidden sm:inline">Overview</span>
         </button>
         
-        <button
-          onClick={() => setActiveTab('plans')}
-          className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
-            activeTab === 'plans'
-              ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
-              : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="truncate hidden sm:inline">Plans</span>
-        </button>
-
         <button
           onClick={() => setActiveTab('funding')}
           className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
@@ -707,7 +695,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               </div>
 
               {/* Dynamic Cards: Balance, Investment, Timer, Referrals */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
                 
                 {/* 1. Live Wallet Balance */}
                 <div id="live-wallet-balance-card" className={`p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden shadow-inner border transition-all duration-500 ${
@@ -764,41 +752,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   </div>
                 </div>
 
-                {/* 2. Active Investment Package */}
-                <div className={`border rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden transition-all ${
-                  hasActivePlan 
-                    ? 'bg-[#161616] border-emerald-500/15' 
-                    : 'bg-[#161616] border-white/5'
-                }`}>
-                  <div className="absolute -top-4 -right-4 text-emerald-500/5 pointer-events-none">
-                    <Coins className="w-20 h-20" />
-                  </div>
-                  <div className="flex items-center justify-between z-10">
-                    <span className="text-[10px] uppercase tracking-[0.12em] text-white/40 font-bold">Plan Statistics</span>
-                    <span className={`text-[8px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded ${
-                      hasActivePlan 
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                        : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
-                    }`}>
-                      {activePlanStatus}
-                    </span>
-                  </div>
-                  <div className="my-1 font-serif text-white/90 text-2xl tracking-tight z-10 leading-none">
-                    {currencySymbol}{(totalActiveInvestedSum * conversionRate).toFixed(2)}
-                    <span className="block text-[8.5px] font-sans text-white/30 tracking-widest uppercase font-semibold mt-1">
-                      Active Deposit Plan
-                    </span>
-                  </div>
-                  <div className="text-[8.5px] text-[#D4AF37] font-semibold flex items-center gap-1 z-10 leading-normal">
-                    <Coins className="w-2.5 h-2.5 text-[#D4AF37] shrink-0" /> 
-                    {hasActivePlan 
-                      ? `Payout: +${currencySymbol}${(dailyProfitRate * conversionRate).toFixed(2)} / 24h` 
-                      : `Requires min ${currencySymbol}${(5 * conversionRate).toFixed(0)} deposit`
-                    }
-                  </div>
-                </div>
-
-                {/* 3. Next Daily Payout Timer */}
+                {/* 2. Next Daily Payout Timer */}
                 <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden">
                   <div className="absolute -top-4 -right-4 text-white/5 pointer-events-none font-black text-6xl select-none">
                     T
@@ -818,7 +772,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   </div>
                 </div>
 
-                {/* 4. Total Referrals */}
+                {/* 3. Total Referrals */}
                 <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden">
                   <div className="absolute -top-4 -right-4 text-white/5 pointer-events-none">
                     <Users className="w-20 h-20" />
@@ -839,7 +793,14 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
               </div>
 
-
+              <PlanMatrix
+                balance={balance}
+                investments={investments}
+                onCreatePlan={onCreatePlan!}
+                onCancelPlan={onCancelPlan!}
+                currencySymbol={currencySymbol}
+                conversionRate={conversionRate}
+              />
 
               {/* Dynamic Earnings Growth Over Time Chart */}
               <div className="bg-white/[0.02] rounded-2xl border border-white/5 p-5 space-y-4">
@@ -1152,17 +1113,6 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 </div>
               </div>
             </motion.div>
-          )}
-
-          {activeTab === 'plans' && (
-            <PlanMatrix
-              balance={balance}
-              investments={investments}
-              onCreatePlan={onCreatePlan!}
-              onCancelPlan={onCancelPlan!}
-              currencySymbol={currencySymbol}
-              conversionRate={conversionRate}
-            />
           )}
 
           {activeTab === 'funding' && (

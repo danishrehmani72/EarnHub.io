@@ -13,10 +13,10 @@ interface PlanMatrixProps {
 }
 
 const PLANS = [
-  { id: 'bronze', name: 'Bronze', min: 5, max: 14.99, dailyProfit: 3, color: 'text-amber-600', bg: 'bg-amber-600/10', border: 'border-amber-600/30' },
-  { id: 'silver', name: 'Silver', min: 15, max: 49.99, dailyProfit: 4, color: 'text-slate-400', bg: 'bg-slate-400/10', border: 'border-slate-400/30' },
-  { id: 'gold', name: 'Gold', min: 50, max: 99.99, dailyProfit: 5, color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/30' },
-  { id: 'platinum', name: 'Platinum', min: 100, max: Infinity, dailyProfit: 7, color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10', border: 'border-[#D4AF37]/30' },
+  { id: 'bronze', name: 'Bronze', min: 5, max: 14.99, dailyProfit: 3, color: 'text-amber-600', border: 'border-amber-600/30' },
+  { id: 'silver', name: 'Silver', min: 15, max: 49.99, dailyProfit: 4, color: 'text-slate-400', border: 'border-slate-400/30' },
+  { id: 'gold', name: 'Gold', min: 50, max: 99.99, dailyProfit: 5, color: 'text-yellow-400', border: 'border-yellow-400/50' },
+  { id: 'diamond', name: 'Diamond', min: 100, max: Infinity, dailyProfit: 7, color: 'text-[#D4AF37]', border: 'border-[#D4AF37]/50' },
 ];
 
 export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, currencySymbol, conversionRate }: PlanMatrixProps) {
@@ -26,7 +26,6 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
   const [error, setError] = useState('');
 
   const activePlans = investments.filter(inv => inv.status === 'active');
-  const lockedPrincipal = activePlans.reduce((sum, inv) => sum + inv.amount, 0);
 
   const handleActivate = async () => {
     setError('');
@@ -52,8 +51,6 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
     setDepositAmount('');
   };
 
-  const activePlanLimit = 5;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -62,37 +59,33 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
       transition={{ duration: 0.2 }}
       className="space-y-6"
     >
-      <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col md:flex-row justify-between gap-4">
-        <div>
-           <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Available Wallet Balance</h3>
-           <p className="text-2xl font-serif text-white">{currencySymbol}{(balance * conversionRate).toFixed(2)}</p>
-        </div>
-        <div>
-           <h3 className="text-[10px] font-bold text-[#D4AF37]/60 uppercase tracking-widest mb-1">Locked Principal Investments</h3>
-           <p className="text-2xl font-serif text-[#D4AF37]">{currencySymbol}{(lockedPrincipal * conversionRate).toFixed(2)}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {PLANS.map(plan => (
-          <div key={plan.id} className={`bg-[#111111] rounded-2xl border ${plan.border} p-5 relative overflow-hidden flex flex-col justify-between hover:scale-[1.02] transition-transform duration-200 cursor-[zoom-in]`} onClick={() => setSelectedPlan(plan)}>
-             <div className="space-y-2 relative z-10">
-               <h4 className={`text-lg font-bold font-serif ${plan.color}`}>{plan.name}</h4>
-               <p className="text-[11px] text-white/50 font-bold uppercase tracking-widest leading-relaxed">
-                 {currencySymbol}{(plan.min * conversionRate).toFixed(0)} {plan.max === Infinity ? '+' : `- ${currencySymbol}${(plan.max * conversionRate).toFixed(0)}`}
-               </p>
-             </div>
-             <div className="mt-6 flex flex-col z-10">
-                <span className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">Daily Profit</span>
-                <span className="text-xl font-mono text-white flex items-center gap-2">
-                  {plan.dailyProfit}% <TrendingUp className={`w-4 h-4 ${plan.color}`} />
-                </span>
-             </div>
-             <div className={`absolute -right-6 -bottom-6 opacity-10 ${plan.color}`}>
-                <ShieldCheck className="w-24 h-24" />
-             </div>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {PLANS.map(plan => {
+          const hasActive = activePlans.some(inv => inv.planId === plan.id);
+          
+          return (
+            <div key={plan.id} className={`bg-[#0A0A0A] rounded-2xl border ${plan.border} p-5 relative overflow-hidden flex flex-col justify-between hover:scale-[1.02] transition-all duration-300 cursor-pointer shadow-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:border-[#D4AF37]/60 group`} onClick={() => setSelectedPlan(plan)}>
+               <div className="space-y-2 relative z-10 mb-4">
+                 <h4 className={`text-xl font-bold font-serif ${plan.color}`}>{plan.name} Plan</h4>
+                 <div className="flex flex-col gap-1.5 mt-2 text-white/80 text-sm">
+                    <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Deposit:</span> <strong className="font-sans">{currencySymbol}{(plan.min * conversionRate).toFixed(0)} {plan.max === Infinity ? '+' : `- ${currencySymbol}${(plan.max * conversionRate).toFixed(0)}`}</strong></p>
+                    <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Daily Profit:</span> <strong className="font-sans text-emerald-400">{plan.dailyProfit}%</strong></p>
+                    <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Duration:</span> <strong className="font-sans text-white/90">Lifetime / Cancel Anytime</strong></p>
+                 </div>
+               </div>
+               
+               <div className="relative z-10 w-full mt-2">
+                  <button className={`w-full py-2.5 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all ${hasActive ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'bg-[#1A1A1A] text-white/60 group-hover:bg-[#D4AF37] group-hover:text-black group-hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] border border-white/5 group-hover:border-[#D4AF37]'}`}>
+                     {hasActive ? 'Plan Active' : 'Activate Plan'}
+                  </button>
+               </div>
+               
+               <div className={`absolute -right-8 -bottom-8 opacity-[0.03] ${plan.color}`}>
+                  <ShieldCheck className="w-32 h-32" />
+               </div>
+            </div>
+          );
+        })}
       </div>
 
       {activePlans.length > 0 && (
