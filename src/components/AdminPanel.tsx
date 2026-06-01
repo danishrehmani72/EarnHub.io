@@ -72,6 +72,7 @@ interface AdminUser {
   createdAt?: any;
   deposits: any[];
   withdrawals: any[];
+  investments: any[];
   referrals: any[];
   dailyBonusEarnings?: number;
 }
@@ -217,6 +218,10 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         const witSnap = await getDocs(collection(db, 'users', userId, 'withdrawals'));
         const userWits = witSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+        // Investments subcollection
+        const invSnap = await getDocs(collection(db, 'users', userId, 'investments'));
+        const userInvs = invSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
         // Referrals subcollection
         const refSnap = await getDocs(collection(db, 'users', userId, 'referrals'));
         const userRefs = refSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -231,6 +236,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
           createdAt: userData.createdAt,
           deposits: userDeps,
           withdrawals: userWits,
+          investments: userInvs,
           referrals: userRefs,
           dailyBonusEarnings: userData.dailyBonusEarnings || 0
         });
@@ -413,6 +419,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
     let pendingDepositsSum = 0;
     let pendingWithdrawalsSum = 0;
     let totalReferralRewardsSum = 0;
+    let totalInvestmentsSum = 0;
     let activeUsersCount = 0;
 
     allUsers.forEach(u => {
@@ -440,6 +447,12 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
           pendingWithdrawalsSum += amt;
         }
       });
+      
+      u.investments.forEach(inv => {
+        if (inv.status === 'active') {
+          totalInvestmentsSum += Number(inv.amount) || 0;
+        }
+      });
     });
 
     const netReserves = totalDepositsSum - totalWithdrawalsSum;
@@ -451,6 +464,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       pendingDepositsSum,
       pendingWithdrawalsSum,
       totalReferralRewardsSum,
+      totalInvestmentsSum,
       activeUsersCount,
       netReserves
     };

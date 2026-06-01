@@ -1,0 +1,179 @@
+import React, { useState } from 'react';
+import { motion } from 'motion/react';
+import { UserPlan } from '../types';
+import { ShieldCheck, CheckCircle2, TrendingUp, XCircle, ArrowRight } from 'lucide-react';
+
+interface PlanMatrixProps {
+  balance: number;
+  investments: UserPlan[];
+  onCreatePlan: (planId: string, amount: number) => Promise<void>;
+  onCancelPlan: (invId: string) => Promise<void>;
+  currencySymbol: string;
+  conversionRate: number;
+}
+
+const PLANS = [
+  { id: 'bronze', name: 'Bronze', min: 5, max: 14.99, dailyProfit: 3, color: 'text-amber-600', bg: 'bg-amber-600/10', border: 'border-amber-600/30' },
+  { id: 'silver', name: 'Silver', min: 15, max: 49.99, dailyProfit: 4, color: 'text-slate-400', bg: 'bg-slate-400/10', border: 'border-slate-400/30' },
+  { id: 'gold', name: 'Gold', min: 50, max: 99.99, dailyProfit: 5, color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/30' },
+  { id: 'platinum', name: 'Platinum', min: 100, max: Infinity, dailyProfit: 7, color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10', border: 'border-[#D4AF37]/30' },
+];
+
+export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, currencySymbol, conversionRate }: PlanMatrixProps) {
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const activePlans = investments.filter(inv => inv.status === 'active');
+  const lockedPrincipal = activePlans.reduce((sum, inv) => sum + inv.amount, 0);
+
+  const handleActivate = async () => {
+    setError('');
+    const amt = parseFloat(depositAmount) / conversionRate;
+    
+    if (isNaN(amt) || amt < selectedPlan.min) {
+      setError(`Minimum deposit for ${selectedPlan.name} is ${currencySymbol}${(selectedPlan.min * conversionRate).toFixed(2)}`);
+      return;
+    }
+    if (selectedPlan.max !== Infinity && amt > selectedPlan.max) {
+      setError(`Maximum deposit for ${selectedPlan.name} is ${currencySymbol}${(selectedPlan.max * conversionRate).toFixed(2)}`);
+      return;
+    }
+    if (amt > balance) {
+      setError(`Insufficient wallet balance. Please add funds.`);
+      return;
+    }
+    
+    setIsLoading(true);
+    await onCreatePlan(selectedPlan.id, amt);
+    setIsLoading(false);
+    setSelectedPlan(null);
+    setDepositAmount('');
+  };
+
+  const activePlanLimit = 5;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="space-y-6"
+    >
+      <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col md:flex-row justify-between gap-4">
+        <div>
+           <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Available Wallet Balance</h3>
+           <p className="text-2xl font-serif text-white">{currencySymbol}{(balance * conversionRate).toFixed(2)}</p>
+        </div>
+        <div>
+           <h3 className="text-[10px] font-bold text-[#D4AF37]/60 uppercase tracking-widest mb-1">Locked Principal Investments</h3>
+           <p className="text-2xl font-serif text-[#D4AF37]">{currencySymbol}{(lockedPrincipal * conversionRate).toFixed(2)}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {PLANS.map(plan => (
+          <div key={plan.id} className={`bg-[#111111] rounded-2xl border ${plan.border} p-5 relative overflow-hidden flex flex-col justify-between hover:scale-[1.02] transition-transform duration-200 cursor-[zoom-in]`} onClick={() => setSelectedPlan(plan)}>
+             <div className="space-y-2 relative z-10">
+               <h4 className={`text-lg font-bold font-serif ${plan.color}`}>{plan.name}</h4>
+               <p className="text-[11px] text-white/50 font-bold uppercase tracking-widest leading-relaxed">
+                 {currencySymbol}{(plan.min * conversionRate).toFixed(0)} {plan.max === Infinity ? '+' : `- ${currencySymbol}${(plan.max * conversionRate).toFixed(0)}`}
+               </p>
+             </div>
+             <div className="mt-6 flex flex-col z-10">
+                <span className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">Daily Profit</span>
+                <span className="text-xl font-mono text-white flex items-center gap-2">
+                  {plan.dailyProfit}% <TrendingUp className={`w-4 h-4 ${plan.color}`} />
+                </span>
+             </div>
+             <div className={`absolute -right-6 -bottom-6 opacity-10 ${plan.color}`}>
+                <ShieldCheck className="w-24 h-24" />
+             </div>
+          </div>
+        ))}
+      </div>
+
+      {activePlans.length > 0 && (
+        <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 mt-8">
+           <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-widest mb-4">Active Investment Portfolios</h3>
+           <div className="space-y-3">
+             {activePlans.map(inv => {
+               const planInfo = PLANS.find(p => p.id === inv.planId);
+               return (
+                 <div key={inv.id} className="flex flex-col sm:flex-row justify-between sm:items-center bg-black/40 border border-white/5 rounded-xl p-4 gap-4">
+                   <div>
+                     <p className={`text-sm font-bold capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
+                     <p className="text-xs text-white/40 mt-0.5">Principal Locked: {currencySymbol}{(inv.amount * conversionRate).toFixed(2)}</p>
+                   </div>
+                   <div className="flex items-center gap-4">
+                     <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] uppercase font-bold tracking-wider rounded border border-emerald-500/20">Earning {planInfo?.dailyProfit}%</span>
+                     <button onClick={() => onCancelPlan(inv.id)} className="px-3 py-1.5 text-[10px] uppercase font-bold text-rose-400 tracking-wider bg-rose-500/10 border border-rose-500/20 rounded hover:bg-rose-500/20 transition-all">Cancel Plan</button>
+                   </div>
+                 </div>
+               );
+             })}
+           </div>
+        </div>
+      )}
+
+      {/* Deposit Modal / Plan Setup Modal */}
+      {selectedPlan && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.9 }}
+             animate={{ opacity: 1, scale: 1 }}
+             exit={{ opacity: 0, scale: 0.9 }}
+             className="w-full max-w-md bg-[#0C0C0C] border border-white/10 rounded-2xl shadow-2xl p-6"
+           >
+              <div className="flex justify-between items-center mb-6">
+                 <div>
+                   <h2 className={`text-xl font-bold font-serif ${selectedPlan.color}`}>Activate {selectedPlan.name}</h2>
+                   <p className="text-xs text-white/40 mt-1 uppercase tracking-wider">Earn {selectedPlan.dailyProfit}% daily profit</p>
+                 </div>
+                 <button onClick={() => { setSelectedPlan(null); setError(''); }} className="p-2 bg-white/5 rounded-full text-white/50 hover:text-white">
+                   <XCircle className="w-5 h-5" />
+                 </button>
+              </div>
+
+              <div className="space-y-4">
+                 <div className="bg-black/50 border border-white/5 rounded-xl p-4 flex justify-between items-center text-sm font-sans">
+                   <span className="text-white/50">Available Wallet</span>
+                   <span className="font-mono text-white">{currencySymbol}{(balance * conversionRate).toFixed(2)}</span>
+                 </div>
+                 
+                 <div className="space-y-2">
+                   <label className="text-[11px] font-bold text-white/50 tracking-widest uppercase ml-1">Investment Amount ({currencySymbol.trim()})</label>
+                   <input 
+                      type="number" 
+                      value={depositAmount} 
+                      onChange={e => setDepositAmount(e.target.value)}
+                      placeholder={`Min ${selectedPlan.min * conversionRate}`}
+                      className="w-full bg-[#161616] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/50 text-white font-mono"
+                   />
+                 </div>
+
+                 {error && (
+                   <p className="text-xs text-rose-400 font-medium px-1">{error}</p>
+                 )}
+
+                 <p className="text-[10px] text-white/30 leading-relaxed px-1">
+                   Note: The investment principal will be locked to generate daily yields. 
+                   You can withdraw profits at any time. Cancelling the plan will return your principal to your wallet and stop future earnings.
+                 </p>
+
+                 <button 
+                   onClick={handleActivate}
+                   disabled={isLoading || !depositAmount}
+                   className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold uppercase tracking-widest text-xs py-3.5 rounded-xl transition-all disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
+                 >
+                   {isLoading ? 'Processing...' : 'Confirm Activation'} <ArrowRight className="w-4 h-4" />
+                 </button>
+              </div>
+           </motion.div>
+        </div>
+      )}
+    </motion.div>
+  );
+}

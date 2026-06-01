@@ -48,3 +48,13 @@ export interface WithdrawalLog {
   createdAt: any;
   timestamp: string;
 }
+
+export interface UserPlan {
+  id: string;
+  planId: string;
+  amount: number;
+  status: 'active' | 'cancelled';
+  createdAt: any;
+  timestamp: string;
+  cancelledAt?: any;
+}

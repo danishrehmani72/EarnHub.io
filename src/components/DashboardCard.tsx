@@ -38,8 +38,10 @@ import {
   CartesianGrid 
 } from 'recharts';
 import { FaqSection } from './FaqSection';
-import { ReferralLog, DepositLog, WithdrawalLog } from '../types';
+import { ReferralLog, DepositLog, WithdrawalLog, UserPlan } from '../types';
 import { AvatarIcon, getAvatarConfig } from '../lib/avatars';
+
+import { PlanMatrix } from './PlanMatrix';
 
 interface DashboardCardProps {
   name: string;
@@ -50,8 +52,11 @@ interface DashboardCardProps {
   avatar?: string;
   deposits?: DepositLog[];
   withdrawals?: WithdrawalLog[];
+  investments?: UserPlan[];
   onCreateDeposit?: (amount: number, network: string, txHash: string) => Promise<void>;
   onCreateWithdrawal?: (amount: number, network: string, wallet: string) => Promise<void>;
+  onCreatePlan?: (planId: string, amount: number) => Promise<void>;
+  onCancelPlan?: (invId: string) => Promise<void>;
   onUpdateTxStatus?: (type: 'deposit' | 'withdrawal', txId: string, status: 'approved' | 'rejected') => Promise<void>;
   onSignOut?: () => Promise<void> | void;
   investmentProfits?: number;
@@ -59,8 +64,8 @@ interface DashboardCardProps {
   userProfile?: any;
   onClaimDailyReward?: (amount: number) => Promise<void>;
   virtualDays?: number;
-  activeTab?: 'overview' | 'funding' | 'faq';
-  onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq') => void;
+  activeTab?: 'overview' | 'funding' | 'faq' | 'plans';
+  onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq' | 'plans') => void;
 }
 
 export default function DashboardCard({
@@ -72,8 +77,11 @@ export default function DashboardCard({
   avatar,
   deposits = [],
   withdrawals = [],
+  investments = [],
   onCreateDeposit,
   onCreateWithdrawal,
+  onCreatePlan,
+  onCancelPlan,
   onUpdateTxStatus,
   onSignOut,
   investmentProfits = 0,
@@ -85,7 +93,7 @@ export default function DashboardCard({
   onActiveTabChange,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
-  const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq'>('overview');
+  const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq' | 'plans'>('overview');
   
   const activeTab = activeTabProp !== undefined ? activeTabProp : activeTabLocal;
   const setActiveTab = onActiveTabChange !== undefined ? onActiveTabChange : setActiveTabLocal;
@@ -334,83 +342,51 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     }
   };
 
-  // --- Investment & Plan calculations (proportional adjustment based on withdrawals) ---
-  const approvedDeposits = useMemo(() => {
-    return (deposits || []).filter(d => d.status === 'approved');
-  }, [deposits]);
+  // --- Investment & Plan calculations ---
+  const activeInvestments = useMemo(() => {
+    return (investments || []).filter(inv => inv.status === 'active');
+  }, [investments]);
 
-  // FIFO Deduction of approved withdrawals to adjust active remaining plan deposits
-  const activeRemainingDeposits = useMemo(() => {
-    const approvedWithdrawalsSum = (withdrawals || [])
-      .filter(w => w.status === 'approved')
-      .reduce((sum, w) => sum + w.amount, 0);
+  const totalActiveInvestedSum = useMemo(() => {
+    return activeInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+  }, [activeInvestments]);
 
-    let remainingWithdrawalsToDeduct = approvedWithdrawalsSum;
-    
-    // Deep copies to avoid side-effects on props
-    const activeDeps = approvedDeposits.map(d => ({ ...d }));
-
-    // Sort ascending by timestamp (FIFO)
-    const sortedActiveDeps = [...activeDeps].sort((a, b) => {
-      const aTime = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.timestamp).getTime() || 0;
-      const bTime = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.timestamp).getTime() || 0;
-      return aTime - bTime;
-    });
-
-    for (const dep of sortedActiveDeps) {
-      if (remainingWithdrawalsToDeduct <= 0) break;
-      if (dep.amount <= remainingWithdrawalsToDeduct) {
-        remainingWithdrawalsToDeduct -= dep.amount;
-        dep.amount = 0;
-      } else {
-        dep.amount -= remainingWithdrawalsToDeduct;
-        remainingWithdrawalsToDeduct = 0;
-      }
-    }
-
-    return sortedActiveDeps.filter(d => d.amount > 0);
-  }, [approvedDeposits, withdrawals]);
-
-  const totalApprovedDepositsSum = useMemo(() => {
-    return activeRemainingDeposits.reduce((sum, d) => sum + d.amount, 0);
-  }, [activeRemainingDeposits]);
-
-  const hasActivePlan = activeRemainingDeposits.some(d => d.amount >= 5);
+  const hasActivePlan = activeInvestments.length > 0;
   const activePlanStatus = hasActivePlan ? 'Active Plan' : 'Inactive Plan';
 
   // Calculate sum of daily performance percentages of all surviving active plan deposits
   const dailyProfitRate = useMemo(() => {
-    return activeRemainingDeposits.reduce((sum, dep) => {
+    return activeInvestments.reduce((sum, inv) => {
       let percent = 0;
-      if (dep.amount >= 100) percent = 7;
-      else if (dep.amount >= 50) percent = 5;
-      else if (dep.amount >= 15) percent = 4;
-      else if (dep.amount >= 5) percent = 3;
-      return sum + (dep.amount * (percent / 100));
+      if (inv.amount >= 100) percent = 7;
+      else if (inv.amount >= 50) percent = 5;
+      else if (inv.amount >= 15) percent = 4;
+      else if (inv.amount >= 5) percent = 3;
+      return sum + (inv.amount * (percent / 100));
     }, 0);
-  }, [activeRemainingDeposits]);
+  }, [activeInvestments]);
 
-  const earliestApprovedDeposit = useMemo(() => {
-    if (activeRemainingDeposits.length === 0) return null;
-    return [...activeRemainingDeposits].sort((a, b) => {
+  const earliestActiveInvestment = useMemo(() => {
+    if (activeInvestments.length === 0) return null;
+    return [...activeInvestments].sort((a, b) => {
       const aTime = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.timestamp).getTime() || 0;
       const bTime = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.timestamp).getTime() || 0;
       return aTime - bTime;
     })[0];
-  }, [activeRemainingDeposits]);
+  }, [activeInvestments]);
 
   const [timeRemaining, setTimeRemaining] = useState('24h 00m 00s');
 
   useEffect(() => {
-    if (!earliestApprovedDeposit) {
+    if (!earliestActiveInvestment) {
       setTimeRemaining('--h --m --s');
       return;
     }
 
     const updateTimer = () => {
-      const depTime = earliestApprovedDeposit.createdAt?.seconds 
-        ? earliestApprovedDeposit.createdAt.seconds * 1000 
-        : new Date(earliestApprovedDeposit.timestamp).getTime() || Date.now();
+      const depTime = earliestActiveInvestment.createdAt?.seconds 
+        ? earliestActiveInvestment.createdAt.seconds * 1000 
+        : new Date(earliestActiveInvestment.timestamp).getTime() || Date.now();
       
       const elapsedMs = Date.now() - depTime;
       const msInDay = 24 * 60 * 60 * 1000;
@@ -432,7 +408,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [earliestApprovedDeposit]);
+  }, [earliestActiveInvestment]);
 
   const nextMilestone = Math.ceil((balance + 1) / 100) * 100;
   const progressPercent = Math.min((balance / nextMilestone) * 100, 100);
@@ -647,7 +623,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       </div>
 
       {/* Navigation Tabs */}
-      <div className="grid grid-cols-3 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
+      <div className="grid grid-cols-4 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
         <button
           onClick={() => setActiveTab('overview')}
           className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
@@ -657,9 +633,21 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           }`}
         >
           <TrendingUp className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="truncate">Overview</span>
+          <span className="truncate hidden sm:inline">Overview</span>
         </button>
         
+        <button
+          onClick={() => setActiveTab('plans')}
+          className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+            activeTab === 'plans'
+              ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
+              : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
+          <span className="truncate hidden sm:inline">Plans</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('funding')}
           className={`py-2.5 px-2 sm:py-3 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
@@ -669,7 +657,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           }`}
         >
           <Wallet className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="truncate">Funding</span>
+          <span className="truncate hidden sm:inline">Funding</span>
         </button>
 
         <button
@@ -681,7 +669,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="truncate">FAQ</span>
+          <span className="truncate hidden sm:inline">FAQ</span>
         </button>
       </div>
 
@@ -796,7 +784,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </span>
                   </div>
                   <div className="my-1 font-serif text-white/90 text-2xl tracking-tight z-10 leading-none">
-                    {currencySymbol}{(totalApprovedDepositsSum * conversionRate).toFixed(2)}
+                    {currencySymbol}{(totalActiveInvestedSum * conversionRate).toFixed(2)}
                     <span className="block text-[8.5px] font-sans text-white/30 tracking-widest uppercase font-semibold mt-1">
                       Active Deposit Plan
                     </span>
@@ -1166,6 +1154,17 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
             </motion.div>
           )}
 
+          {activeTab === 'plans' && (
+            <PlanMatrix
+              balance={balance}
+              investments={investments}
+              onCreatePlan={onCreatePlan!}
+              onCancelPlan={onCancelPlan!}
+              currencySymbol={currencySymbol}
+              conversionRate={conversionRate}
+            />
+          )}
+
           {activeTab === 'funding' && (
             <motion.div
               key="funding-tab"
@@ -1311,13 +1310,18 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center mb-1">
                         <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Amount to Withdraw ({currency})</label>
-                        <button
-                          type="button"
-                          onClick={() => setWithdrawAmount((balance * conversionRate).toFixed(2))}
-                          className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-wider hover:underline"
-                        >
-                          Max Value: {currencySymbol}{(balance * conversionRate).toFixed(2)}
-                        </button>
+                        <div className="flex flex-col items-end">
+                           <button
+                             type="button"
+                             onClick={() => setWithdrawAmount((balance * conversionRate).toFixed(2))}
+                             className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-wider hover:underline"
+                           >
+                             Max Available: {currencySymbol}{(balance * conversionRate).toFixed(2)}
+                           </button>
+                           {hasActivePlan && (
+                             <span className="text-[7px] text-zinc-500 uppercase tracking-widest mt-0.5">Note: Active plan principal is locked</span>
+                           )}
+                        </div>
                       </div>
                       <input
                         type="number"

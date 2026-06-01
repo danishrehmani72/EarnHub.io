@@ -18,7 +18,7 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './lib/firebase';
-import { UserProfile, ReferralLog, DepositLog, WithdrawalLog } from './types';
+import { UserProfile, ReferralLog, DepositLog, WithdrawalLog, UserPlan } from './types';
 import RegistrationCard from './components/RegistrationCard';
 import DashboardCard from './components/DashboardCard';
 import ReferralHistory from './components/ReferralHistory';
@@ -51,6 +51,7 @@ export default function App() {
   const [logs, setLogs] = useState<ReferralLog[]>([]);
   const [deposits, setDeposits] = useState<DepositLog[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalLog[]>([]);
+  const [investments, setInvestments] = useState<UserPlan[]>([]);
   const [referredBy, setReferredBy] = useState<string | null>(null);
   const [referredSource, setReferredSource] = useState<string | null>(null);
   const [inviterName, setInviterName] = useState<string | null>(null);
@@ -274,11 +275,35 @@ export default function App() {
       console.warn("Withdrawals snapshot fallback:", error);
     });
 
+    // Real-time investments listener
+    const investmentsRef = collection(db, 'users', currentUid, 'investments');
+    const investmentsQuery = query(investmentsRef, orderBy('createdAt', 'desc'));
+
+    const unsubInvestments = onSnapshot(investmentsQuery, (snapshot) => {
+      const list: UserPlan[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({
+          id: data.id,
+          planId: data.planId,
+          amount: Number(data.amount) || 0,
+          status: data.status || 'active',
+          createdAt: data.createdAt,
+          timestamp: data.timestamp || '',
+          cancelledAt: data.cancelledAt,
+        });
+      });
+      setInvestments(list);
+    }, (error) => {
+      console.warn("Investments snapshot fallback:", error);
+    });
+
     return () => {
       unsubUserProfile();
       unsubReferrals();
       unsubDeposits();
       unsubWithdrawals();
+      if (unsubInvestments) unsubInvestments();
     };
   }, [currentUid]);
 
@@ -418,6 +443,45 @@ export default function App() {
     }
   };
 
+  const handleCreatePlan = async (planId: string, amount: number) => {
+    if (!currentUid) return;
+    try {
+      const invRef = doc(collection(db, 'users', currentUid, 'investments'));
+      const now = new Date();
+      const timestampStr = now.toLocaleDateString(undefined, {
+        month: 'short', day: 'numeric', year: 'numeric'
+      }) + ' ' + now.toLocaleTimeString(undefined, {
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+
+      await setDoc(invRef, {
+        id: invRef.id,
+        planId,
+        amount,
+        status: 'active',
+        createdAt: serverTimestamp(),
+        timestamp: timestampStr
+      });
+      addToast(`Investment Plan Activated successfully!`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${currentUid}/investments`);
+    }
+  };
+
+  const handleCancelPlan = async (invId: string) => {
+    if (!currentUid) return;
+    try {
+      const invRef = doc(db, 'users', currentUid, 'investments', invId);
+      await setDoc(invRef, { 
+        status: 'cancelled',
+        cancelledAt: serverTimestamp()
+      }, { merge: true });
+      addToast(`Investment Plan Cancelled. Original principal has been returned to your wallet.`, 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${currentUid}/investments/${invId}`);
+    }
+  };
+
   // Handle secret 7-clicks on website logo
   const handleLogoClick = () => {
     setLogoClicks(prev => {
@@ -541,61 +605,42 @@ export default function App() {
   const approvedWithdrawals = withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + w.amount, 0);
   const dailyBonusEarnings = userProfile?.dailyBonusEarnings !== undefined ? userProfile.dailyBonusEarnings : 0;
 
-  // FIFO Deduction of approved withdrawals to adjust active remaining plan deposits
-  const activeRemainingDepositsList = useMemo(() => {
-    let remainingWithdrawalsToDeduct = approvedWithdrawals;
-    
-    // Deep copies to avoid side-effects
-    const activeDeps = approvedDepositsList.map(d => ({ ...d }));
-
-    // Sort ascending by timestamp (FIFO)
-    const sortedActiveDeps = [...activeDeps].sort((a, b) => {
-      const aTime = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.timestamp).getTime() || 0;
-      const bTime = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.timestamp).getTime() || 0;
-      return aTime - bTime;
-    });
-
-    for (const dep of sortedActiveDeps) {
-      if (remainingWithdrawalsToDeduct <= 0) break;
-      if (dep.amount <= remainingWithdrawalsToDeduct) {
-        remainingWithdrawalsToDeduct -= dep.amount;
-        dep.amount = 0;
-      } else {
-        dep.amount -= remainingWithdrawalsToDeduct;
-        remainingWithdrawalsToDeduct = 0;
-      }
+  // Calculate real-time profit accrued on each investment
+  const nowTime = Date.now();
+  const investmentProfits = investments.reduce((sum, processPlan) => {
+    // If it's cancelled, we calculate up to cancelledAt, else up to now
+    let endTime = nowTime;
+    if (processPlan.status === 'cancelled' && processPlan.cancelledAt) {
+      endTime = processPlan.cancelledAt?.seconds 
+        ? processPlan.cancelledAt.seconds * 1000 
+        : new Date(processPlan.cancelledAt).getTime() || nowTime;
     }
 
-    return sortedActiveDeps.filter(d => d.amount > 0);
-  }, [approvedDepositsList, approvedWithdrawals]);
-
-  // Calculate real-time profit accrued on each remaining active approved deposit of $5+
-  // - $5 to $14.99: 3% daily rate
-  // - $15 to $49.99: 4% daily rate
-  // - $50 to $99.99: 5% daily rate
-  // - $100+: 7% daily rate
-  // Dynamic percentages respect virtual/advanced days simulator instantly.
-  const nowTime = Date.now();
-  const investmentProfits = activeRemainingDepositsList.reduce((sum, dep) => {
-    const depTime = dep.createdAt?.seconds 
-      ? dep.createdAt.seconds * 1000 
-      : new Date(dep.timestamp).getTime() || nowTime;
-    const elapsedMs = nowTime - depTime;
+    const startTime = processPlan.createdAt?.seconds 
+      ? processPlan.createdAt.seconds * 1000 
+      : new Date(processPlan.timestamp).getTime() || nowTime;
+      
+    const elapsedMs = Math.max(0, endTime - startTime);
     const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
-    const totalDays = elapsedDaysReal + virtualDays;
+    const totalDays = elapsedDaysReal + (processPlan.status === 'active' ? virtualDays : 0);
     
     let percent = 0;
-    if (dep.amount >= 100) percent = 7;
-    else if (dep.amount >= 50) percent = 5;
-    else if (dep.amount >= 15) percent = 4;
-    else if (dep.amount >= 5) percent = 3;
+    if (processPlan.amount >= 100) percent = 7;
+    else if (processPlan.amount >= 50) percent = 5;
+    else if (processPlan.amount >= 15) percent = 4;
+    else if (processPlan.amount >= 5) percent = 3;
     
-    const dailyRate = dep.amount * (percent / 100);
+    const dailyRate = processPlan.amount * (percent / 100);
     const profit = totalDays * dailyRate;
     return sum + (profit > 0 ? profit : 0);
   }, 0);
 
-  const balance = signupBonus + referralEarnings + approvedDeposits - approvedWithdrawals + investmentProfits + dailyBonusEarnings;
+  // The active investments are locked, so subtract from balance
+  const activeInvestmentsSum = investments
+    .filter(i => i.status === 'active')
+    .reduce((sum, i) => sum + i.amount, 0);
+
+  const balance = signupBonus + referralEarnings + approvedDeposits - approvedWithdrawals + dailyBonusEarnings + investmentProfits - activeInvestmentsSum;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans flex flex-col justify-between antialiased selection:bg-[#D4AF37]/20 selection:text-[#D4AF37]">
@@ -931,8 +976,11 @@ export default function App() {
                 avatar={userProfile.avatar}
                 deposits={deposits}
                 withdrawals={withdrawals}
+                investments={investments}
                 onCreateDeposit={handleCreateDeposit}
                 onCreateWithdrawal={handleCreateWithdrawal}
+                onCreatePlan={handleCreatePlan}
+                onCancelPlan={handleCancelPlan}
                 onUpdateTxStatus={handleUpdateTxStatus}
                 onSignOut={handleSignOut}
                 investmentProfits={investmentProfits}
