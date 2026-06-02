@@ -690,7 +690,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               </span>
             )}
           </div>
-          <p className="text-[9px] text-white/25">Disbursed passive earnings</p>
+          <p className="text-[9px] text-white/25">Disbursed audited payouts</p>
         </div>
 
         <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 space-y-1 relative overflow-hidden">

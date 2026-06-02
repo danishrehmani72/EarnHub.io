@@ -61,6 +61,7 @@ export default function App() {
   const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'faq'>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [openedFooterDoc, setOpenedFooterDoc] = useState<'about' | 'contact' | 'privacy' | 'terms' | null>(null);
 
   // Hidden Super Admin access states
   const [logoClicks, setLogoClicks] = useState(0);
@@ -424,7 +425,7 @@ export default function App() {
     }
   };
 
-  // Claim passive daily rewards in database
+  // Claim account daily rewards in database
   const handleClaimDailyReward = async (amount: number) => {
     if (!currentUid || !userProfile) return;
     try {
@@ -981,14 +982,186 @@ export default function App() {
       </main>
 
       {/* Footer Bar */}
-      <footer className="h-14 border-t border-white/5 bg-[#080808] flex flex-col sm:flex-row items-center justify-between px-6 md:px-10 py-4 sm:py-0 text-[10px] text-[#E5E7EB]/20 uppercase tracking-[0.25em] space-y-1 sm:space-y-0">
-        <div>&copy; {new Date().getFullYear()} MoneyMind Space — Empowering Your Financial Journey</div>
-        <div className="flex gap-6 items-center font-sans">
-          <span>Compliance ID: #MMS-992-KLR</span>
+      <footer className="border-t border-white/5 bg-[#080808] flex flex-col md:flex-row items-center justify-between px-6 md:px-10 py-6 md:py-4 text-[10px] text-[#E5E7EB]/20 uppercase tracking-[0.25em] space-y-3 md:space-y-0">
+        <div className="text-center md:text-left">&copy; {new Date().getFullYear()} MoneyMind Space</div>
+        
+        {/* AdSense policy and branding links */}
+        <div className="flex flex-wrap justify-center gap-3.5 text-[#D4AF37] font-sans text-[9px] font-bold tracking-wider uppercase">
+          <button onClick={() => setOpenedFooterDoc('about')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">About Us</button>
+          <span>•</span>
+          <button onClick={() => setOpenedFooterDoc('contact')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">Contact Us</button>
+          <span>•</span>
+          <button onClick={() => setOpenedFooterDoc('privacy')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">Privacy Policy</button>
+          <span>•</span>
+          <button onClick={() => setOpenedFooterDoc('terms')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">Terms & Conditions</button>
+        </div>
+
+        <div className="flex gap-4 items-center font-sans tracking-widest justify-center">
+          <span>Compliance: #MMS-992-KLR</span>
           <span className="text-[#D4AF37]/40 font-semibold">•</span>
-          <span className="text-[#D4AF37]/50">Server Status: Optimal</span>
+          <span className="text-[#D4AF37]/50">Status: Active</span>
         </div>
       </footer>
+
+      {/* Dynamic Static Information Pages Modal (AdSense Friendly) */}
+      <AnimatePresence>
+        {openedFooterDoc && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative w-full max-w-2xl bg-[#0C0C0C] border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.1)] flex flex-col max-h-[85vh]"
+            >
+              {/* Modal Top header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0F0F0F]">
+                <div>
+                  <h2 className="text-xs uppercase font-extrabold tracking-[0.2em] text-[#D4AF37] font-sans">
+                    {openedFooterDoc === 'about' && 'About MoneyMind Space'}
+                    {openedFooterDoc === 'contact' && 'Contact Support Center'}
+                    {openedFooterDoc === 'privacy' && 'Official Privacy Policy'}
+                    {openedFooterDoc === 'terms' && 'Core Terms & Conditions'}
+                  </h2>
+                  <p className="text-[8px] text-white/30 uppercase tracking-widest leading-none mt-1">Official platform legal document center</p>
+                </div>
+                <button
+                  onClick={() => setOpenedFooterDoc(null)}
+                  className="p-2 rounded-xl border border-white/5 bg-transparent hover:bg-white/5 text-white/50 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modal Scrollable Core Area */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4 font-sans text-xs text-white/70 leading-relaxed text-left">
+                {openedFooterDoc === 'about' && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Welcome to MoneyMind Space</h3>
+                    <p>
+                      MoneyMind Space is a modern financial platform designed to help users manage their accounts, track activity, monitor earnings, and access financial tools through a secure and user-friendly dashboard.
+                    </p>
+                    <p>
+                      Our mission is to provide a simple, transparent, and reliable digital experience for users who want to stay informed and organized in their financial journey.
+                    </p>
+                    <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
+                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-[#D4AF37]">We focus heavily on:</p>
+                      <ul className="list-disc list-inside space-y-1 text-white/60 text-[11px]">
+                        <li>User-friendly dashboard experience</li>
+                        <li>Secure account management</li>
+                        <li>Real-time activity tracking</li>
+                        <li>Referral and community features</li>
+                        <li>Reliable customer support</li>
+                      </ul>
+                    </div>
+                    <p className="text-[11px] text-white/40 italic">
+                      At MoneyMind Space, we continuously improve our platform to provide a better experience for all members.
+                    </p>
+                  </div>
+                )}
+
+                {openedFooterDoc === 'contact' && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Contact Information</h3>
+                    <p>
+                      If you have any questions, suggestions, or require assistance, please contact our support team.
+                    </p>
+                    <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2.5 font-mono text-[11px]">
+                      <div>
+                        <span className="text-white/30 block uppercase text-[9px] tracking-wider font-sans font-bold">Official Support Email</span>
+                        <a href="mailto:support@moneymindspace.online" className="text-[#D4AF37] hover:underline">support@moneymindspace.online</a>
+                      </div>
+                      <div>
+                        <span className="text-white/30 block uppercase text-[9px] tracking-wider font-sans font-bold">Corporate Website</span>
+                        <span className="text-white font-bold">moneymindspace.online</span>
+                      </div>
+                      <div>
+                        <span className="text-white/30 block uppercase text-[9px] tracking-wider font-sans font-bold">Support Hours</span>
+                        <span className="text-white">24 Hours / 7 Days Live Help Desk</span>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-white/40 italic">
+                      We aim to respond to all inquiries as quickly as possible.
+                    </p>
+                  </div>
+                )}
+
+                {openedFooterDoc === 'privacy' && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Privacy Policy</h3>
+                    <p>
+                      At MoneyMind Space, we value your privacy and are committed to protecting your personal information.
+                    </p>
+                    
+                    <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
+                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-[#D4AF37]">We may collect information such as:</p>
+                      <ul className="list-disc list-inside space-y-1 text-white/60 text-[11px]">
+                        <li>Name & user identifiers</li>
+                        <li>Email address</li>
+                        <li>Account transactions and states</li>
+                        <li>Website usage logs and platform metrics</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
+                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-[#D4AF37]">This information is used to:</p>
+                      <ul className="list-disc list-inside space-y-1 text-white/60 text-[11px]">
+                        <li>Improve user experience and platform responsiveness</li>
+                        <li>Provide high quality customer support</li>
+                        <li>Maintain overall server and data ledger security</li>
+                        <li>Enhance our general web tools</li>
+                      </ul>
+                    </div>
+
+                    <p>
+                      We do not sell personal information to third parties. By using our website, you agree to this Privacy Policy.
+                    </p>
+                    <p className="text-[10px] font-bold uppercase text-white/30 tracking-widest pt-2">
+                      Last Updated: June 2026
+                    </p>
+                  </div>
+                )}
+
+                {openedFooterDoc === 'terms' && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Terms and Conditions</h3>
+                    <p>
+                      By accessing and using MoneyMind Space, you agree to comply with these terms and conditions.
+                    </p>
+
+                    <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
+                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-[#D4AF37]">Users agree to:</p>
+                      <ul className="list-disc list-inside space-y-1 text-white/60 text-[11px]">
+                        <li>Provide accurate and precise information</li>
+                        <li>Maintain strict account credentials security</li>
+                        <li>Follow all applicable local and regional laws</li>
+                        <li>Use high-security practices and engage platform tools responsibly</li>
+                      </ul>
+                    </div>
+
+                    <p>
+                      MoneyMind Space reserves the right to modify services, update policies, or suspend accounts that violate these terms. Continued use of the platform constitutes acceptance of any updated terms.
+                    </p>
+                    <p className="text-[10px] font-bold uppercase text-white/30 tracking-widest pt-2">
+                      Last Updated: June 2026
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-3 border-t border-white/5 bg-[#080808] text-right">
+                <button
+                  onClick={() => setOpenedFooterDoc(null)}
+                  className="px-4 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-all text-[10px] uppercase font-bold tracking-widest cursor-pointer text-white"
+                >
+                  Confirm & Dismiss
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Admin Access Control Console Modal Overlay */}
       <AnimatePresence>
