@@ -301,15 +301,15 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       <div className="text-center space-y-2">
         <img 
           src={earnhubLogo}
-          alt="Wealth Hub Gold Premium Logo"
+          alt="MoneyMind Space Gold Premium Logo"
           className="w-16 h-16 mx-auto object-contain rounded-xl border border-[#D4AF37]/20 shadow-[0_0_20px_rgba(212,175,55,0.15)] bg-black mb-2"
           referrerPolicy="no-referrer"
         />
         <h2 className="text-2xl font-semibold tracking-tight text-[#E5E7EB] font-serif">
           {mode === 'signup' ? (
-            <>Join <span className="text-[#D4AF37]">Wealth Hub</span> Elite</>
+            <>Join <span className="text-[#D4AF37]">MoneyMind Space</span></>
           ) : (
-            <>Welcome to <span className="text-[#D4AF37]">Wealth Hub</span></>
+            <>Welcome to <span className="text-[#D4AF37]">MoneyMind Space</span></>
           )}
         </h2>
         <p className="text-xs text-white/50 leading-relaxed max-w-xs mx-auto">

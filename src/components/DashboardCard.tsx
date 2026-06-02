@@ -228,7 +228,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
   // Construct referral link using current origin or a beautiful fallback
   const referralLink = typeof window !== 'undefined' 
     ? `${window.location.origin}/?ref=${userId}` 
-    : `https://demo-earnhub.com/?ref=${userId}`;
+    : `https://moneymindspace.com/?ref=${userId}`;
 
   const handleCopy = async () => {
     try {
@@ -575,7 +575,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       >
 
         <div className="mb-6 z-10 relative">
-          <h1 className="text-3xl font-bold font-serif text-white">Wealth Hub</h1>
+          <h1 className="text-3xl font-bold font-serif text-white">MoneyMind Space</h1>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
@@ -684,7 +684,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     <span className="text-[9px] uppercase font-bold tracking-[0.2em] font-sans">Automated Passive Yields</span>
                   </div>
                   <h3 className="text-sm font-semibold text-white font-sans">
-                    Earn money while you sleep with Wealth Hub Elite.
+                    Earn money while you sleep with MoneyMind Space.
                   </h3>
                   <p className="text-xs text-white/50 leading-relaxed max-w-xl">
                     Your active deposits are secure in the tracking ledger. Sit back and watch your capital generate consistent yields automatically on autopilot, every 24 hours.

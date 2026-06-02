@@ -705,7 +705,7 @@ export default function App() {
         <div className="flex items-center gap-3">
           <img 
             src={earnhubLogo} 
-            alt="Wealth Hub Gold Logo Icon" 
+            alt="MoneyMind Space Gold Logo Icon" 
             onClick={handleLogoClick}
             className="w-10 h-10 object-contain rounded-lg border border-[#D4AF37]/15 shadow-[0_0_15px_rgba(212,175,55,0.15)] bg-black cursor-pointer active:scale-95 transition-transform"
             referrerPolicy="no-referrer"
@@ -714,7 +714,7 @@ export default function App() {
             onClick={() => handleNavClick('dashboard')} 
             className="text-lg font-bold tracking-[0.25em] uppercase font-serif text-white hover:brightness-110 transition-all text-left bg-transparent border-0 cursor-pointer"
           >
-            WEALTH HUB
+            MONEYMIND SPACE
           </button>
         </div>
 
@@ -879,78 +879,61 @@ export default function App() {
         <AnimatePresence mode="wait">
           {!isRegistered ? (
             <div key="registration" className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center w-full max-w-6xl py-4">
-              {/* Marketing Content Column (Earn Money While You Sleep) */}
-              <div className="lg:col-span-7 space-y-6 text-left">
+              {/* Marketing Content Column (MoneyMind Space) */}
+              <div className="lg:col-span-7 space-y-6 text-left animate-fade-in">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/25 text-[#D4AF37] text-[10px] uppercase font-bold tracking-widest font-sans">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Elite Passive Income Matrix
+                  Smart Finance, Better Future
                 </div>
                 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-serif text-white tracking-tight leading-[1.1] text-balance">
-                  Earn Money <br />
+                  Grow Your Wealth <br />
                   <span className="bg-gradient-to-r from-white via-white to-[#D4AF37] bg-clip-text text-transparent">
-                    While You Sleep
+                    With Smart Financial Planning
                   </span>
                 </h1>
                 
                 <p className="text-sm md:text-base text-white/60 leading-relaxed font-sans max-w-xl">
-                  Discover the power of automated passive wealth. Wealth Hub's premium distribution system and secure staking cycles run continuously 24/7 on autopilot, generating real-time account yields and commissions even when you are resting.
+                  Join MoneyMind Space to track earnings, manage investments, and build a stronger financial future with confidence and security.
                 </p>
 
-                {/* Features & Guarantees */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 space-y-1 hover:border-[#D4AF37]/20 transition-all">
-                    <span className="text-[10px] font-bold text-[#D4AF37] tracking-wider uppercase block">
-                      24h Payout Cycles
-                    </span>
-                    <p className="text-xs text-white/50 leading-relaxed">
-                      Yield distributions execute automatically every 24 hours, ensuring continuous daily accrual.
-                    </p>
-                  </div>
-
-                  <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 space-y-1 hover:border-emerald-400/20 transition-all">
-                    <span className="text-[10px] font-bold text-emerald-400 tracking-wider uppercase block">
-                      Fast Withdrawals
-                    </span>
-                    <p className="text-xs text-white/50 leading-relaxed">
-                      Request payouts with minimal settlement times! Once active ledger approval completes, funds are routed instantly.
-                    </p>
-                  </div>
-
-                  <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 space-y-1 hover:border-[#D4AF37]/20 transition-all">
-                    <span className="text-[10px] font-bold text-[#D4AF37] tracking-wider uppercase block">
-                      Secure Ledger
-                    </span>
-                    <p className="text-xs text-white/50 leading-relaxed">
-                      Every transaction, referral commission, and package stake is recorded securely in real-time.
-                    </p>
-                  </div>
-
-                  <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 space-y-1 hover:border-sky-400/20 transition-all">
-                    <span className="text-[10px] font-bold text-sky-400 tracking-wider uppercase block">
-                      24/7 Live Support
-                    </span>
-                    <p className="text-xs text-white/50 leading-relaxed">
-                      Chat directly with our team on Telegram 24/7 at <a href="https://t.me/EarnHubSupportTeam" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline font-bold font-mono">@EarnHubSupportTeam</a>.
-                    </p>
-                  </div>
+                {/* Premium Interactive Action Buttons */}
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <button 
+                    onClick={() => {
+                      document.getElementById('registration-container')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="px-6 py-3 rounded-xl bg-[#D4AF37] text-black font-extrabold text-xs uppercase tracking-wider hover:bg-[#bfa032] active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] cursor-pointer"
+                  >
+                    Get Started
+                  </button>
+                  <button 
+                    onClick={() => {
+                      document.getElementById('registration-container')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="px-6 py-3 rounded-xl border border-white/20 bg-white/5 text-white font-extrabold text-xs uppercase tracking-wider hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+                  >
+                    View Plans
+                  </button>
                 </div>
 
-                {/* Live Stats Indicators */}
-                <div className="pt-4 flex items-center gap-8 md:gap-12 text-[10px] text-white/30 uppercase tracking-widest font-semibold flex-wrap">
-                  <div>
-                    <p className="text-white text-xl md:text-2xl font-bold font-mono tracking-tight">$0.10</p>
-                    <p className="mt-0.5">Signup Reward</p>
+                {/* Premium Core Stats Section */}
+                <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left border-t border-white/5">
+                  <div className="space-y-1">
+                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-[#D4AF37]">10,000+</p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Active Members</p>
                   </div>
-                  <div className="hidden sm:block w-px h-8 bg-white/10" />
-                  <div>
-                    <p className="text-white text-xl md:text-2xl font-bold font-mono tracking-tight">$0.50</p>
-                    <p className="mt-0.5">Referral Bonus</p>
+                  <div className="space-y-1">
+                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-emerald-400">Secure</p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Platform</p>
                   </div>
-                  <div className="hidden sm:block w-px h-8 bg-white/10" />
-                  <div>
-                    <p className="text-white text-xl md:text-2xl font-bold font-mono tracking-tight">10%</p>
-                    <p className="mt-0.5">Daily Growth Pack</p>
+                  <div className="space-y-1">
+                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-white">Fast</p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Withdrawals</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[#D4AF37] text-lg md:text-2xl font-bold font-mono tracking-tight text-sky-400">24/7</p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Support</p>
                   </div>
                 </div>
               </div>
@@ -999,9 +982,9 @@ export default function App() {
 
       {/* Footer Bar */}
       <footer className="h-14 border-t border-white/5 bg-[#080808] flex flex-col sm:flex-row items-center justify-between px-6 md:px-10 py-4 sm:py-0 text-[10px] text-[#E5E7EB]/20 uppercase tracking-[0.25em] space-y-1 sm:space-y-0">
-        <div>&copy; {new Date().getFullYear()} Wealth Hub Collective. All rights reserved.</div>
+        <div>&copy; {new Date().getFullYear()} MoneyMind Space — Empowering Your Financial Journey</div>
         <div className="flex gap-6 items-center font-sans">
-          <span>Compliance ID: #WH-992-KLR</span>
+          <span>Compliance ID: #MMS-992-KLR</span>
           <span className="text-[#D4AF37]/40 font-semibold">•</span>
           <span className="text-[#D4AF37]/50">Server Status: Optimal</span>
         </div>
