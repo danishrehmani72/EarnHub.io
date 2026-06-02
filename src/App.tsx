@@ -42,6 +42,7 @@ import {
   ShieldCheck,
   RefreshCw
 } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 
 
 export default function App() {
@@ -1129,6 +1130,7 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+      <Analytics />
     </div>
   );
 }
