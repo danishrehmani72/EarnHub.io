@@ -25,13 +25,14 @@ service cloud.firestore {
         && (!user.keys().hasAny(['blocked']) || (user.blocked is bool))
         && (!user.keys().hasAny(['lastClaimedAt']) || (user.lastClaimedAt is string && user.lastClaimedAt.size() <= 64))
         && (!user.keys().hasAny(['claimStreak']) || (user.claimStreak is number))
-        && (!user.keys().hasAny(['dailyBonusEarnings']) || (user.dailyBonusEarnings is number));
+        && (!user.keys().hasAny(['dailyBonusEarnings']) || (user.dailyBonusEarnings is number))
+        && (!user.keys().hasAny(['referredBy']) || (user.referredBy == null || user.referredBy is string));
     }
 
     // Helper to validate ReferralLog schema representing a referral commission
     function isValidReferralLog(log) {
-      return log.keys().hasAll(['id', 'timestamp', 'amount', 'referrerName', 'refereeId', 'createdAt'])
-        && log.keys().size() <= 8
+      return log.keys().hasAll(['id', 'timestamp', 'amount', 'refereeId', 'refereeName', 'createdAt'])
+        && log.keys().size() <= 12
         && log.id is string
         && log.id.size() <= 128
         && log.timestamp is string
@@ -39,13 +40,16 @@ service cloud.firestore {
         && log.amount is number
         && log.amount >= 0
         && log.amount <= 1000
-        && log.referrerName is string
-        && log.referrerName.size() >= 1
-        && log.referrerName.size() <= 100
         && log.refereeId is string
         && log.refereeId.size() <= 128
+        && log.refereeName is string
+        && log.refereeName.size() >= 1
+        && log.refereeName.size() <= 100
         && (!log.keys().hasAny(['refereeAvatar']) || (log.refereeAvatar is string && log.refereeAvatar.size() <= 128))
-        && (!log.keys().hasAny(['source']) || (log.source is string && log.source.size() <= 128));
+        && (!log.keys().hasAny(['source']) || (log.source is string && log.source.size() <= 128))
+        && (!log.keys().hasAny(['level']) || (log.level is number))
+        && (!log.keys().hasAny(['referredBy']) || (log.referredBy is string && log.referredBy.size() <= 128))
+        && (!log.keys().hasAny(['referrerName']) || (log.referrerName is string && log.referrerName.size() <= 100));
     }
 
     // ----------------- USERS COLLECTION -----------------

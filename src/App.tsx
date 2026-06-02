@@ -217,7 +217,7 @@ export default function App() {
           if (change.type === 'added') {
             const data = change.doc.data();
             const commission = data.amount !== undefined ? data.amount : 0.50;
-            addToast(`New partner registered: ${data.name || 'Anonymous User'}! +$${commission.toFixed(2)} referral commission!`, 'success', 'new_referral');
+            addToast(`New partner registered: ${data.refereeName || data.name || 'Anonymous User'}! +$${commission.toFixed(2)} referral commission!`, 'success', 'new_referral');
           }
         });
       } else {
@@ -705,7 +705,7 @@ export default function App() {
         <div className="flex items-center gap-3">
           <img 
             src={earnhubLogo} 
-            alt="EarnHub Gold Logo Icon" 
+            alt="Wealth Hub Gold Logo Icon" 
             onClick={handleLogoClick}
             className="w-10 h-10 object-contain rounded-lg border border-[#D4AF37]/15 shadow-[0_0_15px_rgba(212,175,55,0.15)] bg-black cursor-pointer active:scale-95 transition-transform"
             referrerPolicy="no-referrer"
@@ -894,7 +894,7 @@ export default function App() {
                 </h1>
                 
                 <p className="text-sm md:text-base text-white/60 leading-relaxed font-sans max-w-xl">
-                  Discover the power of automated passive wealth. EarnHub's premium distribution system and secure staking cycles run continuously 24/7 on autopilot, generating real-time account yields and commissions even when you are resting.
+                  Discover the power of automated passive wealth. Wealth Hub's premium distribution system and secure staking cycles run continuously 24/7 on autopilot, generating real-time account yields and commissions even when you are resting.
                 </p>
 
                 {/* Features & Guarantees */}
@@ -999,9 +999,9 @@ export default function App() {
 
       {/* Footer Bar */}
       <footer className="h-14 border-t border-white/5 bg-[#080808] flex flex-col sm:flex-row items-center justify-between px-6 md:px-10 py-4 sm:py-0 text-[10px] text-[#E5E7EB]/20 uppercase tracking-[0.25em] space-y-1 sm:space-y-0">
-        <div>&copy; {new Date().getFullYear()} EarnHub Collective. All rights reserved.</div>
-        <div className="flex gap-6 items-center">
-          <span>Compliance ID: #EH-992-KLR</span>
+        <div>&copy; {new Date().getFullYear()} Wealth Hub Collective. All rights reserved.</div>
+        <div className="flex gap-6 items-center font-sans">
+          <span>Compliance ID: #WH-992-KLR</span>
           <span className="text-[#D4AF37]/40 font-semibold">•</span>
           <span className="text-[#D4AF37]/50">Server Status: Optimal</span>
         </div>

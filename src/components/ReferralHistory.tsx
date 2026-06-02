@@ -271,7 +271,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-white">{log.referrerName}</span>
+                              <span className="text-xs font-bold text-white">{log.refereeName || log.referrerName || 'Anonymous Partner'}</span>
                               <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${levelColors.bg} ${levelColors.text}`}>
                                 {levelColors.label}
                               </span>

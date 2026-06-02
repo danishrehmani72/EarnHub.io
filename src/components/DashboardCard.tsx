@@ -684,7 +684,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     <span className="text-[9px] uppercase font-bold tracking-[0.2em] font-sans">Automated Passive Yields</span>
                   </div>
                   <h3 className="text-sm font-semibold text-white font-sans">
-                    Earn money while you sleep with EarnHub Elite.
+                    Earn money while you sleep with Wealth Hub Elite.
                   </h3>
                   <p className="text-xs text-white/50 leading-relaxed max-w-xl">
                     Your active deposits are secure in the tracking ledger. Sit back and watch your capital generate consistent yields automatically on autopilot, every 24 hours.
@@ -1344,10 +1344,43 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                 <td className="py-2.5 font-bold uppercase text-white">{dep.network}</td>
                                 <td className="py-2.5 font-medium text-[#D4AF37]">{currencySymbol}{(dep.amount * conversionRate).toFixed(2)}</td>
                                 <td className="py-2.5 font-mono text-white/40 text-[9px] truncate max-w-[120px]" title={dep.txHash}>{dep.txHash}</td>
-                                <td className="py-2.5 text-right font-bold uppercase tracking-wider text-[9px]">
-                                  {dep.status === 'pending' && <span className="text-amber-500 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">Pending Validation</span>}
-                                  {dep.status === 'approved' && <span className="text-emerald-400 font-semibold bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-md">Approved</span>}
-                                  {dep.status === 'rejected' && <span className="text-rose-500 font-semibold bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md">Rejected</span>}
+                                <td className="py-2.5 text-right">
+                                  <div className="flex flex-col items-end gap-1.5">
+                                    <div className="flex items-center gap-1">
+                                      {dep.status === 'pending' && (
+                                        <span className="inline-flex items-center gap-1 text-amber-500 font-bold uppercase tracking-wider text-[9px] bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
+                                          <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />
+                                          Pending Validation
+                                        </span>
+                                      )}
+                                      {dep.status === 'approved' && (
+                                        <span className="inline-flex items-center gap-1 text-emerald-400 font-bold uppercase tracking-wider text-[9px] bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-md">
+                                          <CheckCircle className="w-3 h-3 text-emerald-400" />
+                                          Approved
+                                        </span>
+                                      )}
+                                      {dep.status === 'rejected' && (
+                                        <span className="inline-flex items-center gap-1 text-rose-500 font-bold uppercase tracking-wider text-[9px] bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md">
+                                          <XCircle className="w-3 h-3 text-rose-500" />
+                                          Rejected
+                                        </span>
+                                      )}
+                                    </div>
+                                    {dep.status === 'pending' && (
+                                      <div className="w-24 sm:w-28 bg-white/5 h-1 rounded-full overflow-hidden relative">
+                                        <motion.div 
+                                          className="bg-[#D4AF37] h-full rounded-full"
+                                          initial={{ x: '-100%' }}
+                                          animate={{ x: '100%' }}
+                                          transition={{ 
+                                            repeat: Infinity, 
+                                            duration: 1.5, 
+                                            ease: "linear" 
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -1385,10 +1418,43 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                 <td className="py-2.5 font-bold uppercase text-white">{wit.network}</td>
                                 <td className="py-2.5 font-mono text-white/40 text-[9px] truncate max-w-[120px]" title={wit.wallet}>{wit.wallet}</td>
                                 <td className="py-2.5 font-medium text-[#D4AF37]">{currencySymbol}{(wit.amount * conversionRate).toFixed(2)}</td>
-                                <td className="py-2.5 text-right font-bold uppercase tracking-wider text-[9px]">
-                                  {wit.status === 'pending' && <span className="text-amber-500 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">Pending Approval</span>}
-                                  {wit.status === 'approved' && <span className="text-emerald-400 font-semibold bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-md">Disbursed</span>}
-                                  {wit.status === 'rejected' && <span className="text-rose-500 font-semibold bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md">Denied</span>}
+                                <td className="py-2.5 text-right">
+                                  <div className="flex flex-col items-end gap-1.5">
+                                    <div className="flex items-center gap-1">
+                                      {wit.status === 'pending' && (
+                                        <span className="inline-flex items-center gap-1 text-amber-500 font-bold uppercase tracking-wider text-[9px] bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
+                                          <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />
+                                          Pending Approval
+                                        </span>
+                                      )}
+                                      {wit.status === 'approved' && (
+                                        <span className="inline-flex items-center gap-1 text-emerald-400 font-bold uppercase tracking-wider text-[9px] bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-md">
+                                          <CheckCircle className="w-3 h-3 text-emerald-400" />
+                                          Disbursed
+                                        </span>
+                                      )}
+                                      {wit.status === 'rejected' && (
+                                        <span className="inline-flex items-center gap-1 text-rose-500 font-bold uppercase tracking-wider text-[9px] bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md">
+                                          <XCircle className="w-3 h-3 text-rose-500" />
+                                          Denied
+                                        </span>
+                                      )}
+                                    </div>
+                                    {wit.status === 'pending' && (
+                                      <div className="w-24 sm:w-28 bg-white/5 h-1 rounded-full overflow-hidden relative">
+                                        <motion.div 
+                                          className="bg-[#D4AF37] h-full rounded-full"
+                                          initial={{ x: '-100%' }}
+                                          animate={{ x: '100%' }}
+                                          transition={{ 
+                                            repeat: Infinity, 
+                                            duration: 1.5, 
+                                            ease: "linear" 
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             ))}

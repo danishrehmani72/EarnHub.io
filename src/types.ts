@@ -7,7 +7,7 @@ export interface ReferralLog {
   id: string;
   timestamp: string;
   amount: number;
-  referrerName: string;
+  referrerName?: string;
   refereeId: string;
   createdAt: any; // can be Firestore Timestamp
   refereeAvatar?: string;

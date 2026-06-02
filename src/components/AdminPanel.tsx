@@ -105,8 +105,13 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [filterWStatus, setFilterWStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [filterWStatus, setFilterWStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [filterType, setFilterType] = useState<'all' | 'deposits' | 'withdrawals'>('all');
+
+  // Transaction Search & Date Range Filters
+  const [txSearchText, setTxSearchText] = useState('');
+  const [txStartDate, setTxStartDate] = useState('');
+  const [txEndDate, setTxEndDate] = useState('');
 
   // Anti-fraud analytics flags state
   const [antiFraudFlags, setAntiFraudFlags] = useState<{
@@ -211,25 +216,45 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         const userId = userDoc.id;
 
         // Deposits subcollection
-        const depSnap = await getDocs(collection(db, 'users', userId, 'deposits'));
-        const userDeps = depSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        let userDeps: any[] = [];
+        try {
+          const depSnap = await getDocs(collection(db, 'users', userId, 'deposits'));
+          userDeps = depSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (err) {
+          console.warn(`Fallback: Failed to fetch deposits for ${userId}`, err);
+        }
 
         // Withdrawals subcollection
-        const witSnap = await getDocs(collection(db, 'users', userId, 'withdrawals'));
-        const userWits = witSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        let userWits: any[] = [];
+        try {
+          const witSnap = await getDocs(collection(db, 'users', userId, 'withdrawals'));
+          userWits = witSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (err) {
+          console.warn(`Fallback: Failed to fetch withdrawals for ${userId}`, err);
+        }
 
         // Investments subcollection
-        const invSnap = await getDocs(collection(db, 'users', userId, 'investments'));
-        const userInvs = invSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        let userInvs: any[] = [];
+        try {
+          const invSnap = await getDocs(collection(db, 'users', userId, 'investments'));
+          userInvs = invSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (err) {
+          console.warn(`Fallback: Failed to fetch investments for ${userId}`, err);
+        }
 
         // Referrals subcollection
-        const refSnap = await getDocs(collection(db, 'users', userId, 'referrals'));
-        const userRefs = refSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        let userRefs: any[] = [];
+        try {
+          const refSnap = await getDocs(collection(db, 'users', userId, 'referrals'));
+          userRefs = refSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (err) {
+          console.warn(`Fallback: Failed to fetch referrals for ${userId}`, err);
+        }
 
         fetchedUsers.push({
           userId,
           name: userData.name || 'Anonymous VIP',
-          email: userData.email || 'no-email@earnhub.com',
+          email: userData.email || 'no-email@wealthhub.com',
           avatar: userData.avatar,
           blocked: userData.blocked || false,
           signupBonus: userData.signupBonus !== undefined ? userData.signupBonus : 0.10,
@@ -494,18 +519,67 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
     const list: { type: 'deposit' | 'withdrawal'; userUid: string; userName: string; data: any }[] = [];
     allUsers.forEach(u => {
       u.deposits.forEach(d => {
-        if (d.status === 'pending') {
-          list.push({ type: 'deposit', userUid: u.userId, userName: u.name, data: d });
-        }
+        list.push({ type: 'deposit', userUid: u.userId, userName: u.name, data: d });
       });
       u.withdrawals.forEach(w => {
-        if (w.status === 'pending') {
-          list.push({ type: 'withdrawal', userUid: u.userId, userName: u.name, data: w });
-        }
+        list.push({ type: 'withdrawal', userUid: u.userId, userName: u.name, data: w });
       });
     });
     return list;
   }, [allUsers]);
+
+  const filteredVerificationItems = useMemo(() => {
+    const list = itemsPendingVerification.filter(item => {
+      // 1. Category Filter (deposits/withdrawals/all)
+      if (filterType !== 'all') {
+        if (filterType === 'deposits' && item.type !== 'deposit') return false;
+        if (filterType === 'withdrawals' && item.type !== 'withdrawal') return false;
+      }
+
+      // 2. Status Filter
+      if (filterWStatus !== 'all' && item.data.status !== filterWStatus) return false;
+
+      // 3. Search text (matches userName, userUid, txHash, network, wallet address)
+      if (txSearchText.trim() !== '') {
+        const query = txSearchText.toLowerCase();
+        const matchesName = (item.userName || '').toLowerCase().includes(query);
+        const matchesUid = (item.userUid || '').toLowerCase().includes(query);
+        const matchesHash = (item.data.txHash || '').toLowerCase().includes(query);
+        const matchesWallet = (item.data.wallet || '').toLowerCase().includes(query);
+        const matchesNetwork = (item.data.network || '').toLowerCase().includes(query);
+        if (!matchesName && !matchesUid && !matchesHash && !matchesWallet && !matchesNetwork) {
+          return false;
+        }
+      }
+
+      // 4. Date Range Filter
+      const txDateObj = item.data.createdAt?.seconds 
+        ? new Date(item.data.createdAt.seconds * 1000) 
+        : new Date(item.data.timestamp);
+
+      if (txStartDate) {
+        const start = new Date(txStartDate + 'T00:00:00');
+        if (txDateObj < start) return false;
+      }
+      if (txEndDate) {
+        const end = new Date(txEndDate + 'T23:59:59');
+        if (txDateObj > end) return false;
+      }
+
+      return true;
+    });
+
+    // Sort newest first
+    return list.sort((a, b) => {
+      const aTime = a.data.createdAt?.seconds 
+        ? a.data.createdAt.seconds * 1000 
+        : new Date(a.data.timestamp).getTime() || 0;
+      const bTime = b.data.createdAt?.seconds 
+        ? b.data.createdAt.seconds * 1000 
+        : new Date(b.data.timestamp).getTime() || 0;
+      return bTime - aTime;
+    });
+  }, [itemsPendingVerification, filterType, filterWStatus, txSearchText, txStartDate, txEndDate]);
 
   // Render Login state first
   if (!isAdminAuthenticated) {
@@ -759,7 +833,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             <p className="text-[9px] text-white/40">Audit incoming cash inputs and payouts across all registers</p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <select 
               value={filterType} 
               onChange={e => setFilterType(e.target.value as any)}
@@ -769,80 +843,162 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               <option value="deposits">Deposit Proofs</option>
               <option value="withdrawals">Withdrawal Payouts</option>
             </select>
+
+            <select 
+              value={filterWStatus} 
+              onChange={e => setFilterWStatus(e.target.value as any)}
+              className="bg-[#0A0A0A] border border-white/5 rounded-xl px-3 py-1.5 text-[10px] text-white uppercase outline-none focus:border-[#D4AF37]/35 cursor-pointer font-bold tracking-wider"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending Verifications</option>
+              <option value="approved">Approved Logs</option>
+              <option value="rejected">Rejected Logs</option>
+            </select>
           </div>
         </div>
 
-        {itemsPendingVerification.length === 0 ? (
+        {/* Dynamic Search & Date-Range Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 bg-white/[0.01] border border-white/5 rounded-xl p-3 text-xs leading-relaxed font-sans">
+          {/* Text Search Input */}
+          <div className="md:col-span-5 relative">
+            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-white/20" />
+            <input 
+              type="text" 
+              placeholder="Search TX by Name, ID, hash, network..." 
+              value={txSearchText}
+              onChange={e => setTxSearchText(e.target.value)}
+              className="w-full bg-[#070707] border border-white/5 rounded-xl pl-9 pr-4 py-2 text-[10px] text-white placeholder-white/30 outline-none focus:border-[#D4AF37]/30 transition-all font-medium font-sans"
+            />
+          </div>
+
+          {/* Start Date Input */}
+          <div className="md:col-span-3 flex items-center gap-1.5">
+            <span className="text-[9px] text-white/30 uppercase tracking-wider shrink-0 font-bold font-sans">Start</span>
+            <input 
+              type="date"
+              value={txStartDate}
+              onChange={e => setTxStartDate(e.target.value)}
+              className="w-full bg-[#070707] border border-white/5 rounded-xl px-2 py-1.5 text-[9px] text-white outline-none focus:border-[#D4AF37]/30 transition-all font-mono"
+            />
+          </div>
+
+          {/* End Date Input */}
+          <div className="md:col-span-3 flex items-center gap-1.5">
+            <span className="text-[9px] text-white/30 uppercase tracking-wider shrink-0 font-bold font-sans">End</span>
+            <input 
+              type="date"
+              value={txEndDate}
+              onChange={e => setTxEndDate(e.target.value)}
+              className="w-full bg-[#070707] border border-white/5 rounded-xl px-2 py-1.5 text-[9px] text-white outline-none focus:border-[#D4AF37]/30 transition-all font-mono"
+            />
+          </div>
+
+          {/* Clear Button */}
+          <div className="md:col-span-1 flex items-center justify-end">
+            {(txSearchText || txStartDate || txEndDate || filterType !== 'all' || filterWStatus !== 'pending') && (
+              <button
+                onClick={() => {
+                  setTxSearchText('');
+                  setTxStartDate('');
+                  setTxEndDate('');
+                  setFilterType('all');
+                  setFilterWStatus('pending');
+                }}
+                className="w-full md:w-auto text-[8px] font-black uppercase tracking-wider px-2 py-1.5 rounded-lg border border-rose-500/20 bg-rose-500/5 text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-all active:scale-95 text-center font-sans"
+                title="Reset Filters"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredVerificationItems.length === 0 ? (
           <div className="p-12 bg-white/[0.01] border border-dashed border-white/5 rounded-xl text-center text-[10.5px] text-white/30 uppercase tracking-[0.2em] font-sans">
-            Ledger holds no pending transaction verifications. Well clean!
+            No transaction records observed inside this view matching filters.
           </div>
         ) : (
           <div className="space-y-3">
-            {itemsPendingVerification
-              .filter(item => {
-                if (filterType === 'all') return true;
-                if (filterType === 'deposits') return item.type === 'deposit';
-                return item.type === 'withdrawal';
-              })
-              .map((item, idx) => {
-                const isDeposit = item.type === 'deposit';
-                const tx = item.data;
-                const isProcessing = processingTxId === tx.id;
+            {filteredVerificationItems.map((item, idx) => {
+              const isDeposit = item.type === 'deposit';
+              const tx = item.data;
+              const isProcessing = processingTxId === tx.id;
 
-                return (
-                  <div key={idx} className="bg-[#070707] border border-white/5 rounded-xl p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 font-sans text-xs">
-                    <div className="space-y-1.5 flex-1 select-all">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
-                          isDeposit 
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' 
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/25'
-                        }`}>
-                          {isDeposit ? 'Inbound Deposit Proof' : 'Outbound Payout Request'}
-                        </span>
-                        <span className="text-white/50 font-mono text-[9.5px]">Claimant Name: <span className="text-white font-bold">{item.userName}</span> ({item.userUid})</span>
-                        <span className="text-white/30 font-mono text-[9px]">{tx.timestamp}</span>
-                      </div>
-                      
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-sm font-black font-mono text-white">${Number(tx.amount).toFixed(2)} USD value</span>
-                        <span className="text-[10px] text-white/30 uppercase font-bold">via {tx.network} Cryptosphere</span>
-                      </div>
-
-                      <p className="text-[9px] font-mono text-white/40 break-all select-all">
-                        {isDeposit 
-                          ? `TXHash Identifier: ${tx.txHash}` 
-                          : `Recipient Destination Wallet Address: ${tx.wallet}`
-                        }
-                      </p>
+              return (
+                <div key={idx} className="bg-[#070707] border border-white/5 rounded-xl p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 font-sans text-xs">
+                  <div className="space-y-1.5 flex-1 select-all">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                        isDeposit 
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' 
+                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/25'
+                      }`}>
+                        {isDeposit ? 'Inbound Deposit Proof' : 'Outbound Payout Request'}
+                      </span>
+                      <span className="text-white/50 font-mono text-[9.5px]">Claimant Name: <span className="text-white font-bold">{item.userName}</span> ({item.userUid})</span>
+                      <span className="text-white/30 font-mono text-[9px]">{tx.timestamp}</span>
+                    </div>
+                    
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-black font-mono text-white">${Number(tx.amount).toFixed(2)} USD value</span>
+                      <span className="text-[10px] text-white/30 uppercase font-bold text-sans">via {tx.network} Cryptosphere</span>
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-widest font-mono ${
+                        tx.status === 'approved' 
+                          ? 'bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20' 
+                          : tx.status === 'rejected' 
+                          ? 'bg-rose-500/15 text-rose-400 border border-rose-500/25' 
+                          : 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
+                      }`}>
+                        {tx.status}
+                      </span>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-2 self-end lg:self-center">
-                      {isProcessing && (
-                        <div className="text-[9px] uppercase font-mono tracking-wider text-amber-500 animate-pulse flex items-center gap-1.5 mr-2">
-                          <Clock className="w-3 h-3 animate-spin" />
-                          Blockchain Syncing...
-                        </div>
-                      )}
-                      
-                      <button
-                        disabled={isProcessing}
-                        onClick={() => handleAdminVerifyTx(item.type, item.userUid, tx.id, 'approved', Number(tx.amount), item.userName)}
-                        className="w-full sm:w-auto px-4 py-2 rounded-lg border border-emerald-500/35 text-emerald-400 hover:bg-emerald-500/10 active:scale-95 transition-all text-[9px] font-black uppercase tracking-[0.15em] cursor-pointer disabled:opacity-50"
-                      >
-                        {isDeposit ? 'Approve Token Credit' : 'Disburse Outbound'}
-                      </button>
-                      <button
-                        disabled={isProcessing}
-                        onClick={() => handleAdminVerifyTx(item.type, item.userUid, tx.id, 'rejected', Number(tx.amount), item.userName)}
-                        className="w-full sm:w-auto px-4 py-2 rounded-lg border border-rose-500/35 text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all text-[9px] font-black uppercase tracking-[0.15em] cursor-pointer disabled:opacity-50"
-                      >
-                        Deny / Flag Status
-                      </button>
-                    </div>
+                    <p className="text-[9px] font-mono text-white/40 break-all select-all">
+                      {isDeposit 
+                        ? `TXHash Identifier: ${tx.txHash}` 
+                        : `Recipient Destination Wallet Address: ${tx.wallet}`
+                      }
+                    </p>
                   </div>
-                );
-              })}
+
+                  <div className="flex flex-col sm:flex-row items-center gap-2 self-end lg:self-center">
+                    {isProcessing && (
+                      <div className="text-[9px] uppercase font-mono tracking-wider text-amber-500 animate-pulse flex items-center gap-1.5 mr-2">
+                        <Clock className="w-3 h-3 animate-spin" />
+                        Blockchain Syncing...
+                      </div>
+                    )}
+                    
+                    {tx.status === 'pending' ? (
+                      <>
+                        <button
+                          disabled={isProcessing}
+                          onClick={() => handleAdminVerifyTx(item.type, item.userUid, tx.id, 'approved', Number(tx.amount), item.userName)}
+                          className="w-full sm:w-auto px-4 py-2 rounded-lg border border-emerald-500/35 text-emerald-400 hover:bg-emerald-500/10 active:scale-95 transition-all text-[9px] font-black uppercase tracking-[0.15em] cursor-pointer disabled:opacity-50"
+                        >
+                          {isDeposit ? 'Approve Token Credit' : 'Disburse Outbound'}
+                        </button>
+                        <button
+                          disabled={isProcessing}
+                          onClick={() => handleAdminVerifyTx(item.type, item.userUid, tx.id, 'rejected', Number(tx.amount), item.userName)}
+                          className="w-full sm:w-auto px-4 py-2 rounded-lg border border-rose-500/35 text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all text-[9px] font-black uppercase tracking-[0.15em] cursor-pointer disabled:opacity-50"
+                        >
+                          Deny / Flag Status
+                        </button>
+                      </>
+                    ) : (
+                      <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                        tx.status === 'approved' 
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25' 
+                          : 'bg-rose-500/10 text-rose-400 border-rose-500/25'
+                      }`}>
+                        Action: {tx.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -868,35 +1024,47 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         </div>
 
         {filteredUsers.length === 0 ? (
-          <div className="p-8 text-center text-xs text-white/30 uppercase tracking-widest">
+          <div className="p-8 text-center text-xs text-white/30 uppercase tracking-widest block font-sans">
             No matching registered user files observed.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans">
             {filteredUsers.map((user, idx) => {
               const approvedD = user.deposits.filter(d => d.status === 'approved').reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
               const approvedW = user.withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
               const referralEarnings = user.referrals.reduce((sum, ref: any) => sum + (ref.amount !== undefined ? ref.amount : 0.05), 0);
 
-              const investmentProfits = user.deposits.filter((d: any) => d.status === 'approved').reduce((sum: number, dep: any) => {
-                const ts = dep.createdAt?.seconds 
-                  ? dep.createdAt.seconds * 1000 
-                  : new Date(dep.timestamp).getTime() || Date.now();
-                const elapsedMs = Date.now() - ts;
+              const activeInvestmentsSum = user.investments
+                .filter((i: any) => i.status === 'active')
+                .reduce((sum: number, i: any) => sum + (Number(i.amount) || 0), 0);
+
+              const investmentProfits = user.investments.reduce((sum: number, processPlan: any) => {
+                let endTime = Date.now();
+                if (processPlan.status === 'cancelled' && processPlan.cancelledAt) {
+                  endTime = processPlan.cancelledAt?.seconds 
+                    ? processPlan.cancelledAt.seconds * 1000 
+                    : new Date(processPlan.cancelledAt).getTime() || Date.now();
+                }
+
+                const startTime = processPlan.createdAt?.seconds 
+                  ? processPlan.createdAt.seconds * 1000 
+                  : new Date(processPlan.timestamp).getTime() || Date.now();
+                  
+                const elapsedMs = Math.max(0, endTime - startTime);
                 const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
                 
                 let percent = 0;
-                if (dep.amount >= 100) percent = 7;
-                else if (dep.amount >= 50) percent = 5;
-                else if (dep.amount >= 15) percent = 4;
-                else if (dep.amount >= 5) percent = 3;
+                if (processPlan.amount >= 100) percent = 7;
+                else if (processPlan.amount >= 50) percent = 5;
+                else if (processPlan.amount >= 15) percent = 4;
+                else if (processPlan.amount >= 5) percent = 3;
                 
-                const dailyRate = dep.amount * (percent / 100);
+                const dailyRate = processPlan.amount * (percent / 100);
                 const profit = elapsedDaysReal * dailyRate;
                 return sum + (profit > 0 ? profit : 0);
               }, 0);
 
-              const calculatedBalance = user.signupBonus + referralEarnings + approvedD - approvedW + investmentProfits + (user.dailyBonusEarnings || 0);
+              const calculatedBalance = user.signupBonus + referralEarnings + approvedD - approvedW + (user.dailyBonusEarnings || 0) + investmentProfits - activeInvestmentsSum;
 
               return (
                 <div key={idx} className="bg-[#070707] border border-white/5 rounded-xl p-4 space-y-3 flex flex-col justify-between">

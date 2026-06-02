@@ -68,7 +68,7 @@
           "type": "number",
           "description": "Earnings from the referral event (usually 10)."
         },
-        "referrerName": {
+        "refereeName": {
           "type": "string",
           "description": "First name or full name of the newly onboarded referee member."
         },
@@ -86,7 +86,7 @@
           "description": "Audit control server-side timestamp of write."
         }
       },
-      "required": ["id", "timestamp", "amount", "referrerName", "refereeId", "createdAt"]
+      "required": ["id", "timestamp", "amount", "refereeId", "refereeName", "createdAt"]
     }
   },
   "firestore": {
