@@ -41,12 +41,12 @@ const faqs: FaqItemConfig[] = [
       <span>
         We offer elite 24/7 customer support. For any issues, deposit credentials confirmation, or instant withdrawal speedup requests, contact our live Telegram representative at{' '}
         <a 
-          href="https://t.me/EarnHubSupportTeam" 
+          href="https://t.me/MoneyMindSpaceSupport" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="text-sky-400 hover:underline font-bold"
         >
-          @EarnHubSupportTeam
+          @MoneyMindSpaceSupport
         </a>
         .
       </span>

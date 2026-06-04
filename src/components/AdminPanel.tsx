@@ -126,7 +126,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const [telegramLogs, setTelegramLogs] = useState<{ msg: string; time: string }[]>([]);
 
   // Supported administrators
-  const ADMIN_EMAILS = ["admin@gmail.com", "danishrehmani72@gmail.com", "superadmin@earnhub.com"];
+  const ADMIN_EMAILS = ["admin@gmail.com", "danishrehmani72@gmail.com", "superadmin@moneymindspace.com", "superadmin@earnhub.com"];
 
   // Push mock Telegram webhook notification
   const logTelegramNotify = (message: string) => {
@@ -177,6 +177,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       cleanId === 'danish' || 
       cleanId === 'danishrehmani72' || 
       cleanId === 'danishrehmani72@gmail.com' ||
+      cleanId === 'adminmoneymind' ||
       cleanId === 'adminearnhub';
       
     const isAuthorizedCode = 
@@ -596,7 +597,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             <ShieldCheck className="w-6 h-6 animate-pulse" />
           </div>
           <h2 className="text-lg font-bold font-serif tracking-widest text-[#D4AF37] uppercase">Secure Admin Login 🔐</h2>
-          <p className="text-[10px] text-white/40 uppercase tracking-[0.1em]">EarnHub Governance Protocol Console</p>
+          <p className="text-[10px] text-white/40 uppercase tracking-[0.1em]">MoneyMind Space Governance Protocol Console</p>
         </div>
 
         {authError && (
@@ -1076,7 +1077,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                         </div>
                         <div className="text-left leading-tight">
                           <p className="text-xs font-bold text-white leading-none">{user.name}</p>
-                          <p className="text-[9px] text-[#D4AF37] font-mono mt-0.5 leading-none break-all max-w-[150px] sm:max-w-xs">{user.email || 'no-email@earnhub.com'}</p>
+                          <p className="text-[9px] text-[#D4AF37] font-mono mt-0.5 leading-none break-all max-w-[150px] sm:max-w-xs">{user.email || 'no-email@moneymindspace.com'}</p>
                           <p className="text-[8px] text-white/45 font-mono leading-none mt-1">ID: #{user.userId}</p>
                         </div>
                       </div>

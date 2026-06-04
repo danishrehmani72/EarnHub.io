@@ -1102,17 +1102,17 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       Need help or looking for fast withdrawals? 
                     </h3>
                     <p className="text-xs text-white/50 leading-relaxed">
-                      Our live response team processes your payouts and assists with account inquiries around the clock. Get dedicated support directly on Telegram 24/7 at <strong className="text-sky-400">@EarnHubSupportTeam</strong>.
+                      Our live response team processes your payouts and assists with account inquiries around the clock. Get dedicated support directly on Telegram 24/7 at <strong className="text-sky-400">@MoneyMindSpaceSupport</strong>.
                     </p>
                   </div>
                   <a
-                    href="https://t.me/EarnHubSupportTeam"
+                    href="https://t.me/MoneyMindSpaceSupport"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-sky-500 text-white font-bold text-xs uppercase tracking-wider hover:bg-sky-400 active:scale-[0.98] transition-all duration-150 shrink-0 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20"
                   >
                     <span>Contact support 24/7</span>
-                    <span className="font-mono text-[10px]">@EarnHubSupportTeam</span>
+                    <span className="font-mono text-[10px]">@MoneyMindSpaceSupport</span>
                   </a>
                 </div>
               </div>
@@ -1308,7 +1308,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 <div className="space-y-1">
                   <span className="text-[9.5px] font-bold text-emerald-400 tracking-wider uppercase block">Fast Automated Withdrawals Enabled</span>
                   <p className="text-[11.5px] text-white/55 leading-relaxed">
-                    Withdrawal requests are processed with elite high-speed routing. Once verified by our active ledger auditors, distributions are dispatched directly to your wallet in record time. For immediate 24/7 support, message us on Telegram at <a href="https://t.me/EarnHubSupportTeam" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline font-bold underline decoration-dotted">@EarnHubSupportTeam</a>.
+                    Withdrawal requests are processed with elite high-speed routing. Once verified by our active ledger auditors, distributions are dispatched directly to your wallet in record time. For immediate 24/7 support, message us on Telegram at <a href="https://t.me/MoneyMindSpaceSupport" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline font-bold underline decoration-dotted">@MoneyMindSpaceSupport</a>.
                   </p>
                 </div>
               </div>

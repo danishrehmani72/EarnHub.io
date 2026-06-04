@@ -506,8 +506,8 @@ export default function App() {
     }
 
     if (target === 'helpline') {
-      window.open('https://t.me/EarnHubSupportTeam', '_blank');
-      addToast('Opening EarnHub Official Support on Telegram...', 'success');
+      window.open('https://t.me/MoneyMindSpaceSupport', '_blank');
+      addToast('Opening MoneyMind Space Support on Telegram...', 'success');
       return;
     }
 
@@ -1206,7 +1206,7 @@ export default function App() {
 
               {/* Admin Footer Banner info */}
               <div className="px-6 py-3 border-t border-white/5 bg-[#050505] text-[8px] text-center text-white/20 uppercase tracking-[0.2em] font-sans flex flex-col sm:flex-row items-center justify-between gap-2">
-                <span>EarnHub Audit Log: Enabled</span>
+                <span>MoneyMind Space Audit Log: Enabled</span>
                 <span className="text-[#D4AF37]/35 font-mono">Operator ID: {currentUid ? currentUid.slice(0, 16) : 'anonymous'}</span>
                 <span>SECURE SESSION TYPE: TLS 1.3 AES-256</span>
               </div>
