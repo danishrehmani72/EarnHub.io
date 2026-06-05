@@ -1134,17 +1134,63 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               className="space-y-8"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* 1. DEPOSIT PORTAL */}
-                <div id="deposit-section" className="bg-[#161616] border border-white/5 rounded-2xl p-6 space-y-4 scroll-mt-24">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ArrowDownLeft className="w-5 h-5 text-emerald-400" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white">Deposit Crypto</h3>
+                {/* 1. DEPOSIT PORTAL - UPGRADED GLASSMORPHISM CARD WITH BLACK & GOLD THEME */}
+                <div 
+                  id="deposit-section" 
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-[#10B981]/60 shadow-[0_0_40px_rgba(212,175,55,0.12)] hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl"
+                >
+                  {/* Premium gold particle overlay gradients */}
+                  <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-[#D4AF37]/8 via-[#10B981]/4 to-transparent blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
+
+                  {/* Portal Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#D4AF37]/20 to-black flex items-center justify-center border border-[#D4AF37]/40 ring-1 ring-[#D4AF37]/15">
+                        <span className="text-xl">💳</span>
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black uppercase tracking-widest text-white font-serif leading-none">Deposit Portal</h3>
+                        <p className="text-[9px] text-[#D4AF37] uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse">Ingress protocol active</p>
+                      </div>
+                    </div>
+                    
+                    <span className="self-start sm:self-auto text-[8.5px] bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30 px-3 py-1.5 rounded-full uppercase tracking-widest font-black flex items-center gap-2">
+                      <span className="w-2 h-2 bg-[#10B981] rounded-full animate-ping"></span>
+                      Verified Secure Node
+                    </span>
                   </div>
 
-                  <form onSubmit={handleDepositSubmit} className="space-y-3.5">
+                  {/* Live Deposit Mode Metric/Highlights */}
+                  <div className="bg-gradient-to-r from-white/[0.01] via-white/[0.02] to-transparent p-5 rounded-2xl border border-white/5 relative">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2 flex items-center gap-1.5">
+                      <span>💎 Official Smart Contract Node</span>
+                      <span className="w-1 h-1 bg-[#D4AF37] rounded-full"></span>
+                    </p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-mono font-black text-white tracking-tight">
+                        100% Instant
+                      </span>
+                      <span className="text-xs text-white/40 uppercase font-mono tracking-wider">
+                        Auto-Credited Funds
+                      </span>
+                    </div>
+                    <p className="text-[9.5px] text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
+                      <span>✅ Audited deposit addresses connected to our automated processing ledger.</span>
+                    </p>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent my-1" />
+
+                  {/* Deposit Submission Form */}
+                  <form onSubmit={handleDepositSubmit} className="space-y-5 text-left">
                     {/* Select Network */}
                     <div className="space-y-1.5">
-                      <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Select Network Token</label>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">🏦</span>
+                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Select Network Token</label>
+                      </div>
                       <select
                         value={depNetwork}
                         onChange={(e) => {
@@ -1152,7 +1198,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                           setDepError('');
                           setDepSuccess('');
                         }}
-                        className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-3 text-xs text-white uppercase font-semibold tracking-wider hover:border-white/20 transition-all outline-none"
+                        className="w-full bg-black/80 border border-[#D4AF37]/30 hover:border-[#10B981]/60 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
                       >
                         <option value="BNB">BNB (BEP20)</option>
                         <option value="TRX">USDT TRON (TRC20)</option>
@@ -1160,64 +1206,111 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       </select>
                     </div>
 
-                    {/* Display Transfer Address */}
-                    <div className="space-y-1.5 bg-[#0C0C0C] border border-white/5 rounded-xl p-3.5 relative overflow-hidden">
-                      <p className="text-[8px] font-bold text-[#D4AF37] uppercase tracking-widest mb-1.5">Official Safe Receiver Address</p>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-mono text-white/70 truncate tracking-wider">
+                    {/* Display Transfer Address block */}
+                    <div className="space-y-1.5 bg-black/80 border border-[#D4AF37]/25 rounded-2xl p-4 relative overflow-hidden shadow-inner shadow-black">
+                      <div className="flex items-center gap-1 md:gap-1.5 mb-1.5">
+                        <span className="text-xs">🔑</span>
+                        <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.15em]">Official Safe Receiver Address</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        <span className="text-[11px] font-mono text-white/90 select-all break-all tracking-wider font-semibold">
                           {depositAddresses[depNetwork]}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleCopyAddr(depNetwork, depositAddresses[depNetwork])}
-                          className="px-2.5 py-1 text-[8px] tracking-wider uppercase font-bold text-[#D4AF37] bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/25 rounded-md transition-all cursor-pointer"
+                          className="px-4 py-2 shrink-0 text-[10px] tracking-widest uppercase font-black text-black bg-[#D4AF37] hover:brightness-110 border-0 rounded-xl transition-all cursor-pointer font-sans"
                         >
-                          {copiedAddr === depNetwork ? 'Copied' : 'Copy'}
+                          {copiedAddr === depNetwork ? 'COPIED ✅' : 'COPY ADDR 📋'}
                         </button>
                       </div>
                     </div>
 
                     {/* Amount Block */}
-                    <div className="space-y-1.5">
-                      <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Amount ({currencySymbol} Equiv.)</label>
+                    <div className="space-y-1.5 bg-transparent">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">💵</span>
+                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Amount ({currencySymbol} Equiv.)</label>
+                      </div>
                       <input
                         type="number"
                         placeholder={`Enter amount eg: ${(100 * conversionRate).toFixed(0)}`}
                         value={depAmount}
                         onChange={(e) => setDepAmount(e.target.value)}
-                        className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/50"
+                        className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
                         min="1"
                         step="any"
                       />
                     </div>
 
                     {/* Tx Hash proof */}
-                    <div className="space-y-1.5">
-                      <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Blockchain TXID / TxHash</label>
+                    <div className="space-y-1.5 bg-transparent">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">⛓</span>
+                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Blockchain TXID / TxHash</label>
+                      </div>
                       <input
                         type="text"
-                        placeholder="Paste transaction receipt hash"
+                        placeholder="Paste transaction receipt hash / TXID"
                         value={depTxHash}
                         onChange={(e) => setDepTxHash(e.target.value)}
-                        className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-3 text-xs text-white font-mono placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/50"
+                        className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
                       />
                     </div>
 
-                    {/* Status feedback */}
-                    {depError && <p className="text-[10px] font-medium text-rose-500 leading-relaxed font-mono">{depError}</p>}
-                    {depSuccess && <p className="text-[10px] font-medium text-emerald-400 leading-relaxed font-mono">{depSuccess}</p>}
+                    {/* Divider line style */}
+                    <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/45 to-transparent my-1" />
+
+                    {/* Core metrics display */}
+                    <div className="grid grid-cols-2 gap-3.5 pt-1 text-xs">
+                      <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
+                        <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
+                          <span>⏱</span> Verification Time
+                        </p>
+                        <p className="text-[10px] font-black text-emerald-400 font-mono">⏱ Est: 5-15 Minutes</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
+                        <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
+                          <span>🔒</span> Core Safety
+                        </p>
+                        <p className="text-[10px] font-black text-[#D4AF37] font-mono">🔒 SSL Direct Escrow</p>
+                      </div>
+                    </div>
+
+                    {/* Status feedback alerts */}
+                    {depError && (
+                      <p className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+                        <span>⚠️ Error:</span>
+                        <span>{depError}</span>
+                      </p>
+                    )}
+                    {depSuccess && (
+                      <p className="text-[10.5px] font-extrabold text-[#10B981] leading-relaxed font-mono flex items-center gap-1.5 bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg select-all">
+                        <span>✅ Success:</span>
+                        <span>{depSuccess}</span>
+                      </p>
+                    )}
 
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full py-3 px-4 rounded-xl bg-[#D4AF37] hover:brightness-110 active:scale-[0.98] transition-all text-black font-extrabold text-[10px] uppercase tracking-widest cursor-pointer disabled:opacity-40"
+                      className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
                     >
-                      {submitting ? 'Registering...' : 'Submit Deposit Proof'}
+                      {submitting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                          <span>Routing Proof...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>🚀 Submit Deposit Proof</span>
+                        </>
+                      )}
                     </button>
                   </form>
                 </div>
 
-                {/* 2. MODERN WITHDRAW PORTAL - UPGRADED GLASSMORPHISM CARD WITH BLACK & GOLD THEME */}
+                {/* 2. WITHDRAW PORTAL - UPGRADED GLASSMORPHISM CARD WITH BLACK & GOLD THEME */}
                 <div 
                   id="withdraw-section" 
                   className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-[#10B981]/60 shadow-[0_0_40px_rgba(212,175,55,0.12)] hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl"
@@ -1233,7 +1326,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         <span className="text-xl">💰</span>
                       </div>
                       <div>
-                        <h3 className="text-base font-black uppercase tracking-widest text-white font-serif leading-none">Modern Withdraw Portal</h3>
+                        <h3 className="text-base font-black uppercase tracking-widest text-white font-serif leading-none">Withdraw Portal</h3>
                         <p className="text-[9px] text-[#D4AF37] uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse">Gateway protocol active</p>
                       </div>
                     </div>

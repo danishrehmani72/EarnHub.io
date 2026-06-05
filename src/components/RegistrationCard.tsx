@@ -296,31 +296,36 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="w-full max-w-md bg-[#111111] rounded-2xl border border-white/5 shadow-2xl p-6 md:p-8 space-y-6"
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-[#10B981]/60 shadow-[0_0_40px_rgba(212,175,55,0.12)] hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 max-w-md w-full backdrop-blur-xl"
     >
-      <div className="text-center space-y-2">
+      {/* Premium gold particle overlay gradients */}
+      <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-[#D4AF37]/8 via-[#10B981]/4 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
+
+      {/* Header section with brand logo */}
+      <div className="text-center space-y-2 relative z-10">
         <img 
           src={earnhubLogo}
           alt="MoneyMind Space Gold Premium Logo"
-          className="w-16 h-16 mx-auto object-contain rounded-xl border border-[#D4AF37]/20 shadow-[0_0_20px_rgba(212,175,55,0.15)] bg-black mb-2"
+          className="w-16 h-16 mx-auto object-contain rounded-2xl border-2 border-[#D4AF37]/40 ring-1 ring-[#D4AF37]/15 shadow-[0_0_20px_rgba(212,175,55,0.15)] bg-black mb-3"
           referrerPolicy="no-referrer"
         />
-        <h2 className="text-2xl font-semibold tracking-tight text-[#E5E7EB] font-serif">
+        <h2 className="text-base font-black uppercase tracking-[0.14em] text-white font-serif leading-none">
           {mode === 'signup' ? (
-            <>Join <span className="text-[#D4AF37]">MoneyMind Space</span></>
+            <>Join <span className="text-[#D4AF37] animate-pulse">MoneyMind Space</span></>
           ) : (
-            <>Welcome to <span className="text-[#D4AF37]">MoneyMind Space</span></>
+            <>Welcome to <span className="text-[#D4AF37] animate-pulse">MoneyMind Space</span></>
           )}
         </h2>
-        <p className="text-xs text-white/50 leading-relaxed max-w-xs mx-auto">
+        <p className="text-[11px] text-white/50 leading-relaxed font-sans max-w-xs mx-auto">
           {mode === 'signup' 
             ? 'Create secure, real-time credentials to unlock professional distribution and payout audits.' 
             : 'Access your private dashboard to monitor balance matrices and secure transaction ledger pipelines.'}
         </p>
       </div>
 
-      {/* Dynamic Tabs/Toggles */}
-      <div className="grid grid-cols-2 gap-1 bg-black/45 p-1 rounded-xl border border-white/5">
+      {/* Dynamic Tabs/Toggles with custom state styling */}
+      <div className="grid grid-cols-2 gap-1.5 bg-black/80 p-1.5 rounded-2xl border border-[#D4AF37]/30 shadow-inner shadow-black relative z-10">
         <button
           type="button"
           onClick={() => {
@@ -328,10 +333,10 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             setError('');
             setSuccessMsg('');
           }}
-          className={`py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+          className={`py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 cursor-pointer ${
             mode === 'signup' 
-              ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/25 shadow-sm' 
-              : 'text-white/40 hover:text-white/70'
+              ? 'bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.25)] font-black' 
+              : 'text-white/40 hover:text-white/80 hover:bg-white/[0.02]'
           }`}
         >
           Sign Up
@@ -343,22 +348,25 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             setError('');
             setSuccessMsg('');
           }}
-          className={`py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+          className={`py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 cursor-pointer ${
             mode === 'login' 
-              ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/25 shadow-sm' 
-              : 'text-white/40 hover:text-white/70'
+              ? 'bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.25)] font-black' 
+              : 'text-white/40 hover:text-white/80 hover:bg-white/[0.02]'
           }`}
         >
           Sign In
         </button>
       </div>
 
-      <form onSubmit={mode === 'signup' ? handleSignup : handleLogin} className="space-y-4">
+      <form onSubmit={mode === 'signup' ? handleSignup : handleLogin} className="space-y-4 relative z-10 text-left">
         {/* User ID Field */}
-        <div>
-          <label htmlFor="userid-input" className="block text-[10px] font-semibold text-white/40 uppercase tracking-[0.2em] mb-2 font-sans">
-            VIP User ID
-          </label>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">👤</span>
+            <label htmlFor="userid-input" className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
+              VIP User ID
+            </label>
+          </div>
           <div className="relative">
             <input
               id="userid-input"
@@ -370,11 +378,11 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                 setUserId(cleanVal);
                 if (cleanVal) setError('');
               }}
-              className="w-full px-4 py-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-[#E5E7EB] placeholder-white/20 font-sans focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all duration-200"
+              className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
             />
           </div>
           {mode === 'signup' && (
-            <p className="mt-1 text-[9px] text-white/30 font-medium">Your User ID is your secure, direct login key: <span className="text-[#D4AF37]/75 font-mono">{userId ? userId : 'id'}</span></p>
+            <p className="mt-1 text-[8.5px] text-white/30 font-medium tracking-wide">Your User ID is your secure login key: <span className="text-[#D4AF37]/80 font-mono font-bold">{userId ? userId : 'id'}</span></p>
           )}
         </div>
 
@@ -386,37 +394,38 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="space-y-4"
+              className="space-y-1.5"
             >
-              <div>
-                <label htmlFor="name-input" className="block text-[10px] font-semibold text-white/40 uppercase tracking-[0.2em] mb-2 font-sans">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">📝</span>
+                <label htmlFor="name-input" className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
                   Full Name of Member
                 </label>
-                <input
-                  id="name-input"
-                  type="text"
-                  placeholder="e.g. Alex Miller"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    if (e.target.value.trim()) setError('');
-                  }}
-                  className="w-full px-4 py-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-[#E5E7EB] placeholder-white/20 font-sans focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all duration-200"
-                />
               </div>
+              <input
+                id="name-input"
+                type="text"
+                placeholder="e.g. Alex Miller"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (e.target.value.trim()) setError('');
+                }}
+                className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+              />
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Secure Password Field */}
-        <div>
-          <label htmlFor="password-input" className="block text-[10px] font-semibold text-white/40 uppercase tracking-[0.2em] mb-2 font-sans">
-            Secure Password
-          </label>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs">🔑</span>
+            <label htmlFor="password-input" className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
+              Secure Password
+            </label>
+          </div>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
-              <Key className="w-3.5 h-3.5" />
-            </span>
             <input
               id="password-input"
               type="password"
@@ -426,21 +435,23 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                 setPassword(e.target.value);
                 if (e.target.value) setError('');
               }}
-              className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-[#E5E7EB] placeholder-white/20 font-sans focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all duration-200"
+              className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
             />
           </div>
         </div>
 
         {/* Feedback Messages */}
         {error && (
-          <p className="text-xs text-red-400 font-medium flex items-center gap-1.5 bg-red-500/5 px-3 py-1.5 rounded-lg border border-red-500/10">
-            <span>⚠️</span> {error}
+          <p className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+            <span>⚠️ Error:</span>
+            <span>{error}</span>
           </p>
         )}
 
         {successMsg && (
-          <p className="text-xs text-emerald-400 font-medium flex items-center gap-1.5 bg-emerald-500/5 px-3 py-1.5 rounded-lg border border-emerald-500/10 animate-bounce">
-            <span className="animate-pulse">🎉</span> {successMsg}
+          <p className="text-[10.5px] font-extrabold text-[#10B981] leading-relaxed font-mono flex items-center gap-1.5 bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg select-all">
+            <span>✅ Success:</span>
+            <span>{successMsg}</span>
           </p>
         )}
 
@@ -448,31 +459,34 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#8A6D3B] text-black font-semibold text-xs uppercase tracking-[0.2em] hover:brightness-110 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(212,175,55,0.15)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
         >
           {isLoading ? (
-            <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+            <>
+              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+              <span>Processing Onboard...</span>
+            </>
           ) : mode === 'signup' ? (
             <>
-              <Sparkles className="w-3.5 h-3.5" />
-              Sign Up & Onboard
+              <Sparkles className="w-4 h-4" />
+              <span>🚀 Sign Up & Onboard</span>
             </>
           ) : (
             <>
-              <LogIn className="w-3.5 h-3.5" />
-              Sign In to Account
+              <LogIn className="w-4 h-4" />
+              <span>🔑 Sign In directly</span>
             </>
           )}
         </button>
       </form>
 
       {/* Alternative View triggers */}
-      <div className="text-center">
+      <div className="text-center relative z-10">
         {mode === 'signup' ? (
           <button
             type="button"
             onClick={() => setMode('login')}
-            className="text-[10px] text-white/40 uppercase tracking-widest font-semibold hover:text-[#D4AF37] transition-all cursor-pointer underline decoration-[#D4AF37]/35 decoration-2"
+            className="text-[9.5px] text-white/50 uppercase tracking-widest font-black hover:text-[#D4AF37] transition-all cursor-pointer underline decoration-[#D4AF37]/35 decoration-2"
           >
             Already have an account? Sign In
           </button>
@@ -480,33 +494,33 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           <button
             type="button"
             onClick={() => setMode('signup')}
-            className="text-[10px] text-white/40 uppercase tracking-widest font-semibold hover:text-[#D4AF37] transition-all cursor-pointer underline decoration-[#D4AF37]/35 decoration-2"
+            className="text-[9.5px] text-white/50 uppercase tracking-widest font-black hover:text-[#D4AF37] transition-all cursor-pointer underline decoration-[#D4AF37]/35 decoration-2"
           >
             Don't have an account? Sign Up
           </button>
         )}
       </div>
 
-      <div className="pt-4 border-t border-white/5 space-y-3.5">
-        <div className="flex items-start gap-3">
-          <div className="p-1.5 rounded bg-white/5 text-[#D4AF37] mt-0.5 border border-white/5">
+      <div className="pt-5 border-t border-white/5 space-y-4 text-left relative z-10 font-sans">
+        <div className="flex items-start gap-3 bg-white/[0.01] border border-white/5 p-3.5 rounded-2xl">
+          <div className="p-1.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] mt-0.5 border border-[#D4AF37]/20 shrink-0">
             <TrendingUp className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-white/80 font-sans">Elite Distribution Model</h4>
-            <p className="text-[11px] text-white/40 leading-normal">
-              Get $0.10 starting bonus upon registration (boosted to $0.30 if invited via a referral link). Earn $0.50 premium commission for every successful referral you invite.
+            <h4 className="text-[10px] font-black text-white/90 uppercase tracking-widest">Elite Distribution Model</h4>
+            <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
+              Get $0.10 starting bonus upon registration (boosted to $0.30 if invited via a referral link). Earn $0.50 premium commissions for every successful referral.
             </p>
           </div>
         </div>
-        <div className="flex items-start gap-3">
-          <div className="p-1.5 rounded bg-white/5 text-[#D4AF37] mt-0.5 border border-white/5">
-            <HelpCircle className="w-3.5 h-3.5" />
+        <div className="flex items-start gap-3 bg-white/[0.01] border border-white/5 p-3.5 rounded-2xl">
+          <div className="p-1.5 rounded bg-[#10B981]/10 text-[#10B981] mt-0.5 border border-[#10B981]/20 shrink-0">
+            <UserCheck className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-white/80 font-sans">Firebase Account Authentication</h4>
-            <p className="text-[11px] text-white/40 leading-normal">
-              Securely register using custom ID tokens. Fully validated real-time database state replication.
+            <h4 className="text-[10px] font-black text-white/90 uppercase tracking-widest">Firebase Account Authentication</h4>
+            <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
+              Securely register using custom ID tokens. Fully validated real-time database state replication with high-performance SSL encryption.
             </p>
           </div>
         </div>
