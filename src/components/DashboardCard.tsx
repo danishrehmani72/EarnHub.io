@@ -95,6 +95,11 @@ export default function DashboardCard({
   const [copied, setCopied] = useState(false);
   const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq'>('overview');
   
+  // High fidelity successful withdraw animation states (TikTok/YouTube friendly)
+  const [recentSuccessWithdraw, setRecentSuccessWithdraw] = useState<{amount: number, network: string, wallet: string} | null>(null);
+  const [successStep, setSuccessStep] = useState<'loading' | 'completed'>('loading');
+  const [successProgress, setSuccessProgress] = useState(0);
+
   const activeTab = activeTabProp !== undefined ? activeTabProp : activeTabLocal;
   const setActiveTab = onActiveTabChange !== undefined ? onActiveTabChange : setActiveTabLocal;
   const [adminModeType, setAdminModeType] = useState<'sandbox' | 'platform_global'>('platform_global');
@@ -1212,17 +1217,63 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   </form>
                 </div>
 
-                {/* 2. WITHDRAW PORTAL */}
-                <div id="withdraw-section" className="bg-[#161616] border border-white/5 rounded-2xl p-6 space-y-4 scroll-mt-24">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ArrowUpRight className="w-5 h-5 text-[#D4AF37]" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white">Withdraw Funds</h3>
+                {/* 2. MODERN WITHDRAW PORTAL - UPGRADED GLASSMORPHISM CARD WITH BLACK & GOLD THEME */}
+                <div 
+                  id="withdraw-section" 
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-[#10B981]/60 shadow-[0_0_40px_rgba(212,175,55,0.12)] hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl"
+                >
+                  {/* Premium gold particle overlay gradients */}
+                  <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-[#D4AF37]/8 via-[#10B981]/4 to-transparent blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
+
+                  {/* Portal Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#D4AF37]/20 to-black flex items-center justify-center border border-[#D4AF37]/40 ring-1 ring-[#D4AF37]/15">
+                        <span className="text-xl">💰</span>
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black uppercase tracking-widest text-white font-serif leading-none">Modern Withdraw Portal</h3>
+                        <p className="text-[9px] text-[#D4AF37] uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse">Gateway protocol active</p>
+                      </div>
+                    </div>
+                    
+                    <span className="self-start sm:self-auto text-[8.5px] bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30 px-3 py-1.5 rounded-full uppercase tracking-widest font-black flex items-center gap-2">
+                      <span className="w-2 h-2 bg-[#10B981] rounded-full animate-ping"></span>
+                      Verified Secure Core
+                    </span>
                   </div>
 
-                  <form onSubmit={handleWithdrawSubmit} className="space-y-4">
-                    {/* Select Network */}
+                  {/* 💰 Live Available Balance Block */}
+                  <div className="bg-gradient-to-r from-white/[0.01] via-white/[0.02] to-transparent p-5 rounded-2xl border border-white/5 relative">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2 flex items-center gap-1.5">
+                      <span>💰 Available Balance</span>
+                      <span className="w-1 h-1 bg-[#D4AF37] rounded-full"></span>
+                    </p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-mono font-black text-white tracking-tight">
+                        {currencySymbol}{(balance * conversionRate).toFixed(2)}
+                      </span>
+                      <span className="text-xs text-white/40 uppercase font-mono tracking-wider">
+                        ({currency}) Base Liquidity
+                      </span>
+                    </div>
+                    <p className="text-[9.5px] text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
+                      <span>✅ Safely secured under high-performance cryptographic locks.</span>
+                    </p>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent my-1" />
+
+                  {/* Withdrawal Submission Form */}
+                  <form onSubmit={handleWithdrawSubmit} className="space-y-5 text-left">
+                    {/* Method Dropdown selection */}
                     <div className="space-y-1.5">
-                      <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Select Output Protocol</label>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">🏦</span>
+                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Withdraw To</label>
+                      </div>
                       <select
                         value={withdrawNetwork}
                         onChange={(e) => {
@@ -1230,92 +1281,200 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                           setWithdrawError('');
                           setWithdrawSuccess('');
                         }}
-                        className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-3 text-xs text-white uppercase font-semibold tracking-wider hover:border-white/20 transition-all outline-none"
+                        className="w-full bg-black/80 border border-[#D4AF37]/30 hover:border-[#10B981]/60 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
                       >
-                        <option value="BNB">BNB (BEP20)</option>
-                        <option value="TRX">USDT TRON (TRC20)</option>
-                        <option value="MATIC">Polygon (MATIC)</option>
-                        <option value="EASYPAISA">EasyPaisa (PKR)</option>
-                        <option value="JAZZCASH">JazzCash (PKR)</option>
+                        <option value="EASYPAISA">EasyPaisa (PKR Fast-Track)</option>
+                        <option value="JAZZCASH">JazzCash (PKR Fast-Track)</option>
+                        <option value="BNB">Binance BNB (BEP20)</option>
+                        <option value="TRX">Binance USDT (TRC20)</option>
+                        <option value="MATIC">Binance Polygon (MATIC)</option>
                       </select>
                     </div>
 
-                    {/* Destination Address */}
+                    {/* Target Address input */}
                     <div className="space-y-1.5">
-                      <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">
-                        {withdrawNetwork === 'EASYPAISA' ? 'EasyPaisa Account Details' : 
-                         withdrawNetwork === 'JAZZCASH' ? 'JazzCash Account Details' : 
-                         'Your Private Crypto Wallet Address'}
-                      </label>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">📱</span>
+                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
+                          {withdrawNetwork === 'EASYPAISA' ? 'EasyPaisa Account Number & Title' : 
+                          withdrawNetwork === 'JAZZCASH' ? 'JazzCash Account Number & Title' : 
+                          'Destination Wallet Address / Binance Pay ID'}
+                        </label>
+                      </div>
                       <input
                         type="text"
                         placeholder={
-                          withdrawNetwork === 'EASYPAISA' ? 'e.g., 03001234567 - Muhammad Ali' : 
-                          withdrawNetwork === 'JAZZCASH' ? 'e.g., 03001234567 - Muhammad Ali' : 
-                          'Paste receiver address here'
+                          withdrawNetwork === 'EASYPAISA' ? 'e.g., 03487654321 - Danish Rehmani' : 
+                          withdrawNetwork === 'JAZZCASH' ? 'e.g., 03487654321 - Danish Rehmani' : 
+                          'e.g., Binance Pay ID or BEP20 Wallet Address'
                         }
                         value={withdrawWallet}
                         onChange={(e) => setWithdrawWallet(e.target.value)}
-                        className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-3 text-xs text-white font-mono placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/50"
+                        className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
                       />
                     </div>
 
-                    {/* Amount Block */}
+                    {/* Value Amount input */}
                     <div className="space-y-1.5">
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest">Amount to Withdraw ({currency})</label>
-                        <div className="flex flex-col items-end">
-                           <button
-                             type="button"
-                             onClick={() => setWithdrawAmount((balance * conversionRate).toFixed(2))}
-                             className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-wider hover:underline"
-                           >
-                             Max Available: {currencySymbol}{(balance * conversionRate).toFixed(2)}
-                           </button>
-                           {hasActivePlan && (
-                             <span className="text-[7px] text-zinc-500 uppercase tracking-widest mt-0.5">Note: Active plan principal is locked</span>
-                           )}
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-sans">💵</span>
+                          <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Amount to Withdraw ({currencySymbol})</label>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => setWithdrawAmount((balance * conversionRate).toFixed(2))}
+                          className="text-[9px] font-extrabold text-[#D4AF37] uppercase tracking-wider hover:underline hover:text-[#10B981] transition-all"
+                        >
+                          Max Avail: {currencySymbol}{(balance * conversionRate).toFixed(2)}
+                        </button>
                       </div>
                       <input
                         type="number"
-                        placeholder="0.00"
+                        placeholder="$0.00 equivalent value"
                         value={withdrawAmount}
                         onChange={(e) => setWithdrawAmount(e.target.value)}
-                        className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/50"
+                        className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
                         step="any"
                       />
                     </div>
 
-                    {/* Status feedback */}
-                    {withdrawError && <p className="text-[10px] font-medium text-rose-500 leading-relaxed font-mono">{withdrawError}</p>}
-                    {withdrawSuccess && <p className="text-[10px] font-medium text-emerald-400 leading-relaxed font-mono">{withdrawSuccess}</p>}
+                    {/* Divider line style */}
+                    <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/45 to-transparent my-1" />
 
+                    {/* Core metrics display */}
+                    <div className="grid grid-cols-2 gap-3.5 pt-1 text-xs">
+                      <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
+                        <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
+                          <span>⚡</span> Instant Withdrawal
+                        </p>
+                        <p className="text-[10px] font-black text-emerald-400 font-mono">⏱ Processing: 1-2 Minutes</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
+                        <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
+                          <span>🔒</span> Secure Gateway
+                        </p>
+                        <p className="text-[10px] font-black text-[#D4AF37] font-mono">✅ Min Withdraw: $1.00</p>
+                      </div>
+                    </div>
+
+                    {/* Status Feedback alerts */}
+                    {withdrawError && (
+                      <p className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+                        <span>⚠️ Error:</span>
+                        <span>{withdrawError}</span>
+                      </p>
+                    )}
+                    {withdrawSuccess && (
+                      <p className="text-[10.5px] font-extrabold text-[#10B981] leading-relaxed font-mono flex items-center gap-1.5 bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg select-all">
+                        <span>✅ Success:</span>
+                        <span>{withdrawSuccess}</span>
+                      </p>
+                    )}
+
+                    {/* Gold Glowing Core Button with Custom hover scale & glow tracking */}
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full py-3 px-4 rounded-xl border border-[#D4AF37]/35 text-[#D4AF37] hover:bg-[#D4AF37]/10 active:scale-[0.98] transition-all font-extrabold text-[10px] uppercase tracking-widest cursor-pointer disabled:opacity-40"
+                      className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
                     >
-                      {submitting ? 'Requesting...' : 'Request Withdrawal'}
+                      {submitting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                          <span>Routing Request...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>🚀 Withdraw Now</span>
+                        </>
+                      )}
                     </button>
                   </form>
                 </div>
+
+                {/* 🔒 CERTIFIED TRUST SECTION */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-[#D4AF37]/15 text-left space-y-1">
+                    <span className="text-[#D4AF37] text-md">⚡</span>
+                    <h5 className="text-[9px] font-black uppercase text-white tracking-widest">Fast Automated</h5>
+                    <p className="text-[7.5px] text-white/50 uppercase tracking-widest leading-none font-bold">Direct Withdrawals</p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-[#D4AF37]/15 text-left space-y-1">
+                    <span className="text-emerald-400 text-md">💸</span>
+                    <h5 className="text-[9px] font-black uppercase text-white tracking-widest">24/7 Processing</h5>
+                    <p className="text-[7.5px] text-white/50 uppercase tracking-widest leading-none font-bold">Uninterrupted Yields</p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-[#D4AF37]/15 text-left space-y-1">
+                    <span className="text-emerald-500 text-md">🔒</span>
+                    <h5 className="text-[9px] font-black uppercase text-white tracking-widest">100% Secure</h5>
+                    <p className="text-[7.5px] text-white/50 uppercase tracking-widest leading-none font-bold">Encrypted Ledger</p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-[#D4AF37]/15 text-left space-y-1">
+                    <span className="text-[#D4AF37] text-md">📱</span>
+                    <h5 className="text-[9px] font-black uppercase text-white tracking-widest">Easy/Jazz/Binance</h5>
+                    <p className="text-[7.5px] text-white/50 uppercase tracking-widest leading-none font-bold">Standard Channels</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Automated Fast Withdrawals Note */}
-              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-5 flex items-start gap-3.5 text-left">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mt-1.5 shrink-0"></span>
-                <div className="space-y-1">
-                  <span className="text-[9.5px] font-bold text-emerald-400 tracking-wider uppercase block">Fast Automated Withdrawals Enabled</span>
-                  <p className="text-[11.5px] text-white/55 leading-relaxed">
-                    Withdrawal requests are processed with elite high-speed routing. Once verified by our active ledger auditors, distributions are dispatched directly to your wallet in record time. For immediate 24/7 support, message us on Telegram at <a href="https://t.me/MoneyMindSpaceSupport" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline font-bold underline decoration-dotted">@MoneyMindSpaceSupport</a>.
-                  </p>
+              {/* 🏆 LATEST WITHDRAWALS (TRUST PROOF SECTION) */}
+              <div className="bg-[#0B0B0B] border border-white/5 rounded-2xl p-6 space-y-4 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🏆</span>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-[#D4AF37]">Latest Withdrawals</h4>
+                      <p className="text-[8px] text-[#10B981] uppercase tracking-wider font-bold animate-pulse mt-0.5">Real-time Platform Payouts</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#10B981]/10 text-[#10B981] text-[7.5px] uppercase font-black border border-[#10B981]/20">
+                    <span className="w-1 h-1 bg-[#10B981] rounded-full animate-ping"></span>
+                    <span>Verified</span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-white/5 bg-[#050505]">
+                  <table className="w-full text-left border-collapse text-[11px]">
+                    <thead>
+                      <tr className="bg-white/[0.01] border-b border-white/5 text-white/30 uppercase text-[8px] tracking-widest">
+                        <th className="py-3 px-4 font-bold">User</th>
+                        <th className="py-3 px-4 font-bold">Amount</th>
+                        <th className="py-3 px-4 font-bold text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.03]">
+                      {[
+                        { name: "A*** Khan", amount: "$50", method: "EasyPaisa", time: "Just now" },
+                        { name: "M*** Ali", amount: "$20", method: "JazzCash", time: "1 min ago" },
+                        { name: "B*** Crypto", amount: "$130", method: "Binance", time: "5 mins ago" },
+                        { name: "S*** Ahmed", amount: "$85", method: "EasyPaisa", time: "12 mins ago" },
+                        { name: "Z*** Malik", amount: "$30", method: "JazzCash", time: "18 mins ago" }
+                      ].map((item, idx) => (
+                        <tr key={idx} className="hover:bg-white/[0.01] transition-all">
+                          <td className="py-3 px-4 font-medium text-white/90">
+                            <div className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+                              <span>{item.name}</span>
+                              <span className="text-[7px] text-white/30 uppercase px-1.5 py-0.5 rounded border border-white/5 bg-white/[0.01]">{item.method}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 font-mono font-bold text-[#D4AF37]">{item.amount}</td>
+                          <td className="py-3 px-4 text-right">
+                            <span className="inline-flex items-center gap-1 text-[8.5px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/10 border border-[#10B981]/20 px-2.5 py-1 rounded">
+                              ✅ Paid
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
               {/* 3. FUNDING STATEMENT LEDGER */}
-              <div className="bg-[#161616] border border-white/5 rounded-2xl p-6 space-y-4">
+              <div className="bg-[#0B0B0B] border border-white/5 rounded-2xl p-6 space-y-4">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-[#D4AF37] mb-2">My Funding Statement History</h4>
+
                 
                 {/* Deposits History list */}
                 <div className="space-y-4">
@@ -1392,74 +1551,95 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                   <hr className="border-white/5" />
 
-                  {/* Withdrawals list */}
+                  {/* Upgraded Withdrawals History - Transformed to chronological cards with green success indicators per design requirements */}
                   <div>
-                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider mb-2.5">Payout & Withdrawal Statements</p>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">📥</span>
+                        <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest leading-none">My Payout Records (Chronological Cards)</p>
+                      </div>
+                      <span className="text-[7.5px] font-black text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        Secure SSL Gateway Live
+                      </span>
+                    </div>
+
                     {(!withdrawals || withdrawals.length === 0) ? (
-                      <div className="p-4 bg-white/[0.01] border border-dashed border-white/5 rounded-xl text-center text-[10px] text-white/30 uppercase tracking-widest">
-                        No payout withdrawal payouts logged.
+                      <div className="p-8 bg-[#050505] border border-dashed border-white/5 rounded-xl text-center text-[10px] text-white/30 uppercase tracking-widest">
+                        No payout withdrawal payouts logged yet.
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse text-[10.5px]">
-                          <thead>
-                            <tr className="border-b border-white/5 text-white/40 uppercase text-[8px] tracking-widest">
-                              <th className="pb-2 font-semibold">Requested Timestamp</th>
-                              <th className="pb-2 font-semibold">Method</th>
-                              <th className="pb-2 font-semibold">Destination Address/Account</th>
-                              <th className="pb-2 font-semibold">Payout Value</th>
-                              <th className="pb-2 font-semibold text-right">Approval State</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-white/5">
-                            {withdrawals.map((wit) => (
-                              <tr key={wit.id} className="text-white/80">
-                                <td className="py-2.5 text-[10px] font-mono text-white/40">{wit.timestamp}</td>
-                                <td className="py-2.5 font-bold uppercase text-white">{wit.network}</td>
-                                <td className="py-2.5 font-mono text-white/40 text-[9px] truncate max-w-[120px]" title={wit.wallet}>{wit.wallet}</td>
-                                <td className="py-2.5 font-medium text-[#D4AF37]">{currencySymbol}{(wit.amount * conversionRate).toFixed(2)}</td>
-                                <td className="py-2.5 text-right">
-                                  <div className="flex flex-col items-end gap-1.5">
-                                    <div className="flex items-center gap-1">
-                                      {wit.status === 'pending' && (
-                                        <span className="inline-flex items-center gap-1 text-amber-500 font-bold uppercase tracking-wider text-[9px] bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
-                                          <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />
-                                          Pending Approval
-                                        </span>
-                                      )}
-                                      {wit.status === 'approved' && (
-                                        <span className="inline-flex items-center gap-1 text-emerald-400 font-bold uppercase tracking-wider text-[9px] bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-md">
-                                          <CheckCircle className="w-3 h-3 text-emerald-400" />
-                                          Disbursed
-                                        </span>
-                                      )}
-                                      {wit.status === 'rejected' && (
-                                        <span className="inline-flex items-center gap-1 text-rose-500 font-bold uppercase tracking-wider text-[9px] bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md">
-                                          <XCircle className="w-3 h-3 text-rose-500" />
-                                          Denied
-                                        </span>
-                                      )}
-                                    </div>
-                                    {wit.status === 'pending' && (
-                                      <div className="w-24 sm:w-28 bg-white/5 h-1 rounded-full overflow-hidden relative">
-                                        <motion.div 
-                                          className="bg-[#D4AF37] h-full rounded-full"
-                                          initial={{ x: '-100%' }}
-                                          animate={{ x: '100%' }}
-                                          transition={{ 
-                                            repeat: Infinity, 
-                                            duration: 1.5, 
-                                            ease: "linear" 
-                                          }}
-                                        />
-                                      </div>
-                                    )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {withdrawals.slice().reverse().map((wit) => {
+                          const isApproved = wit.status === 'approved';
+                          const isPending = wit.status === 'pending';
+                          return (
+                            <motion.div 
+                              whileHover={{ scale: 1.015, borderColor: isApproved ? 'rgba(16,185,129,0.3)' : 'rgba(212,175,55,0.2)' }}
+                              key={wit.id} 
+                              className={`p-4 rounded-xl border transition-all duration-300 backdrop-blur-md relative overflow-hidden ${
+                                isApproved 
+                                  ? 'bg-[#10B981]/5 border-[#10B981]/20 shadow-[0_4px_20px_rgba(16,185,129,0.04)]' 
+                                  : isPending 
+                                  ? 'bg-amber-500/5 border-amber-500/15' 
+                                  : 'bg-rose-500/5 border-rose-500/15'
+                              }`}
+                            >
+                              {/* Glowing success or pending corner flare */}
+                              <div className={`absolute top-0 right-0 w-24 h-24 blur-2xl pointer-events-none opacity-40 ${
+                                isApproved ? 'bg-[#10B981]/20' : 'bg-[#D4AF37]/10'
+                              }`} />
+
+                              <div className="flex flex-col justify-between h-full space-y-3 relative z-10 text-left">
+                                <div className="flex items-center justify-between">
+                                  <span className={`inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border ${
+                                    isApproved 
+                                      ? 'text-emerald-400 bg-emerald-400/15 border-emerald-400/20' 
+                                      : isPending 
+                                      ? 'text-amber-400 bg-amber-400/15 border-amber-400/20 animate-pulse'
+                                      : 'text-rose-400 bg-rose-500/15 border-rose-500/20'
+                                  }`}>
+                                    {isApproved ? '✅ Withdrawal Completed' : isPending ? '⏳ Processing Request' : '❌ Withdrawal Rejected'}
+                                  </span>
+                                  <span className="text-[9px] font-mono text-white/30 font-semibold">{wit.timestamp}</span>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="text-lg md:text-xl font-mono font-black text-white tracking-tight">
+                                      {currencySymbol}{(wit.amount * conversionRate).toFixed(2)}
+                                    </span>
+                                    <span className="text-white/30 text-xs">→</span>
+                                    <span className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">
+                                      {wit.network}
+                                    </span>
                                   </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                  <p className="text-[10px] text-white/40 font-mono truncate max-w-xs" title={wit.wallet}>
+                                    <span className="text-white/20 select-none">ID/Acc: </span>
+                                    {wit.wallet}
+                                  </p>
+                                </div>
+
+                                {isPending && (
+                                  <div className="pt-1.5">
+                                    <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden relative">
+                                      <motion.div 
+                                        className="bg-[#D4AF37] h-full rounded-full"
+                                        initial={{ x: '-100%' }}
+                                        animate={{ x: '100%' }}
+                                        transition={{ 
+                                          repeat: Infinity, 
+                                          duration: 1.5, 
+                                          ease: "linear" 
+                                        }}
+                                      />
+                                    </div>
+                                    <p className="text-[7.5px] text-amber-500/80 font-mono uppercase tracking-widest mt-1">Simulated Auditing Queue...</p>
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1483,6 +1663,120 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           )}
         </AnimatePresence>
       </div>
+
+      {/* 🚀 HIGH-FIDELITY TIKTOK / YOUTUBE FRIENDLY POPUP WITH SIMULATED VERIFICATION */}
+      <AnimatePresence>
+        {recentSuccessWithdraw && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-b from-[#111111] to-black border-2 border-[#10B981]/40 hover:border-[#D4AF37]/50 shadow-[0_0_80px_rgba(16,185,129,0.25)] p-6 md:p-8 space-y-6 text-center"
+            >
+              {/* Golden circular glow background effect */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#10B981]/15 to-[#D4AF37]/5 blur-3xl pointer-events-none" />
+              
+              <div className="space-y-4">
+                <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-[#10B981]/20 to-[#D4AF37]/15 flex items-center justify-center border-2 border-[#10B981]/50 relative">
+                  {successStep === 'completed' ? (
+                    <motion.span 
+                      initial={{ scale: 0.5, rotate: -45 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      className="text-3xl"
+                    >
+                      🎉
+                    </motion.span>
+                  ) : (
+                    <RefreshCw className="w-7 h-7 text-[#10B981] animate-spin" />
+                  )}
+                  {successStep === 'completed' && (
+                    <span className="absolute -top-1.5 -right-1.5 text-xs bg-[#10B981] text-black font-black uppercase px-1.5 py-0.5 rounded-full">
+                      LIVE
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <h3 className="text-xl font-black uppercase tracking-wider text-white">
+                    {successStep === 'completed' ? '🎉 Withdrawal Successful' : '⚡ Submitting Real-time Request'}
+                  </h3>
+                  <p className="text-xs text-white/50 tracking-wider">
+                    High-Seed Automatic Routing Protocol
+                  </p>
+                </div>
+              </div>
+
+              {/* Glassmorphic payout confirmation values */}
+              <div className="p-5 rounded-2xl bg-[#080808]/80 border border-white/5 space-y-3">
+                <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">Transaction Value Dispatched</p>
+                <h4 className="text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-[#D4AF37] to-emerald-400 bg-size-[200%_auto] tracking-tight">
+                  {currencySymbol}{(recentSuccessWithdraw.amount * conversionRate).toFixed(2)}
+                </h4>
+                <div className="h-[1px] bg-white/5" />
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  <div>
+                    <span className="text-[8px] text-white/30 uppercase tracking-widest block font-bold">Network/Type</span>
+                    <span className="text-[11px] font-black text-white uppercase tracking-wider block mt-0.5">{recentSuccessWithdraw.network}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8px] text-white/30 uppercase tracking-widest block font-bold">Payout Target</span>
+                    <span className="text-[11px] font-mono font-medium text-[#D4AF37] block mt-0.5 truncate select-all" title={recentSuccessWithdraw.wallet}>
+                      {recentSuccessWithdraw.wallet}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress bar and simulated auditing output */}
+              <div className="space-y-3.5">
+                <div className="flex justify-between items-center text-xs font-mono font-extrabold text-white">
+                  <span className="text-[10px] text-white/40 uppercase tracking-wider">
+                    {successStep === 'completed' ? '✅ Dispatch Completed' : '⚡ Routing Ledger Verify'}
+                  </span>
+                  <span className="text-emerald-400">{successProgress}%</span>
+                </div>
+                
+                {/* Visual Progress Bar */}
+                <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/15 relative">
+                  <motion.div 
+                    initial={{ width: '0%' }}
+                    animate={{ width: `${successProgress}%` }}
+                    className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-[#10B981] via-[#D4AF37] to-[#10B981] bg-[length:200%_auto] rounded-full"
+                  />
+                </div>
+
+                <div className="flex items-center justify-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${successStep === 'completed' ? 'bg-[#10B981] animate-pulse' : 'bg-amber-500 animate-ping'}`} />
+                  <span className="text-[9.5px] font-mono text-white/60 tracking-wider">
+                    {successStep === 'completed' 
+                      ? '✅ Completed: Sent to ' + recentSuccessWithdraw.network 
+                      : 'Syncing with Multi-Auditor Cryptographic Protocol...'
+                    }
+                  </span>
+                </div>
+              </div>
+
+              {/* Close Button Trigger */}
+              {successStep === 'completed' && (
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  onClick={() => setRecentSuccessWithdraw(null)}
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] text-black font-black text-xs uppercase tracking-widest cursor-pointer hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] active:scale-95 transition-all text-center flex items-center justify-center gap-2"
+                >
+                  <span>🚀 Continue Earning</span>
+                </motion.button>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

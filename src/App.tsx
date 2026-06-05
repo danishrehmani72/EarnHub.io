@@ -23,6 +23,7 @@ import RegistrationCard from './components/RegistrationCard';
 import DashboardCard from './components/DashboardCard';
 import ReferralHistory from './components/ReferralHistory';
 import AdminPanel from './components/AdminPanel';
+import RecentWithdrawalToast from './components/RecentWithdrawalToast';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
 import earnhubLogo from './assets/images/earnhub_logo_1780161493423.png';
@@ -43,6 +44,27 @@ import {
   RefreshCw,
   Play
 } from 'lucide-react';
+
+
+// Custom lightweight number counting animation component
+function CountUpNum({ value, duration = 1500, suffix = "" }: { value: number; duration?: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTimestamp: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      setCount(Math.floor(progress * value));
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [value, duration]);
+
+  return <span>{count.toLocaleString()}{suffix}</span>;
+}
 
 
 export default function App() {
@@ -897,68 +919,93 @@ export default function App() {
         <AnimatePresence mode="wait">
           {!isRegistered ? (
             <div key="registration" className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center w-full max-w-6xl py-4">
-              {/* Marketing Content Column (MoneyMind Space) */}
+              {/* Marketing Content Column with Premium Hero Banner (Requested Theme) */}
               <div className="lg:col-span-7 space-y-6 text-left animate-fade-in">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/25 text-[#D4AF37] text-[10px] uppercase font-bold tracking-widest font-sans">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Smart Finance, Better Future
-                </div>
-                
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-serif text-white tracking-tight leading-[1.1] text-balance">
-                  Grow Your Wealth <br />
-                  <span className="bg-gradient-to-r from-white via-white to-[#D4AF37] bg-clip-text text-transparent">
-                    With Smart Financial Planning
-                  </span>
-                </h1>
-                
-                <p className="text-sm md:text-base text-white/60 leading-relaxed font-sans max-w-xl">
-                  Join MoneyMind Space to track earnings, manage investments, and build a stronger financial future with confidence and security.
-                </p>
+                {/* 💸 High Impact Premium Banner card */}
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F0F0F] to-black border-2 border-[#10B981]/25 hover:border-[#D4AF37]/50 shadow-[0_0_40px_rgba(16,185,129,0.08)] hover:shadow-[0_0_50px_rgba(212,175,55,0.12)] transition-all duration-500 p-6 md:p-8 space-y-6">
+                  {/* Glowing background matrix effect */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#10B981]/10 via-[#D4AF37]/5 to-transparent blur-3xl pointer-events-none" />
+                  
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-ping"></span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#10B981] bg-[#10B981]/10 px-3 py-1 rounded-full border border-[#10B981]/20">
+                      Multi-Protocol Vault Live
+                    </span>
+                  </div>
 
-                {/* Premium Interactive Action Buttons */}
-                <div className="flex flex-wrap items-center gap-4 pt-2">
-                  <button 
-                    onClick={() => {
-                      document.getElementById('registration-container')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="px-6 py-3 rounded-xl bg-[#D4AF37] text-black font-extrabold text-xs uppercase tracking-wider hover:bg-[#bfa032] active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] cursor-pointer"
-                  >
-                    Get Started
-                  </button>
-                  <button 
-                    onClick={() => {
-                      document.getElementById('registration-container')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="px-6 py-3 rounded-xl border border-white/20 bg-white/5 text-white font-extrabold text-xs uppercase tracking-wider hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
-                  >
-                    View Plans
-                  </button>
-                  <button 
-                    onClick={() => setShowIntroVideo(true)}
-                    className="px-6 py-3 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 text-[#D4AF37] font-extrabold text-xs uppercase tracking-wider hover:bg-[#D4AF37]/10 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-[#D4AF37]" />
-                    Watch Intro Video
-                  </button>
+                  {/* 💸 MAIN HIGHLIGHT */}
+                  <div className="space-y-3">
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black font-serif text-white tracking-tight leading-none text-balance">
+                      💸 Earn Daily Online
+                    </h1>
+                    <p className="text-sm md:text-base text-white/70 leading-relaxed font-sans font-medium max-w-xl">
+                      Join MoneyMind Space to claim yields, build automated income, and secure high-rate cryptographic earnings in Pakistan & globally.
+                    </p>
+                  </div>
+
+                  {/* ✅ REQUESTED SPECIFIC LIST WITH ICONS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+                    <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-[#10B981]/30 transition-all">
+                      <span className="text-md text-[#10B981]">✅</span>
+                      <span className="text-xs font-black uppercase tracking-wider text-white">Fast Withdrawals</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-[#D4AF37]/30 transition-all">
+                      <span className="text-md text-[#D4AF37]">✅</span>
+                      <span className="text-xs font-black uppercase tracking-wider text-white">Referral Rewards</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-emerald-400/30 transition-all">
+                      <span className="text-md text-emerald-400">✅</span>
+                      <span className="text-xs font-black uppercase tracking-wider text-white">Binance Deposits</span>
+                    </div>
+                  </div>
+
+                  {/* ⚡ Call to Action Buttons */}
+                  <div className="flex flex-wrap items-center gap-4 pt-2">
+                    <button 
+                      onClick={() => {
+                        document.getElementById('registration-container')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#10B981] via-[#D4AF37] to-[#10B981] bg-[length:200%_auto] hover:bg-right text-black font-black text-xs uppercase tracking-widest hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-500 cursor-pointer border-0 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                    >
+                      Start Earning
+                    </button>
+                    
+                    <button 
+                      onClick={() => setShowIntroVideo(true)}
+                      className="px-6 py-4 rounded-xl border border-white/10 bg-white/5 text-white font-extrabold text-xs uppercase tracking-wider hover:bg-white/10 active:scale-95 transition-all cursor-pointer flex items-center gap-2.5"
+                    >
+                      <Play className="w-4 h-4 fill-white" />
+                      Intro Video
+                    </button>
+                  </div>
                 </div>
 
-                {/* Premium Core Stats Section */}
+                {/* Premium Core Stats Section - With requested Number Counting animations */}
                 <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left border-t border-white/5">
                   <div className="space-y-1">
-                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-[#D4AF37]">10,000+</p>
+                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-[#D4AF37]">
+                      <CountUpNum value={10000} suffix="+" />
+                    </p>
                     <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Active Members</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-emerald-400">Secure</p>
-                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Platform</p>
+                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-[#10B981] flex items-center gap-1.5">
+                      <span>99.9%</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    </p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Secure Core</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-white">Fast</p>
-                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Withdrawals</p>
+                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-white">
+                      &lt; <CountUpNum value={2} suffix=" Min" />
+                    </p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Fast Withdrawals</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[#D4AF37] text-lg md:text-2xl font-bold font-mono tracking-tight text-sky-400">24/7</p>
-                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Support</p>
+                    <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-[#D4AF37]">
+                      <CountUpNum value={100} suffix="%" />
+                    </p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Legit Payout Guarantee</p>
                   </div>
                 </div>
               </div>
@@ -1381,6 +1428,9 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Real-time Simulated Recent Payout & Withdrawal Feed Popups */}
+      <RecentWithdrawalToast />
     </div>
   );
 }
