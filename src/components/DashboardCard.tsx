@@ -1092,33 +1092,110 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 </div>
               </div>
 
+              {/* Premium Official Telegram Community & Public Group Card */}
+              <div className="bg-[#0D0D0C] border-2 border-[#D4AF37]/35 rounded-2xl p-6 relative overflow-hidden mt-6 transition-all hover:border-[#D4AF37]/65 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                {/* Premium gold & telegram blue decorative gradients */}
+                <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-br from-[#24A1DE]/15 to-[#D4AF37]/10 blur-3xl pointer-events-none" />
+                <div className="absolute top-2 right-2 text-[#24A1DE]/5 font-black text-6xl select-none uppercase tracking-widest font-serif">
+                  TG
+                </div>
+
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                  <div className="space-y-3 max-w-xl text-left">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#24A1DE]/10 border border-[#24A1DE]/25 text-[#24A1DE] text-[8.5px] uppercase font-black tracking-wider">
+                        💬 Public Group B
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[#D4AF37] text-[8.5px] uppercase font-black tracking-wider">
+                        💎 Moneymindspace.online Official
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold text-white tracking-wide">
+                      Join Our Global Telegram Community Channel
+                    </h3>
+                    
+                    <p className="text-xs text-white/70 leading-relaxed">
+                      Become part of our leading financial community to unlock massive profit vectors and receive daily updates regarding <strong className="text-[#D4AF37] hover:underline cursor-pointer">Moneymindspace.online</strong> performance.
+                    </p>
+
+                    {/* Highly convincing community benefits checklist */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1.5 text-[11px] text-white/50">
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-400 font-bold">✓</span>
+                        <span>Receive instant staking & deposit event alerts</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-400 font-bold">✓</span>
+                        <span>Share payment payout logs and withdrawal checks</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-400 font-bold">✓</span>
+                        <span>Unlock special Telegram exclusive promo codes</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-400 font-bold">✓</span>
+                        <span>Connect live with VIP partners & direct assistance</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2.5 shrink-0 w-full lg:w-auto">
+                    <a
+                      href="https://t.me/moneymindonlineearningspace"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#24A1DE] via-[#229ED9] to-[#24A1DE] text-white font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-200 shadow-md shadow-[#24A1DE]/20 text-center cursor-pointer"
+                    >
+                      <span>Join Official Group</span>
+                      <span className="font-mono text-[9px] bg-black/20 px-1.5 py-0.5 rounded">Group B</span>
+                    </a>
+                    
+                    <p className="text-[8.5px] text-white/35 font-mono text-center">
+                      Protected by Moneymindspace.online
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Premium Customer Support & Fast Withdrawal Card */}
               <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 relative overflow-hidden mt-6 transition-all hover:border-sky-500/20">
                 <div className="absolute top-0 right-0 p-3 text-sky-400/5 select-none pointer-events-none">
                   <HelpCircle className="w-16 h-16" />
                 </div>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                   <div className="space-y-1.5 max-w-xl text-left">
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[9px] uppercase font-bold tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-                      Customer Support 24/7 Live
+                      Customer Support & Admin Center
                     </span>
                     <h3 className="text-sm font-semibold text-white tracking-wide">
-                      Need help or looking for fast withdrawals? 
+                      Need help or looking for fast withdrawals & any queries? 
                     </h3>
                     <p className="text-xs text-white/50 leading-relaxed">
-                      Our live response team processes your payouts and assists with account inquiries around the clock. Get dedicated support directly on Telegram 24/7 at <strong className="text-sky-400">@MoneyMindSpaceSupport</strong>.
+                      Our live response team processes your payouts and assists with account inquiries around the clock. Contact <strong className="text-sky-400">@MoneyMindSpaceSupport</strong> on Telegram for 24/7 client help, or contact <strong className="text-[#D4AF37]">@Alexadminhub</strong> for any admin inquiries and direct queries.
                     </p>
                   </div>
-                  <a
-                    href="https://t.me/MoneyMindSpaceSupport"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-sky-500 text-white font-bold text-xs uppercase tracking-wider hover:bg-sky-400 active:scale-[0.98] transition-all duration-150 shrink-0 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20"
-                  >
-                    <span>Contact support 24/7</span>
-                    <span className="font-mono text-[10px]">@MoneyMindSpaceSupport</span>
-                  </a>
+                  <div className="flex flex-col sm:flex-row gap-3 shrink-0 relative z-10">
+                    <a
+                      href="https://t.me/MoneyMindSpaceSupport"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-sky-500 text-white font-bold text-xs uppercase tracking-wider hover:bg-sky-400 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20"
+                    >
+                      <span>Support Chat</span>
+                      <span className="font-mono text-[9px] bg-black/20 px-1 py-0.5 rounded">@MoneyMindSpaceSupport</span>
+                    </a>
+                    <a
+                      href="https://t.me/Alexadminhub"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#8A6D3B] text-black font-extrabold text-xs uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-[#D4AF37]/10"
+                    >
+                      <span>Admin Hub</span>
+                      <span className="font-mono text-[9px] bg-black/15 px-1 py-0.5 rounded">@Alexadminhub</span>
+                    </a>
+                  </div>
                 </div>
               </div>
             </motion.div>

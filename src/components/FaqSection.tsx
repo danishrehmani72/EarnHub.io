@@ -39,7 +39,7 @@ const faqs: FaqItemConfig[] = [
     question: 'How do I contact customer support 24/7?',
     answer: (
       <span>
-        We offer elite 24/7 customer support. For any issues, deposit credentials confirmation, or instant withdrawal speedup requests, contact our live Telegram representative at{' '}
+        We offer elite 24/7 customer support. For transactions, deposit confirmations, or withdrawal inquiries, contact our live Telegram representative at{' '}
         <a 
           href="https://t.me/MoneyMindSpaceSupport" 
           target="_blank" 
@@ -47,6 +47,15 @@ const faqs: FaqItemConfig[] = [
           className="text-sky-400 hover:underline font-bold"
         >
           @MoneyMindSpaceSupport
+        </a>
+        . For any general admin questions or queries, you can reach out directly to{' '}
+        <a 
+          href="https://t.me/Alexadminhub" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-[#D4AF37] hover:underline font-bold"
+        >
+          @Alexadminhub
         </a>
         .
       </span>
