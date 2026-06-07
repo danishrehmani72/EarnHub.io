@@ -44,6 +44,7 @@ import {
   RefreshCw,
   Play
 } from 'lucide-react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 
 // Custom lightweight number counting animation component
@@ -1471,6 +1472,9 @@ export default function App() {
 
       {/* Real-time Simulated Recent Payout & Withdrawal Feed Popups */}
       <RecentWithdrawalToast />
+      
+      {/* Vercel Speed Insights */}
+      <SpeedInsights />
     </div>
   );
 }
