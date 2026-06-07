@@ -58,3 +58,11 @@ export interface UserPlan {
   timestamp: string;
   cancelledAt?: any;
 }
+
+export interface DailyRewardLog {
+  id: string;
+  amount: number;
+  streak: number;
+  timestamp: string;
+  createdAt: any;
+}

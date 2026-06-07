@@ -18,7 +18,7 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './lib/firebase';
-import { UserProfile, ReferralLog, DepositLog, WithdrawalLog, UserPlan } from './types';
+import { UserProfile, ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog } from './types';
 import RegistrationCard from './components/RegistrationCard';
 import DashboardCard from './components/DashboardCard';
 import ReferralHistory from './components/ReferralHistory';
@@ -75,6 +75,7 @@ export default function App() {
   const [deposits, setDeposits] = useState<DepositLog[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalLog[]>([]);
   const [investments, setInvestments] = useState<UserPlan[]>([]);
+  const [dailyRewardLogs, setDailyRewardLogs] = useState<DailyRewardLog[]>([]);
   const [referredBy, setReferredBy] = useState<string | null>(null);
   const [referredSource, setReferredSource] = useState<string | null>(null);
   const [inviterName, setInviterName] = useState<string | null>(null);
@@ -338,12 +339,34 @@ export default function App() {
       console.warn("Investments snapshot fallback:", error);
     });
 
+    // Real-time daily rewards listener
+    const dailyRewardsRef = collection(db, 'users', currentUid, 'daily_rewards');
+    const dailyRewardsQuery = query(dailyRewardsRef, orderBy('createdAt', 'desc'));
+
+    const unsubDailyRewards = onSnapshot(dailyRewardsQuery, (snapshot) => {
+      const list: DailyRewardLog[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({
+          id: data.id,
+          amount: Number(data.amount) || 0,
+          streak: Number(data.streak) || 0,
+          timestamp: data.timestamp || '',
+          createdAt: data.createdAt,
+        });
+      });
+      setDailyRewardLogs(list);
+    }, (error) => {
+      console.warn("Daily rewards snapshot fallback:", error);
+    });
+
     return () => {
       unsubUserProfile();
       unsubReferrals();
       unsubDeposits();
       unsubWithdrawals();
       if (unsubInvestments) unsubInvestments();
+      if (unsubDailyRewards) unsubDailyRewards();
     };
   }, [currentUid]);
 
@@ -472,14 +495,30 @@ export default function App() {
       const currentEarnings = userProfile.dailyBonusEarnings || 0;
       const currentStreak = userProfile.claimStreak || 0;
       
+      const nextStreak = currentStreak + 1;
+      const claimTimestamp = new Date().toISOString();
+
+      // 1. Update main user profile with dividend yield and streak status
       await setDoc(userRef, {
         dailyBonusEarnings: Number((currentEarnings + amount).toFixed(2)),
-        claimStreak: currentStreak + 1,
-        lastClaimedAt: new Date().toISOString()
+        claimStreak: nextStreak,
+        lastClaimedAt: claimTimestamp,
+        updatedAt: serverTimestamp()
       }, { merge: true });
+
+      // 2. Record this event in the daily_rewards subcollection for historical audit
+      const rewardLogRef = doc(collection(db, 'users', currentUid, 'daily_rewards'));
+      await setDoc(rewardLogRef, {
+        id: rewardLogRef.id,
+        amount: Number(amount.toFixed(2)),
+        streak: nextStreak,
+        timestamp: claimTimestamp,
+        createdAt: serverTimestamp(),
+      });
     } catch (error) {
       console.error("Error claiming daily reward:", error);
-      addToast("Failed to lock daily dividends inside cloud nodes.", "error");
+      addToast("Failed to lock daily dividends inside cloud nodes. Please try again.", "error");
+      handleFirestoreError(error, OperationType.WRITE, `users/${currentUid}/daily_rewards`);
     }
   };
 
@@ -1032,6 +1071,7 @@ export default function App() {
                 deposits={deposits}
                 withdrawals={withdrawals}
                 investments={investments}
+                dailyRewardLogs={dailyRewardLogs}
                 onCreateDeposit={handleCreateDeposit}
                 onCreateWithdrawal={handleCreateWithdrawal}
                 onCreatePlan={handleCreatePlan}

@@ -38,7 +38,7 @@ import {
   CartesianGrid 
 } from 'recharts';
 import { FaqSection } from './FaqSection';
-import { ReferralLog, DepositLog, WithdrawalLog, UserPlan } from '../types';
+import { ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog } from '../types';
 import { AvatarIcon, getAvatarConfig } from '../lib/avatars';
 
 import { PlanMatrix } from './PlanMatrix';
@@ -66,6 +66,7 @@ interface DashboardCardProps {
   virtualDays?: number;
   activeTab?: 'overview' | 'funding' | 'faq';
   onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq') => void;
+  dailyRewardLogs?: DailyRewardLog[];
 }
 
 export default function DashboardCard({
@@ -91,6 +92,7 @@ export default function DashboardCard({
   virtualDays = 0,
   activeTab: activeTabProp,
   onActiveTabChange,
+  dailyRewardLogs = [],
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
   const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq'>('overview');

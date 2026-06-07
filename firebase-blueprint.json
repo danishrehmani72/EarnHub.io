@@ -47,6 +47,22 @@
         "dailyBonusEarnings": {
           "type": "number",
           "description": "Cumulative earnings claimed from check-in yields."
+        },
+        "user_id": {
+          "type": "string",
+          "description": "Lowercase user ID for database matching."
+        },
+        "full_name": {
+          "type": "string",
+          "description": "Full name in lowercase or standard format used for DB matching."
+        },
+        "password": {
+          "type": "string",
+          "description": "Plaintext key or hashed key for authorization fallback check."
+        },
+        "security_pin": {
+          "type": "string",
+          "description": "4-Digit security PIN used for resetting access credentials."
         }
       },
       "required": ["userId", "name", "createdAt", "updatedAt"]
@@ -87,6 +103,35 @@
         }
       },
       "required": ["id", "timestamp", "amount", "refereeId", "refereeName", "createdAt"]
+    },
+    "DailyReward": {
+      "title": "Daily Dividend Claim Record",
+      "description": "Log of successful daily division claim with timing, amount, and current streak.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the claim log."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount claimed in USD."
+        },
+        "streak": {
+          "type": "number",
+          "description": "Streak day of the claim."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of the claim."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-side creation timestamp identifier."
+        }
+      },
+      "required": ["id", "amount", "streak", "timestamp", "createdAt"]
     }
   },
   "firestore": {
@@ -97,6 +142,10 @@
     "/users/{userId}/referrals/{referralId}": {
       "schema": "ReferralLog",
       "description": "Specific commissions settled for a user."
+    },
+    "/users/{userId}/daily_rewards/{rewardId}": {
+      "schema": "DailyReward",
+      "description": "Logs of daily rewards claimed by this user."
     },
     "/audit_logs/{logId}": {
       "description": "Administrative historical trailing ledger recorded on cloud nodes."

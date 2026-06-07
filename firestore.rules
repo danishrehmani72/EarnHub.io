@@ -11,10 +11,10 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\- .@]+$');
     }
 
-    // Helper to validate User schema
+    // Helper to validate User schema (requires userId and name, others optional to prevent legacy data lockouts)
     function isValidUser(user, userId) {
-      return user.keys().hasAll(['userId', 'name', 'createdAt', 'updatedAt'])
-        && user.keys().size() <= 12
+      return user.keys().hasAll(['userId', 'name'])
+        && user.keys().size() <= 22
         && user.userId is string
         && user.userId == userId
         && user.name is string
@@ -26,7 +26,23 @@ service cloud.firestore {
         && (!user.keys().hasAny(['lastClaimedAt']) || (user.lastClaimedAt is string && user.lastClaimedAt.size() <= 64))
         && (!user.keys().hasAny(['claimStreak']) || (user.claimStreak is number))
         && (!user.keys().hasAny(['dailyBonusEarnings']) || (user.dailyBonusEarnings is number))
-        && (!user.keys().hasAny(['referredBy']) || (user.referredBy == null || user.referredBy is string));
+        && (!user.keys().hasAny(['referredBy']) || (user.referredBy == null || user.referredBy is string))
+        && (!user.keys().hasAny(['user_id']) || (user.user_id is string && user.user_id.size() <= 128))
+        && (!user.keys().hasAny(['full_name']) || (user.full_name is string && user.full_name.size() <= 128))
+        && (!user.keys().hasAny(['password']) || (user.password is string && user.password.size() <= 128))
+        && (!user.keys().hasAny(['security_pin']) || (user.security_pin is string && user.security_pin.size() <= 16));
+    }
+
+    // Helper to validate DailyReward log schema
+    function isValidDailyReward(log) {
+      return log.keys().hasAll(['id', 'amount', 'streak', 'timestamp', 'createdAt'])
+        && log.keys().size() <= 6
+        && log.id is string
+        && log.id.size() <= 128
+        && log.amount is number
+        && log.streak is number
+        && log.timestamp is string
+        && log.timestamp.size() <= 64;
     }
 
     // Helper to validate ReferralLog schema representing a referral commission
@@ -62,7 +78,7 @@ service cloud.firestore {
 
       allow update: if isValidId(userId) 
         && isValidUser(request.resource.data, userId)
-        && request.resource.data.createdAt == resource.data.createdAt; // createdAt is immortal
+        && (!resource.data.keys().hasAll(['createdAt']) || request.resource.data.createdAt == resource.data.createdAt); // createdAt is immortal of users
 
       allow delete: if isValidId(userId); // Profiles can be deleted for resets
 
@@ -101,6 +117,14 @@ service cloud.firestore {
         allow get: if isValidId(userId) && isValidId(investmentId);
         allow list: if isValidId(userId);
         allow create, update, delete: if isValidId(userId) && isValidId(investmentId);
+      }
+
+      // ----------------- DAILY REWARDS SUBCOLLECTION -----------------
+      match /daily_rewards/{rewardId} {
+        allow get: if isValidId(userId) && isValidId(rewardId);
+        allow list: if isValidId(userId);
+        allow create: if isValidId(userId) && isValidId(rewardId) && isValidDailyReward(request.resource.data);
+        allow update, delete: if isValidId(userId) && isValidId(rewardId);
       }
     }
 
