@@ -184,7 +184,9 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       cleanCode === '7272' || 
       cleanCode === 'danish7272' || 
       cleanCode === 'danish123' ||
-      cleanCode === 'Rehmani7602@';
+      cleanCode === 'Rehmani7602@' ||
+      cleanCode === 'ADMIN2026HUB' ||
+      cleanCode === 'admin2026hub';
 
     if (!isAuthorizedId) {
       setAuthError('❌ Access Denied: Unauthorized admin user ID');
