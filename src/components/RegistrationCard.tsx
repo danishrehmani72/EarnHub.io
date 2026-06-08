@@ -115,7 +115,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       const userRef = doc(db, 'users', cleanUserId);
       const userSnap = await getDocWithRetry(userRef);
       if (userSnap.exists()) {
-        setError('This User ID is already occupied by another VIP member.');
+        setError('This User ID is already occupied by another registered member.');
         setIsLoading(false);
         return;
       }
@@ -384,7 +384,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
     } else {
       // Reset Password
       if (!userId.trim()) {
-        setError('Please enter your VIP User ID.');
+        setError('Please enter your registered User ID.');
         return;
       }
       if (!recoveryCode.trim()) {
@@ -403,7 +403,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         const userRef = doc(db, 'users', cleanUserId);
         const userSnap = await getDocWithRetry(userRef);
         if (!userSnap.exists()) {
-          setError('❌ This VIP User ID does not exist in our system.');
+          setError('❌ This registered User ID does not exist in our system.');
           setIsLoading(false);
           return;
         }
@@ -567,7 +567,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           ) : mode === 'login' ? (
             <>Welcome to <span className="text-[#D4AF37] animate-pulse">MoneyMind Space</span></>
           ) : (
-            <>Account <span className="text-[#D4AF37] animate-pulse">VIP Recovery</span></>
+            <>Account <span className="text-[#D4AF37] animate-pulse">Security Recovery</span></>
           )}
         </h2>
         <p className="text-[11px] text-white/50 leading-relaxed font-sans max-w-xs mx-auto">
@@ -673,7 +673,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             <div className="flex items-center gap-1.5">
               <span className="text-sm">👤</span>
               <label htmlFor="userid-input" className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
-                VIP User ID
+                Registered User ID
               </label>
             </div>
             <div className="relative">
@@ -842,44 +842,42 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-gradient-to-b from-zinc-900 via-black to-[#0A0A0A] rounded-2xl border border-[#D4AF37]/30 text-left space-y-4 relative z-20"
+            className="p-4 bg-gradient-to-b from-zinc-900 via-black to-[#0A0A0A] rounded-2xl border border-white/10 text-left space-y-4 relative z-20"
           >
             <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
-              <span className="text-sm select-none">💬</span>
+              <span className="text-sm select-none">📧</span>
               <h4 className="text-[10px] font-black uppercase text-white tracking-widest">
-                Manual Reset Directory
+                Account Service Desk
               </h4>
             </div>
             
             <p className="text-[10.5px] text-white/70 leading-relaxed font-sans">
-              Did you register before the PIN update, or forgot your Recovery PIN/Code? Our supervisor <strong className="text-[#D4AF37]">@Alexadminhub</strong> of <span className="text-[#D4AF37] font-semibold">Moneymindspace.online</span> will manually confirm your profile data and reset your security key!
+              Did you register before the PIN update, or forgot your Recovery PIN/Code? Please reach out to our official help center at <span className="text-[#D4AF37] font-semibold text-xs leading-none">support@moneymindspace.online</span>. Our compliance and support team will verify your balance logs and securely reset your credentials.
             </p>
 
             <div className="space-y-2 text-[10px] bg-black/40 p-3 rounded-xl border border-white/5 font-mono">
-              <p className="text-white/40 uppercase text-[8.5px] font-black tracking-widest">📋 Provide to Admin:</p>
+              <p className="text-white/40 uppercase text-[8.5px] font-black tracking-widest">📋 Verification Requirements:</p>
               <div className="flex gap-2 text-white/70">
                 <span className="text-[#D4AF37] font-bold">1.</span>
-                <span>The exact **Full Name** of the member profile</span>
+                <span>The exact **Full Name** registered to your profile</span>
               </div>
               <div className="flex gap-2 text-white/70">
                 <span className="text-[#D4AF37] font-bold">2.</span>
-                <span>The approximate **Account Balance** matrix</span>
+                <span>The approximate **Account Balance** or plan tier</span>
               </div>
               <div className="flex gap-2 text-white/70">
                 <span className="text-[#D4AF37] font-bold">3.</span>
-                <span>Screenshot of deposit confirmation/staking hash</span>
+                <span>Any screenshot or text record of deposit transactions</span>
               </div>
             </div>
 
             <div className="pt-1 select-none">
               <a
-                href="https://t.me/Alexadminhub"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="mailto:support@moneymindspace.online"
                 className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all text-center shadow-[0_0_15px_rgba(212,175,55,0.25)] cursor-pointer"
               >
-                <span>Message live helper now</span>
-                <span className="bg-black/10 px-1.5 py-0.5 rounded text-[8.5px] text-black/85">@Alexadminhub</span>
+                <span>Email Secure Support Desk</span>
+                <span className="bg-black/10 px-1.5 py-0.5 rounded text-[8.5px] text-black/85">support@moneymindspace.online</span>
               </a>
             </div>
           </motion.div>
@@ -907,11 +905,11 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             animate={{ scale: 1, opacity: 1 }}
             className="p-4 bg-gradient-to-r from-[#D4AF37]/15 to-[#10B981]/15 rounded-2xl border-2 border-[#D4AF37]/50 text-center space-y-2 select-all relative z-20"
           >
-            <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-black">VIP Account Located</p>
+            <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-black">Account Located Successfully</p>
             <div className="text-xs font-black text-white font-mono flex items-center justify-center gap-1.5 bg-black/85 py-2.5 px-3 rounded-xl border border-white/10 select-all">
               🔑 User ID: <span className="text-emerald-400 text-base font-bold select-all">{recoveryFoundId}</span>
             </div>
-            <p className="text-[9px] text-white/50 font-medium">Use this User ID and your VIP password to sign in directly.</p>
+            <p className="text-[9px] text-white/50 font-medium">Use this User ID and your registered password to sign in directly.</p>
           </motion.div>
         )}
 
@@ -940,7 +938,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             ) : forgotSubTab === 'userId' ? (
               <>
                 <UserCheck className="w-4 h-4" />
-                <span>🔍 Find VIP User ID</span>
+                <span>🔍 Find Member User ID</span>
               </>
             ) : (
               <>
@@ -1054,15 +1052,15 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         </div>
         <div className="flex items-start gap-3 bg-[#D4AF37]/5 border border-[#D4AF37]/20 p-3.5 rounded-2xl hover:border-[#D4AF37]/45 transition-[border-color] duration-300">
           <div className="p-1.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] mt-0.5 border border-[#D4AF37]/25 shrink-0">
-            <span className="text-[11px] leading-none select-none">💬</span>
+            <span className="text-[11px] leading-none select-none">📧</span>
           </div>
           <div>
             <h4 className="text-[10px] font-black text-white/90 uppercase tracking-widest flex items-center justify-between gap-2 flex-wrap">
-              <span>Direct Support Helpline</span>
-              <span className="text-[7.5px] bg-[#D4AF37]/15 text-[#D4AF37] font-bold px-1.5 py-0.5 rounded border border-[#D4AF37]/35 uppercase tracking-wider">Message Admin</span>
+              <span>Secure Support Desk</span>
+              <span className="text-[7.5px] bg-[#D4AF37]/15 text-[#D4AF37] font-bold px-1.5 py-0.5 rounded border border-[#D4AF37]/35 uppercase tracking-wider">Email Help Desk</span>
             </h4>
             <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
-              Have persistent queries, premium activation issues, or login failures? Chat directly with our supervisor on Telegram at <a href="https://t.me/Alexadminhub" target="_blank" rel="noopener noreferrer" className="text-[#D4AF37] font-extrabold hover:underline">@Alexadminhub</a>.
+              Have persistent queries, setup issues, or login failures? Email our security team directly at <a href="mailto:support@moneymindspace.online" className="text-[#D4AF37] font-extrabold hover:underline">support@moneymindspace.online</a> for priority assistance.
             </p>
           </div>
         </div>
@@ -1090,7 +1088,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
             <div className="space-y-1">
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[#D4AF37] text-[8.5px] uppercase font-black tracking-widest">
-                VIP Support Panel
+                Support Reset Panel
               </span>
               <h3 className="text-base font-black text-white uppercase tracking-wider">
                 Reset Password
@@ -1109,7 +1107,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                 <input
                   type="text"
                   required
-                  placeholder="Enter your VIP User ID"
+                  placeholder="Enter your registered User ID"
                   value={resetUserId}
                   onChange={(e) => setResetUserId(e.target.value.replace(/\s+/g, '').toLowerCase())}
                   className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/60"

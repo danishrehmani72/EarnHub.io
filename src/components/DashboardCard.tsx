@@ -1118,7 +1118,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </h3>
                     
                     <p className="text-xs text-white/70 leading-relaxed">
-                      Become part of our leading financial community to unlock massive profit vectors and receive daily updates regarding <strong className="text-[#D4AF37] hover:underline cursor-pointer">Moneymindspace.online</strong> performance.
+                      Become part of our professional community to receive secure insights and daily updates regarding <strong className="text-[#D4AF37] hover:underline cursor-pointer">Moneymindspace.online</strong> performance.
                     </p>
 
                     {/* Highly convincing community benefits checklist */}
@@ -1160,7 +1160,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 </div>
               </div>
 
-              {/* Premium Customer Support & Fast Withdrawal Card */}
+              {/* Premium Customer Support & Help Desk Card */}
               <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 relative overflow-hidden mt-6 transition-all hover:border-sky-500/20">
                 <div className="absolute top-0 right-0 p-3 text-sky-400/5 select-none pointer-events-none">
                   <HelpCircle className="w-16 h-16" />
@@ -1169,13 +1169,13 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   <div className="space-y-1.5 max-w-xl text-left">
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[9px] uppercase font-bold tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-                      Customer Support & Admin Center
+                      Official Support Desk
                     </span>
                     <h3 className="text-sm font-semibold text-white tracking-wide">
-                      Need help or looking for fast withdrawals & any queries? 
+                      Need help regarding your deposits, account ledger, or security reset?
                     </h3>
                     <p className="text-xs text-white/50 leading-relaxed">
-                      Our live response team processes your payouts and assists with account inquiries around the clock. Contact <strong className="text-sky-400">@MoneyMindSpaceSupport</strong> on Telegram for 24/7 client help, or contact <strong className="text-[#D4AF37]">@Alexadminhub</strong> for any admin inquiries and direct queries.
+                      Our official customer care desk and compliance department verify transactions and support members around the clock. Connect with us via our official channel <strong className="text-sky-400">@MoneyMindSpaceSupport</strong> for updates, or email <strong className="text-[#D4AF37]">support@moneymindspace.online</strong> for direct security and ledger assistance.
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 shrink-0 relative z-10">
@@ -1189,13 +1189,11 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       <span className="font-mono text-[9px] bg-black/20 px-1 py-0.5 rounded">@MoneyMindSpaceSupport</span>
                     </a>
                     <a
-                      href="https://t.me/Alexadminhub"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href="mailto:support@moneymindspace.online"
                       className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#8A6D3B] text-black font-extrabold text-xs uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-[#D4AF37]/10"
                     >
-                      <span>Admin Hub</span>
-                      <span className="font-mono text-[9px] bg-black/15 px-1 py-0.5 rounded">@Alexadminhub</span>
+                      <span>Email Support</span>
+                      <span className="font-mono text-[9px] bg-black/15 px-1 py-0.5 rounded">support@moneymindspace.online</span>
                     </a>
                   </div>
                 </div>

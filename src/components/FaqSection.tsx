@@ -48,14 +48,12 @@ const faqs: FaqItemConfig[] = [
         >
           @MoneyMindSpaceSupport
         </a>
-        . For any general admin questions or queries, you can reach out directly to{' '}
+        . For any secure administration questions or compliance inquiries, you can reach out directly to our help desk via email at{' '}
         <a 
-          href="https://t.me/Alexadminhub" 
-          target="_blank" 
-          rel="noopener noreferrer" 
+          href="mailto:support@moneymindspace.online" 
           className="text-[#D4AF37] hover:underline font-bold"
         >
-          @Alexadminhub
+          support@moneymindspace.online
         </a>
         .
       </span>
