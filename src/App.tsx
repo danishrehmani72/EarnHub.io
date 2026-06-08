@@ -23,7 +23,6 @@ import RegistrationCard from './components/RegistrationCard';
 import DashboardCard from './components/DashboardCard';
 import ReferralHistory from './components/ReferralHistory';
 import AdminPanel from './components/AdminPanel';
-import RecentWithdrawalToast from './components/RecentWithdrawalToast';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
 import earnhubLogo from './assets/images/earnhub_logo_1780161493423.png';
@@ -42,8 +41,49 @@ import {
   Lock,
   ShieldCheck,
   RefreshCw,
-  Play
+  Play,
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
+
+
+const mobileItemVariants = {
+  hidden: { opacity: 0, x: -16 },
+  visible: { 
+    opacity: 1, 
+    x: 0, 
+    transition: { 
+      type: 'spring', 
+      stiffness: 260, 
+      damping: 20 
+    } 
+  }
+};
+
+const mobileMenuVariants = {
+  hidden: { opacity: 0, y: -20, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 240,
+      damping: 24,
+      staggerChildren: 0.05,
+      delayChildren: 0.05
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: -20,
+    scale: 0.98,
+    transition: {
+      duration: 0.15,
+      ease: 'easeInOut'
+    }
+  }
+};
 
 
 // Custom lightweight number counting animation component
@@ -133,6 +173,34 @@ export default function App() {
 
   // Toast Notification System
   const [toasts, setToasts] = useState<{id: string; message: string; type: 'success' | 'error'}[]>([]);
+  const [lastClearedToasts, setLastClearedToasts] = useState<{id: string; message: string; type: 'success' | 'error'}[]>([]);
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const clearAllToasts = () => {
+    if (toasts.length === 0) return;
+    setLastClearedToasts([...toasts]);
+    setToasts([]);
+  };
+
+  const undoClearToasts = () => {
+    if (lastClearedToasts.length === 0) return;
+    setToasts(prev => [...prev, ...lastClearedToasts]);
+    setLastClearedToasts([]);
+  };
+
+  // Reset last cleared toasts history after 8 seconds
+  useEffect(() => {
+    if (lastClearedToasts.length > 0) {
+      const timer = setTimeout(() => {
+        setLastClearedToasts([]);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastClearedToasts]);
+
   const addToast = (
     message: string, 
     type: 'success' | 'error', 
@@ -725,28 +793,85 @@ export default function App() {
     <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans flex flex-col justify-between antialiased selection:bg-[#D4AF37]/20 selection:text-[#D4AF37]">
       
       {/* Toast Notification Container */}
-      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2">
+      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-[340px] xs:max-w-sm w-full pointer-events-none">
+        {/* Header Action Controls */}
+        <div className="flex flex-col gap-1.5 items-end justify-end w-full mb-1">
+          <AnimatePresence>
+            {toasts.length >= 2 && (
+              <motion.button
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                onClick={clearAllToasts}
+                className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider text-white/65 hover:text-white bg-black/70 hover:bg-zinc-900 border border-white/10 hover:border-white/20 rounded-xl backdrop-blur-md cursor-pointer transition-all duration-150 shadow-lg shadow-black/30"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                <span>Clear All ({toasts.length})</span>
+              </motion.button>
+            )}
+
+            {lastClearedToasts.length > 0 && toasts.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="pointer-events-auto flex items-center justify-between gap-3 w-full px-3.5 py-2.5 bg-[#0F0F0F]/90 backdrop-blur-md border border-emerald-500/20 text-emerald-400 rounded-xl shadow-2xl"
+              >
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-extrabold text-white/90">Notifications Cleared</span>
+                  <span className="text-[9px] text-[#D4AF37] font-medium tracking-wide">Restorable within 8 seconds</span>
+                </div>
+                <button
+                  onClick={undoClearToasts}
+                  className="px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 font-extrabold uppercase text-[9px] tracking-wider rounded-lg border border-emerald-500/20 cursor-pointer transition-all flex items-center gap-1 shrink-0"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Undo
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* List of active toasts */}
         <AnimatePresence>
           {toasts.map(t => (
             <motion.div
               key={t.id}
-              initial={{ opacity: 0, x: 50, scale: 0.9 }}
+              layout
+              initial={{ opacity: 0, x: 50, scale: 0.92 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 20, scale: 0.9 }}
-              className={`px-4 py-3 rounded-xl border flex items-center gap-3 shadow-lg min-w-[280px] max-w-sm ${
+              exit={{ opacity: 0, x: 20, scale: 0.92 }}
+              className={`pointer-events-auto px-3.5 py-3 rounded-xl border flex items-center justify-between gap-2.5 shadow-xl transition-all duration-150 hover:scale-[1.01] hover:shadow-black/60 relative ${
                 t.type === 'success' 
-                  ? 'bg-[#111111] border-emerald-500/20 text-emerald-400' 
-                  : 'bg-[#111111] border-rose-500/20 text-rose-400'
+                  ? 'bg-[#0E0E0E]/90 border-emerald-500/20 text-emerald-400 backdrop-blur-xl' 
+                  : 'bg-[#0E0E0E]/90 border-rose-500/20 text-rose-400 backdrop-blur-xl'
               }`}
             >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                t.type === 'success' ? 'bg-emerald-500/10' : 'bg-rose-500/10'
-              }`}>
-                {t.type === 'success' ? '✓' : '✗'}
+              <div className="flex items-start gap-3 min-w-0">
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                  t.type === 'success' 
+                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
+                    : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+                }`}>
+                  {t.type === 'success' ? '✓' : '✗'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-white/90 font-sans tracking-wide leading-relaxed break-words">
+                    {t.message}
+                  </p>
+                </div>
               </div>
-              <p className="text-xs font-semibold text-white/90 font-sans tracking-wide leading-relaxed">
-                {t.message}
-              </p>
+
+              {/* Dismiss / Close Button */}
+              <button
+                type="button"
+                onClick={() => removeToast(t.id)}
+                className="text-white/20 hover:text-white/70 p-1 rounded-lg hover:bg-white/5 transition-all cursor-pointer inline-flex items-center justify-center shrink-0 self-start mt-0.5"
+                title="Dismiss"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -882,74 +1007,102 @@ export default function App() {
       {/* Mobile Menu Dropdown Bar */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="md:hidden bg-[#0C0C0C] border-b border-white/10 z-50 overflow-hidden w-full"
-          >
-            <div className="px-6 py-5 flex flex-col gap-4 font-sans text-sm font-semibold tracking-wide text-white/70">
-              <button 
-                type="button"
-                onClick={() => handleNavClick('dashboard')}
-                className={`py-2 text-left flex items-center justify-between border-b border-white/[0.03] transition-all cursor-pointer bg-transparent border-0 ${isRegistered && dashboardTab === 'overview' ? 'text-white font-extrabold border-[#D4AF37]/50' : 'hover:text-white'}`}
-              >
-                <span>Dashboard Overview</span>
-                <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-[#D4AF37] uppercase">Growth</span>
-              </button>
+          <>
+            {/* Backdrop Blur Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="md:hidden fixed inset-0 top-20 bg-black/60 backdrop-blur-sm z-40 cursor-pointer"
+            />
 
-              <button 
-                type="button"
-                onClick={() => handleNavClick('deposit')}
-                className="py-2 text-left flex items-center justify-between border-b border-white/[0.03] transition-all cursor-pointer text-emerald-400 font-extrabold hover:brightness-110 bg-transparent border-0"
-              >
-                <span className="flex items-center gap-2">
-                  <ArrowDownLeft className="w-4 h-4" />
-                  Deposit Funds
-                </span>
-                <span className="text-[10px] bg-emerald-500/10 px-2.5 py-0.5 rounded text-emerald-400 border border-emerald-500/20 uppercase tracking-widest text-[8px] font-black">Daily Yield</span>
-              </button>
+            <motion.div
+              variants={mobileMenuVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="md:hidden fixed left-0 right-0 top-20 bg-[#0C0C0C]/85 backdrop-blur-xl border-b border-white/10 z-45 overflow-hidden w-full shadow-2xl shadow-black/80"
+            >
+              <div className="px-6 py-6 flex flex-col gap-3 font-sans text-sm font-semibold tracking-wide text-white/70">
+                <motion.button 
+                  variants={mobileItemVariants}
+                  type="button"
+                  onClick={() => handleNavClick('dashboard')}
+                  className={`py-3 px-4 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer bg-transparent ${isRegistered && dashboardTab === 'overview' ? 'text-white font-extrabold border-[#D4AF37]/35 bg-[#D4AF37]/10' : 'border-white/5 hover:border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                    Dashboard Overview
+                  </span>
+                  <span className="text-[10px] bg-[#D4AF37]/15 border border-[#D4AF37]/20 px-2 py-0.5 rounded text-[#D4AF37] uppercase font-bold tracking-wider">Growth</span>
+                </motion.button>
 
-              <button 
-                type="button"
-                onClick={() => handleNavClick('withdraw')}
-                className="py-2 text-left flex items-center justify-between border-b border-white/[0.03] transition-all cursor-pointer text-[#D4AF37] font-extrabold hover:brightness-110 bg-transparent border-0"
-              >
-                <span className="flex items-center gap-2">
-                  <ArrowUpRight className="w-4 h-4" />
-                  Withdraw Funds
-                </span>
-                <span className="text-[10px] bg-[#D4AF37]/10 px-2.5 py-0.5 rounded text-[#D4AF37] border border-[#D4AF37]/20 uppercase tracking-widest text-[8px] font-black">Withdraw</span>
-              </button>
+                <motion.button 
+                  variants={mobileItemVariants}
+                  type="button"
+                  onClick={() => handleNavClick('deposit')}
+                  className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all cursor-pointer text-emerald-400 font-extrabold hover:brightness-110 bg-transparent"
+                >
+                  <span className="flex items-center gap-2">
+                    <ArrowDownLeft className="w-4 h-4" />
+                    Deposit Funds
+                  </span>
+                  <span className="text-[9px] bg-emerald-500/10 px-2.5 py-0.5 rounded text-emerald-400 border border-emerald-500/20 uppercase tracking-widest font-black">Daily Yield</span>
+                </motion.button>
 
-              <button 
-                type="button"
-                onClick={() => handleNavClick('helpline')}
-                className="py-2 text-left flex items-center gap-2 border-b border-white/[0.03] transition-all text-sky-400 hover:text-sky-300 font-extrabold cursor-pointer bg-transparent border-0"
-              >
-                <MessageSquare className="w-4 h-4 animate-pulse" />
-                <span>Customer Telegram Helpline</span>
-              </button>
+                <motion.button 
+                  variants={mobileItemVariants}
+                  type="button"
+                  onClick={() => handleNavClick('withdraw')}
+                  className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-white/5 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/5 transition-all cursor-pointer text-[#D4AF37] font-extrabold hover:brightness-110 bg-transparent"
+                >
+                  <span className="flex items-center gap-2">
+                    <ArrowUpRight className="w-4 h-4" />
+                    Withdraw Funds
+                  </span>
+                  <span className="text-[9px] bg-[#D4AF37]/10 px-2.5 py-0.5 rounded text-[#D4AF37] border border-[#D4AF37]/20 uppercase tracking-widest font-black">Withdraw</span>
+                </motion.button>
 
-              <button 
-                type="button"
-                onClick={() => handleNavClick('faq')}
-                className={`py-2 text-left flex items-center gap-2 border-b border-white/[0.03] transition-all cursor-pointer bg-transparent border-0 ${isRegistered && dashboardTab === 'faq' ? 'text-white font-extrabold' : 'hover:text-white'}`}
-              >
-                <HelpCircle className="w-4 h-4 text-white/50" />
-                <span>Frequently Asked Questions (FAQ)</span>
-              </button>
+                <motion.button 
+                  variants={mobileItemVariants}
+                  type="button"
+                  onClick={() => handleNavClick('helpline')}
+                  className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-white/5 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all text-sky-400 hover:text-sky-300 font-extrabold cursor-pointer bg-transparent inline-flex"
+                >
+                  <span className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 animate-pulse" />
+                    Customer Telegram Helpline
+                  </span>
+                  <span className="text-[9px] bg-sky-500/10 px-2 rounded text-sky-400 border border-sky-500/20 uppercase tracking-wider font-bold">24/7 Support</span>
+                </motion.button>
 
-              <div className="flex items-center justify-between pt-2 text-[10px] font-medium text-white/40 uppercase tracking-widest">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>Firestore Ledger Core Live</span>
-                </div>
-                <span>v3.5 Optimal</span>
+                <motion.button 
+                  variants={mobileItemVariants}
+                  type="button"
+                  onClick={() => handleNavClick('faq')}
+                  className={`py-3 px-4 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer bg-transparent ${isRegistered && dashboardTab === 'faq' ? 'text-white font-extrabold border-[#D4AF37]/35 bg-[#D4AF37]/10' : 'border-white/5 hover:border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4 text-white/50" />
+                    Frequently Asked Questions (FAQ)
+                  </span>
+                  <span className="text-[9px] bg-white/5 px-2 py-0.5 rounded text-white/40 uppercase tracking-wider font-bold">Info</span>
+                </motion.button>
+
+                <motion.div 
+                  variants={mobileItemVariants}
+                  className="flex items-center justify-between pt-3 px-1 text-[10px] font-medium text-white/30 uppercase tracking-widest border-t border-white/5 mt-1"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Firestore Ledger Core Live</span>
+                  </div>
+                  <span>v3.5 Premium</span>
+                </motion.div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -1470,7 +1623,6 @@ export default function App() {
       </AnimatePresence>
 
       {/* Real-time Simulated Recent Payout & Withdrawal Feed Popups */}
-      <RecentWithdrawalToast />
     </div>
   );
 }
