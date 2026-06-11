@@ -1,6 +1,27 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      // Suppress cross-origin "Script error." telemetry from external trackers/ad scripts in sandboxed environments
+      window.addEventListener('error', function(e) {
+        if (e.message === 'Script error.' || !e.filename) {
+          e.preventDefault && e.preventDefault();
+          e.stopPropagation && e.stopPropagation();
+          return true;
+        }
+        if (e.filename && (
+          e.filename.indexOf('5gvci.com') > -1 || 
+          e.filename.indexOf('nap5k.com') > -1 || 
+          e.filename.indexOf('n6wxm.com') > -1 || 
+          e.filename.indexOf('googlesyndication.com') > -1 || 
+          e.filename.indexOf('doubleclick.net') > -1
+        )) {
+          e.preventDefault && e.preventDefault();
+          e.stopPropagation && e.stopPropagation();
+          return true;
+        }
+      }, true);
+    </script>
     <!-- MONETAG PUSH NOTIFICATIONS ADS -->
     <script src="https://5gvci.com/act/files/tag.min.js?z=11106475" data-cfasync="false" async></script>
     <!-- MONETAG MONETIZATION SCRIPT -->

@@ -455,7 +455,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         activeUsersCount++;
       }
 
-      const referralEarnings = u.referrals.reduce((sum, ref: any) => sum + (ref.amount !== undefined ? ref.amount : 0.05), 0);
+      const referralEarnings = u.referrals.reduce((sum, ref: any) => sum + (ref.amount !== undefined ? ref.amount : 0.055), 0);
       totalReferralRewardsSum += referralEarnings;
 
       u.deposits.forEach(d => {
@@ -1035,7 +1035,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             {filteredUsers.map((user, idx) => {
               const approvedD = user.deposits.filter(d => d.status === 'approved').reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
               const approvedW = user.withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
-              const referralEarnings = user.referrals.reduce((sum, ref: any) => sum + (ref.amount !== undefined ? ref.amount : 0.05), 0);
+              const referralEarnings = user.referrals.reduce((sum, ref: any) => sum + (ref.amount !== undefined ? ref.amount : 0.055), 0);
 
               const activeInvestmentsSum = user.investments
                 .filter((i: any) => i.status === 'active')

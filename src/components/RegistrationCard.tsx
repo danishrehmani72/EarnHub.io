@@ -174,12 +174,12 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             second: '2-digit'
           });
 
-          // Level 1 Reward ($0.05)
+          // Level 1 Reward ($0.055)
           const level1LogRef = doc(collection(db, 'users', referredBy, 'referrals'));
           await setDoc(level1LogRef, {
             id: level1LogRef.id,
             timestamp: timestampStr,
-            amount: 0.05,
+            amount: 0.055,
             level: 1,
             refereeId: cleanUserId,
             refereeName: cleanName,
@@ -200,12 +200,12 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               const parent2Ref = doc(db, 'users', parent2Id);
               const parent2Snap = await getDocWithRetry(parent2Ref);
               if (parent2Snap.exists()) {
-                // Level 2 Reward ($0.03)
+                // Level 2 Reward ($0.033)
                 const level2LogRef = doc(collection(db, 'users', parent2Id, 'referrals'));
                 await setDoc(level2LogRef, {
                   id: level2LogRef.id,
                   timestamp: timestampStr,
-                  amount: 0.03,
+                  amount: 0.033,
                   level: 2,
                   refereeId: cleanUserId,
                   refereeName: cleanName,
@@ -222,12 +222,12 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                   const parent3Ref = doc(db, 'users', parent3Id);
                   const parent3Snap = await getDocWithRetry(parent3Ref);
                   if (parent3Snap.exists()) {
-                    // Level 3 Reward ($0.01)
+                    // Level 3 Reward ($0.011)
                     const level3LogRef = doc(collection(db, 'users', parent3Id, 'referrals'));
                     await setDoc(level3LogRef, {
                       id: level3LogRef.id,
                       timestamp: timestampStr,
-                      amount: 0.01,
+                      amount: 0.011,
                       level: 3,
                       refereeId: cleanUserId,
                       refereeName: cleanName,
@@ -1021,7 +1021,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           <div>
             <h4 className="text-[10px] font-black text-white/90 uppercase tracking-widest">Elite Distribution Model</h4>
             <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
-              Get $0.10 starting bonus upon registration (boosted to $0.30 if invited via a referral link). Earn $0.50 premium commissions for every successful referral.
+              Get $0.10 starting bonus upon registration (boosted to $0.30 if invited via a referral link). Earn $0.55 premium commissions for every successful referral.
             </p>
           </div>
         </div>

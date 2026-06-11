@@ -159,19 +159,19 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                 <div className="absolute top-0 inset-x-0 h-0.5 bg-[#D4AF37]/40" />
                 <span className="text-[8px] text-white/30 uppercase tracking-[0.15em] font-semibold block">Level 1 (Direct)</span>
                 <span className="text-lg font-bold text-white font-mono block mt-1">{level1Logs.length}</span>
-                <span className="text-[8.5px] text-[#D4AF37] font-mono font-black mt-1 block bg-[#D4AF37]/5 py-0.5 rounded-sm uppercase">$0.05 / ref</span>
+                <span className="text-[8.5px] text-[#D4AF37] font-mono font-black mt-1 block bg-[#D4AF37]/5 py-0.5 rounded-sm uppercase">$0.055 / ref</span>
               </div>
               <div className="bg-[#161616]/50 border border-white/5 rounded-xl p-3.5 text-center relative overflow-hidden">
                 <div className="absolute top-0 inset-x-0 h-0.5 bg-indigo-500/40" />
                 <span className="text-[8px] text-white/30 uppercase tracking-[0.15em] font-semibold block">Level 2 (Indirect)</span>
                 <span className="text-lg font-bold text-white font-mono block mt-1">{level2Logs.length}</span>
-                <span className="text-[8.5px] text-indigo-400 font-mono font-black mt-1 block bg-indigo-500/5 py-0.5 rounded-sm uppercase">$0.03 / ref</span>
+                <span className="text-[8.5px] text-indigo-400 font-mono font-black mt-1 block bg-indigo-500/5 py-0.5 rounded-sm uppercase">$0.033 / ref</span>
               </div>
               <div className="bg-[#161616]/50 border border-white/5 rounded-xl p-3.5 text-center relative overflow-hidden">
                 <div className="absolute top-0 inset-x-0 h-0.5 bg-sky-500/40" />
                 <span className="text-[8px] text-white/30 uppercase tracking-[0.15em] font-semibold block">Level 3 (Indirect)</span>
                 <span className="text-lg font-bold text-white font-mono block mt-1">{level3Logs.length}</span>
-                <span className="text-[8.5px] text-sky-400 font-mono font-black mt-1 block bg-sky-500/5 py-0.5 rounded-sm uppercase">$0.01 / ref</span>
+                <span className="text-[8.5px] text-sky-400 font-mono font-black mt-1 block bg-sky-500/5 py-0.5 rounded-sm uppercase">$0.011 / ref</span>
               </div>
             </div>
 
@@ -282,7 +282,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
 
                         <div className="text-right">
                           <p className="text-xs font-mono text-emerald-400 font-extrabold">
-                            +${(log.amount !== undefined ? log.amount : (levelNum === 1 ? 0.05 : levelNum === 2 ? 0.03 : 0.01)).toFixed(2)}
+                            +${(log.amount !== undefined ? log.amount : (levelNum === 1 ? 0.055 : levelNum === 2 ? 0.033 : 0.011)).toFixed(3)}
                           </p>
                           <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest block mt-0.5">Sponsor Payout</span>
                         </div>
@@ -351,7 +351,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                                   <span className="text-[8.5px] text-white/30 uppercase tracking-widest font-semibold block mt-0.5">Tier 1 Agent</span>
                                 </div>
                               </div>
-                              <span className="text-[9px] font-mono text-emerald-400 bg-emerald-400/5 px-2 py-0.5 rounded border border-emerald-400/10 font-black">+$0.05</span>
+                              <span className="text-[9px] font-mono text-emerald-400 bg-emerald-400/5 px-2 py-0.5 rounded border border-emerald-400/10 font-black">+$0.055</span>
                             </div>
                           </div>
 
@@ -377,7 +377,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                                             <span className="text-[8.5px] text-white/30 uppercase tracking-widest font-semibold block mt-0.5">Tier 2 Agent</span>
                                           </div>
                                         </div>
-                                        <span className="text-[9px] font-mono text-emerald-400 bg-emerald-400/5 px-2 py-0.5 rounded border border-emerald-400/10 font-black">+$0.03</span>
+                                        <span className="text-[9px] font-mono text-emerald-400 bg-emerald-400/5 px-2 py-0.5 rounded border border-emerald-400/10 font-black">+$0.033</span>
                                       </div>
                                     </div>
 
@@ -397,7 +397,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                                                   <span className="text-[8px] text-white/30 uppercase tracking-widest font-semibold block mt-0.5 leading-none">Tier 3 Associate</span>
                                                 </div>
                                               </div>
-                                              <span className="text-[8.5px] font-mono text-emerald-405 bg-emerald-400/5 px-1.5 py-0.5 rounded border border-emerald-400/10 font-bold text-emerald-400">+$0.01</span>
+                                              <span className="text-[8.5px] font-mono text-emerald-400 bg-emerald-400/5 px-1.5 py-0.5 rounded border border-emerald-400/10 font-bold text-emerald-400">+$0.011</span>
                                             </div>
                                           </div>
                                         ))}

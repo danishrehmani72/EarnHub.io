@@ -1003,8 +1003,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     onClick={async () => {
                       if (onClaimDailyReward) {
                         const currentStreak = userProfile?.claimStreak || 0;
-                        const minAmt = currentStreak >= 5 ? 0.40 : 0.15;
-                        const maxAmt = currentStreak >= 5 ? 0.60 : 0.35;
+                        const minAmt = currentStreak >= 5 ? 0.28 : 0.105;
+                        const maxAmt = currentStreak >= 5 ? 0.42 : 0.245;
                         const claimAmt = Number((Math.random() * (maxAmt - minAmt) + minAmt).toFixed(2));
                         
                         await onClaimDailyReward(claimAmt);
@@ -1620,7 +1620,14 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         { name: "S*** Ahmed", amount: "$85", method: "EasyPaisa", time: "12 mins ago" },
                         { name: "Z*** Malik", amount: "$30", method: "JazzCash", time: "18 mins ago" }
                       ].map((item, idx) => (
-                        <tr key={idx} className="hover:bg-white/[0.01] transition-all">
+                        <motion.tr 
+                          key={idx} 
+                          initial={{ opacity: 0, y: 15 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: "-10px" }}
+                          transition={{ duration: 0.4, delay: idx * 0.05 }}
+                          className="hover:bg-white/[0.01] transition-all"
+                        >
                           <td className="py-3 px-4 font-medium text-white/90">
                             <div className="flex items-center gap-2">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
@@ -1634,7 +1641,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                               ✅ Paid
                             </span>
                           </td>
-                        </tr>
+                        </motion.tr>
                       ))}
                     </tbody>
                   </table>
@@ -1667,8 +1674,15 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-white/5">
-                            {deposits.map((dep) => (
-                              <tr key={dep.id} className="text-white/80">
+                            {deposits.map((dep, idx) => (
+                              <motion.tr 
+                                key={dep.id} 
+                                initial={{ opacity: 0, y: 15 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: "-10px" }}
+                                transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.3) }}
+                                className="text-white/80"
+                              >
                                 <td className="py-2.5 text-[10px] font-mono text-white/40">{dep.timestamp}</td>
                                 <td className="py-2.5 font-bold uppercase text-white">{dep.network}</td>
                                 <td className="py-2.5 font-medium text-[#D4AF37]">{currencySymbol}{(dep.amount * conversionRate).toFixed(2)}</td>
@@ -1711,7 +1725,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                     )}
                                   </div>
                                 </td>
-                              </tr>
+                              </motion.tr>
                             ))}
                           </tbody>
                         </table>
@@ -1739,11 +1753,15 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {withdrawals.slice().reverse().map((wit) => {
+                        {withdrawals.slice().reverse().map((wit, idx) => {
                           const isApproved = wit.status === 'approved';
                           const isPending = wit.status === 'pending';
                           return (
                             <motion.div 
+                              initial={{ opacity: 0, y: 20 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true, margin: "-20px" }}
+                              transition={{ duration: 0.5, delay: Math.min(idx * 0.05, 0.3) }}
                               whileHover={{ scale: 1.015, borderColor: isApproved ? 'rgba(16,185,129,0.3)' : 'rgba(212,175,55,0.2)' }}
                               key={wit.id} 
                               className={`p-4 rounded-xl border transition-all duration-300 backdrop-blur-md relative overflow-hidden ${

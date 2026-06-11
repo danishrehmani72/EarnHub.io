@@ -325,7 +325,7 @@ export default function App() {
         snapshot.docChanges().forEach((change) => {
           if (change.type === 'added') {
             const data = change.doc.data();
-            const commission = data.amount !== undefined ? data.amount : 0.50;
+            const commission = data.amount !== undefined ? data.amount : 0.55;
             addToast(`New partner registered: ${data.refereeName || data.name || 'Anonymous User'}! +$${commission.toFixed(2)} referral commission!`, 'success', 'new_referral');
           }
         });
@@ -746,7 +746,7 @@ export default function App() {
 
   // Real-time ledger balance calculation
   const signupBonus = userProfile?.signupBonus !== undefined ? userProfile.signupBonus : 0.10;
-  const referralEarnings = logs.reduce((sum, log) => sum + (typeof log.amount === 'number' ? log.amount : 0.05), 0);
+  const referralEarnings = logs.reduce((sum, log) => sum + (typeof log.amount === 'number' ? log.amount : 0.055), 0);
   const approvedDepositsList = deposits.filter(d => d.status === 'approved');
   const approvedDeposits = approvedDepositsList.reduce((sum, d) => sum + d.amount, 0);
   const approvedWithdrawals = withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + w.amount, 0);
