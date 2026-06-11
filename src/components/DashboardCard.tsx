@@ -280,7 +280,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
   const handleCopyPkNumber = async () => {
     try {
-      await navigator.clipboard.writeText('03436520125');
+      await navigator.clipboard.writeText('03435319202');
       setCopiedPkNumber(true);
       setTimeout(() => setCopiedPkNumber(false), 2500);
     } catch (err) {
@@ -290,7 +290,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
   const handleCopyPkDepNumber = async () => {
     try {
-      await navigator.clipboard.writeText('03436520125');
+      await navigator.clipboard.writeText('03435319202');
       setCopiedPkDepNumber(true);
       setTimeout(() => setCopiedPkDepNumber(false), 2500);
     } catch (err) {
@@ -320,7 +320,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
         const depositDetails = `${pkDepMethod === 'EASYPAISA' ? 'Easypaisa' : pkDepMethod === 'JAZZCASH' ? 'JazzCash' : pkDepMethod === 'SADAPAY' ? 'SadaPay' : pkDepMethod === 'NAYAPAY' ? 'NayaPay' : 'Bank Transfer'} - Number: ${pkDepSenderNumber.trim()} | Name: ${pkDepSenderName.trim()}`;
         await onCreateDeposit(amtInput, pkDepMethod, `${pkDepTxid.trim()} (${depositDetails})`);
         
-        setPkDepSuccess('✅ Your deposit request has been submitted successfully. It will be credited after verification within 2–24 hours.');
+        setPkDepSuccess('✅ Your deposit request has been submitted successfully. It will be credited after verification within 2 minutes to 2 hours.');
         setPkDepAmount('');
         setPkDepSenderNumber('');
         setPkDepSenderName('');
@@ -831,13 +831,19 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
                 
                 {/* 1. Live Wallet Balance */}
-                <div id="live-wallet-balance-card" className={`p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden shadow-inner border transition-all duration-500 ${
-                  flashType === 'up'
-                    ? 'border-emerald-500/30 bg-emerald-950/20 shadow-[0_0_25px_rgba(16,185,129,0.15)] scale-[1.01]'
-                    : flashType === 'down'
-                    ? 'border-rose-500/30 bg-rose-950/20 shadow-[0_0_25px_rgba(244,63,94,0.15)] scale-[0.99]'
-                    : 'bg-[#161616] border-white/5'
-                }`}>
+                <motion.div 
+                  id="live-wallet-balance-card" 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className={`p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden shadow-inner border transition-all duration-500 rounded-2xl ${
+                    flashType === 'up'
+                      ? 'border-emerald-500/30 bg-emerald-950/20 shadow-[0_0_25px_rgba(16,185,129,0.15)] scale-[1.01]'
+                      : flashType === 'down'
+                      ? 'border-rose-500/30 bg-rose-950/20 shadow-[0_0_25px_rgba(244,63,94,0.15)] scale-[0.99]'
+                      : 'bg-[#161616] border-white/5'
+                  }`}
+                >
                   <div className={`absolute -top-4 -right-4 pointer-events-none transition-colors duration-500 ${
                     flashType === 'up'
                       ? 'text-emerald-500/10'
@@ -883,10 +889,15 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         : 'Real-time active ledger'
                     }
                   </div>
-                </div>
+                </motion.div>
 
                 {/* 2. Next Daily Payout Timer */}
-                <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden">
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
+                  className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden"
+                >
                   <div className="absolute -top-4 -right-4 text-white/5 pointer-events-none font-black text-6xl select-none">
                     T
                   </div>
@@ -903,10 +914,15 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${hasActivePlan ? 'bg-emerald-400 animate-ping' : 'bg-white/20'}`} />
                     {hasActivePlan ? 'Fixed daily cycle running' : 'Await approved deposit'}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* 3. Total Referrals */}
-                <div className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden">
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.16, ease: "easeOut" }}
+                  className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden"
+                >
                   <div className="absolute -top-4 -right-4 text-white/5 pointer-events-none">
                     <Users className="w-20 h-20" />
                   </div>
@@ -922,7 +938,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   <div className="text-[8.5px] text-[#D4AF37] font-medium flex items-center gap-1 z-10 leading-normal font-sans">
                     <Award className="w-2.5 h-2.5 text-[#D4AF37] shrink-0" /> Target progress: {progressPercent.toFixed(0)}%
                   </div>
-                </div>
+                </motion.div>
 
               </div>
 
@@ -1512,7 +1528,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       <div className="bg-black/60 border border-emerald-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-left relative overflow-hidden">
                         <div className="space-y-1 z-10">
                           <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Easypaisa Number</p>
-                          <h5 className="text-[15px] font-mono font-black text-white tracking-widest">03436520125</h5>
+                          <h5 className="text-[15px] font-mono font-black text-white tracking-widest">03435319202</h5>
                         </div>
                         <button
                           type="button"
@@ -1598,7 +1614,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         {/* Important Notice Box */}
                         <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/15 text-left text-xs leading-relaxed text-amber-300 space-y-1.5">
                           <p className="font-extrabold flex items-center gap-1 text-amber-400">⚠️ IMPORTANT NOTICE</p>
-                          <p>To ensure secure transactions and prevent fraud, all deposit payments are manually verified before being added to your account. Please send payment to the correct details and upload proof if required. Processing may take 2–24 hours after verification.</p>
+                          <p>To ensure secure transactions and prevent fraud, all deposit payments are manually verified before being added to your account. Please send payment to the correct details and upload proof if required. Processing may take 2 minutes to 2 hours after verification.</p>
                         </div>
 
                         {/* Deposit Rules */}
@@ -1606,7 +1622,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                           <p className="font-black text-white uppercase tracking-wider text-[9px] text-[#10B981]">🇵🇰 Deposit Rules & requirements</p>
                           <ul className="space-y-1 text-white/70 list-disc list-inside">
                             <li>Minimum Deposit: $5</li>
-                            <li>Processing Time: 2–24 Hours</li>
+                            <li>Processing Time: 2 Minutes to 2 Hours</li>
                             <li>One deposit request at a time</li>
                             <li>Always keep payment proof (screenshot/receipt)</li>
                           </ul>
