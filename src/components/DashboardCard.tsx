@@ -222,11 +222,32 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
   const [depError, setDepError] = useState('');
   const [depSuccess, setDepSuccess] = useState('');
 
+  // Pakistan Deposit states
+  const [depositMethodTab, setDepositMethodTab] = useState<'pakistan' | 'crypto'>('pakistan');
+  const [pkDepMethod, setPkDepMethod] = useState<'EASYPAISA' | 'JAZZCASH' | 'SADAPAY' | 'NAYAPAY' | 'BANK'>('EASYPAISA');
+  const [pkDepAmount, setPkDepAmount] = useState('');
+  const [pkDepSenderNumber, setPkDepSenderNumber] = useState('');
+  const [pkDepSenderName, setPkDepSenderName] = useState('');
+  const [pkDepTxid, setPkDepTxid] = useState('');
+  const [pkDepError, setPkDepError] = useState('');
+  const [pkDepSuccess, setPkDepSuccess] = useState('');
+  const [copiedPkDepNumber, setCopiedPkDepNumber] = useState(false);
+
   const [withdrawNetwork, setWithdrawNetwork] = useState('BNB');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawWallet, setWithdrawWallet] = useState('');
   const [withdrawError, setWithdrawError] = useState('');
   const [withdrawSuccess, setWithdrawSuccess] = useState('');
+
+  // Pakistan Withdrawal states
+  const [withdrawMethodTab, setWithdrawMethodTab] = useState<'pakistan' | 'crypto'>('pakistan');
+  const [pkMethod, setPkMethod] = useState<'EASYPAISA' | 'JAZZCASH' | 'SADAPAY' | 'NAYAPAY' | 'BANK'>('EASYPAISA');
+  const [pkWithdrawAmount, setPkWithdrawAmount] = useState('');
+  const [pkWithdrawNumber, setPkWithdrawNumber] = useState('');
+  const [pkWithdrawName, setPkWithdrawName] = useState('');
+  const [pkWithdrawError, setPkWithdrawError] = useState('');
+  const [pkWithdrawSuccess, setPkWithdrawSuccess] = useState('');
+  const [copiedPkNumber, setCopiedPkNumber] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -254,6 +275,63 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       setTimeout(() => setCopiedAddr(null), 2500);
     } catch (err) {
       console.error('Failed to copy crypto address', err);
+    }
+  };
+
+  const handleCopyPkNumber = async () => {
+    try {
+      await navigator.clipboard.writeText('03436520125');
+      setCopiedPkNumber(true);
+      setTimeout(() => setCopiedPkNumber(false), 2500);
+    } catch (err) {
+      console.error('Failed to copy Pakistan withdraw number', err);
+    }
+  };
+
+  const handleCopyPkDepNumber = async () => {
+    try {
+      await navigator.clipboard.writeText('03436520125');
+      setCopiedPkDepNumber(true);
+      setTimeout(() => setCopiedPkDepNumber(false), 2500);
+    } catch (err) {
+      console.error('Failed to copy Pakistan deposit number', err);
+    }
+  };
+
+  const handlePkDepositSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPkDepError('');
+    setPkDepSuccess('');
+
+    const amtInput = parseFloat(pkDepAmount);
+    if (!amtInput || amtInput < 5) {
+      setPkDepError('❌ Minimum deposit amount is $5.');
+      return;
+    }
+
+    if (!pkDepSenderNumber.trim() || !pkDepSenderName.trim() || !pkDepTxid.trim()) {
+      setPkDepError('❌ Please fill in all payment details and Transaction ID correctly.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      if (onCreateDeposit) {
+        const depositDetails = `${pkDepMethod === 'EASYPAISA' ? 'Easypaisa' : pkDepMethod === 'JAZZCASH' ? 'JazzCash' : pkDepMethod === 'SADAPAY' ? 'SadaPay' : pkDepMethod === 'NAYAPAY' ? 'NayaPay' : 'Bank Transfer'} - Number: ${pkDepSenderNumber.trim()} | Name: ${pkDepSenderName.trim()}`;
+        await onCreateDeposit(amtInput, pkDepMethod, `${pkDepTxid.trim()} (${depositDetails})`);
+        
+        setPkDepSuccess('✅ Your deposit request has been submitted successfully. It will be credited after verification within 2–24 hours.');
+        setPkDepAmount('');
+        setPkDepSenderNumber('');
+        setPkDepSenderName('');
+        setPkDepTxid('');
+      } else {
+        setPkDepError('❌ Deposit system configuration issues. Please try again.');
+      }
+    } catch (err) {
+      setPkDepError('❌ Could not save deposit request.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -334,6 +412,50 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       }
     } catch (err) {
       setWithdrawError('Could not save withdrawal request.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePkWithdrawSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPkWithdrawError('');
+    setPkWithdrawSuccess('');
+
+    const amtInput = parseFloat(pkWithdrawAmount);
+    if (!amtInput || amtInput < 10) {
+      setPkWithdrawError('❌ Minimum withdrawal amount is $10.');
+      return;
+    }
+
+    if (amtInput > balance) {
+      setPkWithdrawError(`❌ Insufficient funds. Your live balance is ${currencySymbol}${(balance * conversionRate).toFixed(2)}.`);
+      return;
+    }
+
+    if (!pkWithdrawNumber.trim() || !pkWithdrawName.trim()) {
+      setPkWithdrawError('❌ Please fill in all payment details correctly.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      if (onCreateWithdrawal) {
+        const methodName = pkMethod === 'EASYPAISA' ? 'Easypaisa' :
+                           pkMethod === 'JAZZCASH' ? 'JazzCash' :
+                           pkMethod === 'SADAPAY' ? 'SadaPay' :
+                           pkMethod === 'NAYAPAY' ? 'NayaPay' : 'Bank Transfer';
+        const walletDetails = `${methodName} - Number/Account: ${pkWithdrawNumber.trim()} | Account Title: ${pkWithdrawName.trim()}`;
+        await onCreateWithdrawal(amtInput, pkMethod, walletDetails);
+        setPkWithdrawSuccess('✅ Your withdrawal request has been submitted successfully. Processing may take 2–24 hours.');
+        setPkWithdrawAmount('');
+        setPkWithdrawNumber('');
+        setPkWithdrawName('');
+      } else {
+        setPkWithdrawError('❌ Withdrawal system configuration issues. Please try again.');
+      }
+    } catch (err) {
+      setPkWithdrawError('❌ Could not save withdrawal request.');
     } finally {
       setSubmitting(false);
     }
@@ -1211,214 +1333,488 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               className="space-y-8"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* 1. DEPOSIT PORTAL - UPGRADED GLASSMORPHISM CARD WITH BLACK & GOLD THEME */}
+                {/* 1. DEPOSIT PORTAL - UPGRADED GLASSMORPHISM CARD WITH MULTI-RAIL PAKISTAN & CRYPTO SUPPORT */}
                 <div 
                   id="deposit-section" 
-                  className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-[#10B981]/60 shadow-[0_0_40px_rgba(212,175,55,0.12)] hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl"
+                  className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ${depositMethodTab === 'pakistan' ? 'from-[#031d10] via-[#010905] to-black border-2 border-emerald-500/40 hover:border-emerald-500/70 shadow-[0_0_40px_rgba(16,185,129,0.15)] shadow-emerald-500/10' : 'from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-emerald-500/60 shadow-[0_0_40px_rgba(212,175,55,0.12)]'} hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl`}
                 >
-                  {/* Premium gold particle overlay gradients */}
-                  <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-[#D4AF37]/8 via-[#10B981]/4 to-transparent blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
+                  {/* Premium color overlay gradients */}
+                  <div className={`absolute top-0 right-0 w-72 h-72 bg-gradient-to-br ${depositMethodTab === 'pakistan' ? 'from-emerald-500/10 to-transparent' : 'from-[#D4AF37]/6 via-[#10B981]/3 to-transparent'} blur-3xl pointer-events-none`} />
+                  <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
                   {/* Portal Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#D4AF37]/20 to-black flex items-center justify-center border border-[#D4AF37]/40 ring-1 ring-[#D4AF37]/15">
-                        <span className="text-xl">💳</span>
+                      <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${depositMethodTab === 'pakistan' ? 'from-emerald-500/25 to-black border border-emerald-500/40' : 'from-[#D4AF37]/20 to-black border border-[#D4AF37]/40'} flex items-center justify-center ring-1 ring-white/5`}>
+                        <span className="text-xl">{depositMethodTab === 'pakistan' ? '🇵🇰' : '💳'}</span>
                       </div>
                       <div>
-                        <h3 className="text-base font-black uppercase tracking-widest text-white font-serif leading-none">Deposit Portal</h3>
-                        <p className="text-[9px] text-[#D4AF37] uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse">Ingress protocol active</p>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-white leading-none">
+                          {depositMethodTab === 'pakistan' ? 'Pakistan Deposit Center' : 'Deposit Portal'}
+                        </h3>
+                        <p className={`text-[8.5px] ${depositMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-[#D4AF37]'} uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse`}>
+                          {depositMethodTab === 'pakistan' ? 'PKR local rails active' : 'Crypto protocol active'}
+                        </p>
                       </div>
                     </div>
                     
-                    <span className="self-start sm:self-auto text-[8.5px] bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30 px-3 py-1.5 rounded-full uppercase tracking-widest font-black flex items-center gap-2">
-                      <span className="w-2 h-2 bg-[#10B981] rounded-full animate-ping"></span>
-                      Verified Secure Node
+                    <span className={`self-start sm:self-auto text-[8.5px] ${depositMethodTab === 'pakistan' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30'} px-3 py-1.5 rounded-full uppercase tracking-widest font-black flex items-center gap-2`}>
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                      Verified Secure Core
                     </span>
                   </div>
 
-                  {/* Live Deposit Mode Metric/Highlights */}
-                  <div className="bg-gradient-to-r from-white/[0.01] via-white/[0.02] to-transparent p-5 rounded-2xl border border-white/5 relative">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2 flex items-center gap-1.5">
-                      <span>💎 Official Smart Contract Node</span>
-                      <span className="w-1 h-1 bg-[#D4AF37] rounded-full"></span>
-                    </p>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-mono font-black text-white tracking-tight">
-                        100% Instant
-                      </span>
-                      <span className="text-xs text-white/40 uppercase font-mono tracking-wider">
-                        Auto-Credited Funds
-                      </span>
+                  {/* Live Available Balance Block / Description */}
+                  {depositMethodTab === 'pakistan' ? (
+                    <div className="bg-gradient-to-r from-emerald-950/20 via-white/[0.01] to-transparent p-5 rounded-2xl border border-white/5 relative">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#10B981] mb-2 flex items-center gap-1.5">
+                        <span>🇵🇰 Instantly Secure Local Route</span>
+                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+                      </p>
+                      <p className="text-[11.5px] text-white/80 leading-relaxed font-sans">
+                        Add funds to your account instantly and securely using available payment methods in Pakistan.
+                      </p>
                     </div>
-                    <p className="text-[9.5px] text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
-                      <span>✅ Audited deposit addresses connected to our automated processing ledger.</span>
-                    </p>
+                  ) : (
+                    <div className="bg-gradient-to-r from-white/[0.01] via-white/[0.02] to-transparent p-5 rounded-2xl border border-white/5 relative">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2 flex items-center gap-1.5">
+                        <span>💎 Official Smart Contract Node</span>
+                        <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full"></span>
+                      </p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-mono font-black text-white tracking-tight">
+                          100% Instant
+                        </span>
+                        <span className="text-xs text-white/40 uppercase font-mono tracking-wider">
+                          Auto-Credited Funds
+                        </span>
+                      </div>
+                      <p className="text-[9.5px] text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
+                        <span>✅ Audited deposit addresses connected to our automated processing ledger.</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Custom Navigation Tab Toggle Bar */}
+                  <div className="bg-black/60 border border-white/5 p-1 rounded-xl grid grid-cols-2 gap-1.5 shadow-inner shadow-black">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDepositMethodTab('pakistan');
+                        setPkDepError('');
+                        setPkDepSuccess('');
+                      }}
+                      className={`py-2 px-3 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+                        depositMethodTab === 'pakistan'
+                          ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                          : 'text-white/40 hover:text-white/70 border border-transparent'
+                      }`}
+                    >
+                      🇵🇰 Pakistan Center
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDepositMethodTab('crypto');
+                        setDepError('');
+                        setDepSuccess('');
+                      }}
+                      className={`py-2 px-3 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+                        depositMethodTab === 'crypto'
+                          ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/25 shadow-sm'
+                          : 'text-white/40 hover:text-white/70 border border-transparent'
+                      }`}
+                    >
+                      🌐 Crypto Deposits
+                    </button>
                   </div>
 
                   {/* Divider */}
-                  <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent my-1" />
+                  <div className={`w-full h-[1px] bg-gradient-to-r from-transparent ${depositMethodTab === 'pakistan' ? 'via-emerald-500/30' : 'via-[#D4AF37]/30'} to-transparent my-1`} />
 
-                  {/* Deposit Submission Form */}
-                  <form onSubmit={handleDepositSubmit} className="space-y-5 text-left">
-                    {/* Select Network */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm">🏦</span>
-                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Select Network Token</label>
-                      </div>
-                      <select
-                        value={depNetwork}
-                        onChange={(e) => {
-                          setDepNetwork(e.target.value);
-                          setDepError('');
-                          setDepSuccess('');
-                        }}
-                        className="w-full bg-black/80 border border-[#D4AF37]/30 hover:border-[#10B981]/60 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
-                      >
-                        <option value="BNB">BNB (BEP20)</option>
-                        <option value="TRX">USDT TRON (TRC20)</option>
-                        <option value="MATIC">Polygon (MATIC)</option>
-                      </select>
-                    </div>
+                  {/* SUBTAB 1: PAKISTAN DEPOSIT PORTAL */}
+                  {depositMethodTab === 'pakistan' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-6"
+                    >
+                      {/* Available Deposit Method Title */}
+                      <div className="space-y-2.5 text-left">
+                        <label className="block text-[9px] font-black text-white/50 uppercase tracking-widest">Available Deposit Methods (Select One)</label>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {/* Easypaisa */}
+                          <div
+                            className={`p-3.5 rounded-xl flex items-center justify-between select-none cursor-pointer text-left border-2 bg-emerald-950/25 border-emerald-500`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">✅</span>
+                              <div>
+                                <p className="font-bold text-white leading-tight">Easypaisa</p>
+                                <p className="text-[8px] text-emerald-400 uppercase tracking-widest font-extrabold mt-0.5">Active</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] bg-white/10 text-white rounded border border-white/20 py-0.5 px-1.5 uppercase font-semibold">PKR</span>
+                          </div>
 
-                    {/* Display Transfer Address block */}
-                    <div className="space-y-1.5 bg-black/80 border border-[#D4AF37]/25 rounded-2xl p-4 relative overflow-hidden shadow-inner shadow-black">
-                      <div className="flex items-center gap-1 md:gap-1.5 mb-1.5">
-                        <span className="text-xs">🔑</span>
-                        <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.15em]">Official Safe Receiver Address</p>
+                          {/* JazzCash */}
+                          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 opacity-60 select-none text-left flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🚧</span>
+                              <div>
+                                <p className="font-bold text-white/70 leading-tight">JazzCash</p>
+                                <p className="text-[8.5px] text-amber-500 uppercase tracking-widest font-extrabold mt-0.5">Soon</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] border border-white/10 text-white/40 rounded py-0.5 px-1.5 uppercase font-semibold">PKR</span>
+                          </div>
+
+                          {/* SadaPay */}
+                          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 opacity-60 select-none text-left flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🚧</span>
+                              <div>
+                                <p className="font-bold text-white/70 leading-tight">SadaPay</p>
+                                <p className="text-[8.5px] text-amber-500 uppercase tracking-widest font-extrabold mt-0.5">Soon</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] border border-white/10 text-white/40 rounded py-0.5 px-1.5 uppercase font-semibold">PKR</span>
+                          </div>
+
+                          {/* NayaPay */}
+                          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 opacity-60 select-none text-left flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🚧</span>
+                              <div>
+                                <p className="font-bold text-white/70 leading-tight">NayaPay</p>
+                                <p className="text-[8.5px] text-amber-500 uppercase tracking-widest font-extrabold mt-0.5">Soon</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] border border-white/10 text-white/40 rounded py-0.5 px-1.5 uppercase font-semibold">PKR</span>
+                          </div>
+
+                          {/* Bank Transfer */}
+                          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 col-span-2 opacity-60 select-none text-left flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🚧</span>
+                              <div>
+                                <p className="font-bold text-white/70 leading-tight">Bank Transfer</p>
+                                <p className="text-[8.5px] text-amber-500 uppercase tracking-widest font-extrabold mt-0.5">Soon</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] border border-white/10 text-white/40 rounded py-0.5 px-1.5 uppercase font-semibold">Local Bank</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                        <span className="text-[11px] font-mono text-white/90 select-all break-all tracking-wider font-semibold">
-                          {depositAddresses[depNetwork]}
-                        </span>
+
+                      {/* Display platform Easypaisa account number */}
+                      <div className="bg-black/60 border border-emerald-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-left relative overflow-hidden">
+                        <div className="space-y-1 z-10">
+                          <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Easypaisa Number</p>
+                          <h5 className="text-[15px] font-mono font-black text-white tracking-widest">03436520125</h5>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => handleCopyAddr(depNetwork, depositAddresses[depNetwork])}
-                          className="px-4 py-2 shrink-0 text-[10px] tracking-widest uppercase font-black text-black bg-[#D4AF37] hover:brightness-110 border-0 rounded-xl transition-all cursor-pointer font-sans"
+                          onClick={handleCopyPkDepNumber}
+                          className="w-full sm:w-auto px-4 py-2 shrink-0 text-[10px] tracking-widest uppercase font-black text-white bg-emerald-600 hover:bg-emerald-500 border-0 rounded-xl transition-all cursor-pointer font-sans z-10 shadow-lg shadow-emerald-700/20"
                         >
-                          {copiedAddr === depNetwork ? 'COPIED ✅' : 'COPY ADDR 📋'}
+                          {copiedPkDepNumber ? 'COPIED ✅' : 'COPY NUMBER 📋'}
                         </button>
                       </div>
-                    </div>
 
-                    {/* Amount Block */}
-                    <div className="space-y-1.5 bg-transparent">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm">💵</span>
-                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Amount ({currencySymbol} Equiv.)</label>
+                      {/* Notice Box */}
+                      <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/15 text-left text-xs leading-relaxed text-emerald-300">
+                        📢 We are currently negotiating with payment agents in Pakistan to provide additional deposit options. More deposit methods will be available soon.
                       </div>
-                      <input
-                        type="number"
-                        placeholder={`Enter amount eg: ${(100 * conversionRate).toFixed(0)}`}
-                        value={depAmount}
-                        onChange={(e) => setDepAmount(e.target.value)}
-                        className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
-                        min="1"
-                        step="any"
-                      />
-                    </div>
 
-                    {/* Tx Hash proof */}
-                    <div className="space-y-1.5 bg-transparent">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm">⛓</span>
-                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Blockchain TXID / TxHash</label>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Paste transaction receipt hash / TXID"
-                        value={depTxHash}
-                        onChange={(e) => setDepTxHash(e.target.value)}
-                        className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
-                      />
-                    </div>
+                      {/* Pakistan submission Form */}
+                      <form onSubmit={handlePkDepositSubmit} className="space-y-4.5 text-left">
+                        {/* Amount Box */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">💵</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Deposit Amount (USD)</label>
+                          </div>
+                          <input
+                            type="number"
+                            placeholder="Minimum $5"
+                            value={pkDepAmount}
+                            onChange={(e) => setPkDepAmount(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                            min="1"
+                            step="any"
+                          />
+                          <p className="text-[9px] text-[#10B981] font-mono tracking-wider">
+                            Approximate equivalent: {pkDepAmount ? `₨ ${(parseFloat(pkDepAmount) * conversionRate).toFixed(2)} PKR` : `₨ ${(5 * conversionRate).toFixed(0)} PKR`}
+                          </p>
+                        </div>
 
-                    {/* Divider line style */}
-                    <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/45 to-transparent my-1" />
+                        {/* Your Sender Mobile/Account Number */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">📱</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Your Sender Easypaisa Account Number</label>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="e.g. 03123456789"
+                            value={pkDepSenderNumber}
+                            onChange={(e) => setPkDepSenderNumber(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                          />
+                        </div>
 
-                    {/* Core metrics display */}
-                    <div className="grid grid-cols-2 gap-3.5 pt-1 text-xs">
-                      <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
-                        <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
-                          <span>⏱</span> Verification Time
-                        </p>
-                        <p className="text-[10px] font-black text-emerald-400 font-mono">⏱ Est: 5-15 Minutes</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
-                        <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
-                          <span>🔒</span> Core Safety
-                        </p>
-                        <p className="text-[10px] font-black text-[#D4AF37] font-mono">🔒 SSL Direct Escrow</p>
-                      </div>
-                    </div>
+                        {/* Your Sender Account Title / Name */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">👤</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Your Sender Account Title / Holder Name</label>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="e.g. your name here"
+                            value={pkDepSenderName}
+                            onChange={(e) => setPkDepSenderName(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                          />
+                        </div>
 
-                    {/* Status feedback alerts */}
-                    {depError && (
-                      <p className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
-                        <span>⚠️ Error:</span>
-                        <span>{depError}</span>
-                      </p>
-                    )}
-                    {depSuccess && (
-                      <p className="text-[10.5px] font-extrabold text-[#10B981] leading-relaxed font-mono flex items-center gap-1.5 bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg select-all">
-                        <span>✅ Success:</span>
-                        <span>{depSuccess}</span>
-                      </p>
-                    )}
+                        {/* TXID / Ref receipt Number */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs">⛓</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Transaction ID (TXID) / Reference No.</label>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Enter Easypaisa TXID / Receipt TRX ID"
+                            value={pkDepTxid}
+                            onChange={(e) => setPkDepTxid(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                          />
+                        </div>
 
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
+                        {/* Important Notice Box */}
+                        <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/15 text-left text-xs leading-relaxed text-amber-300 space-y-1.5">
+                          <p className="font-extrabold flex items-center gap-1 text-amber-400">⚠️ IMPORTANT NOTICE</p>
+                          <p>To ensure secure transactions and prevent fraud, all deposit payments are manually verified before being added to your account. Please send payment to the correct details and upload proof if required. Processing may take 2–24 hours after verification.</p>
+                        </div>
+
+                        {/* Deposit Rules */}
+                        <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-left space-y-2 text-xs">
+                          <p className="font-black text-white uppercase tracking-wider text-[9px] text-[#10B981]">🇵🇰 Deposit Rules & requirements</p>
+                          <ul className="space-y-1 text-white/70 list-disc list-inside">
+                            <li>Minimum Deposit: $5</li>
+                            <li>Processing Time: 2–24 Hours</li>
+                            <li>One deposit request at a time</li>
+                            <li>Always keep payment proof (screenshot/receipt)</li>
+                          </ul>
+                        </div>
+
+                        {/* Alerts */}
+                        {pkDepError && (
+                          <p className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+                            <span>{pkDepError}</span>
+                          </p>
+                        )}
+                        {pkDepSuccess && (
+                          <p className="text-[10.5px] font-extrabold text-[#10B981] leading-relaxed font-mono flex items-center gap-1.5 bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg select-all">
+                            <span>{pkDepSuccess}</span>
+                          </p>
+                        )}
+
+                        <button
+                          type="submit"
+                          disabled={submitting}
+                          className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 text-white shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:shadow-[0_0_45px_rgba(16,185,129,0.6)] active:scale-[0.98] transition-all duration-500 font-extrabold text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
+                        >
+                          {submitting ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                              <span>Processing Deposit...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>💰 Deposit Now</span>
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    </motion.div>
+                  )}
+
+                  {/* SUBTAB 2: CRYPTO DEPOSITS */}
+                  {depositMethodTab === 'crypto' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-6"
                     >
-                      {submitting ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin text-black" />
-                          <span>Routing Proof...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>🚀 Submit Deposit Proof</span>
-                        </>
-                      )}
-                    </button>
-                  </form>
+                      {/* Deposit Submission Form */}
+                      <form onSubmit={handleDepositSubmit} className="space-y-5 text-left">
+                        {/* Select Network */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">🏦</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Select Network Token</label>
+                          </div>
+                          <select
+                            value={depNetwork}
+                            onChange={(e) => {
+                              setDepNetwork(e.target.value);
+                              setDepError('');
+                              setDepSuccess('');
+                            }}
+                            className="w-full bg-black/80 border border-[#D4AF37]/30 hover:border-[#10B981]/60 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
+                          >
+                            <option value="BNB">BNB (BEP20)</option>
+                            <option value="TRX">USDT TRON (TRC20)</option>
+                            <option value="MATIC">Polygon (MATIC)</option>
+                          </select>
+                        </div>
+
+                        {/* Display Transfer Address block */}
+                        <div className="space-y-1.5 bg-black/80 border border-[#D4AF37]/25 rounded-2xl p-4 relative overflow-hidden shadow-inner shadow-black">
+                          <div className="flex items-center gap-1 md:gap-1.5 mb-1.5">
+                            <span className="text-xs">🔑</span>
+                            <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.15em]">Official Safe Receiver Address</p>
+                          </div>
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                            <span className="text-[11px] font-mono text-white/90 select-all break-all tracking-wider font-semibold">
+                              {depositAddresses[depNetwork]}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyAddr(depNetwork, depositAddresses[depNetwork])}
+                              className="px-4 py-2 shrink-0 text-[10px] tracking-widest uppercase font-black text-black bg-[#D4AF37] hover:brightness-110 border-0 rounded-xl transition-all cursor-pointer font-sans"
+                            >
+                              {copiedAddr === depNetwork ? 'COPIED ✅' : 'COPY ADDR 📋'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Amount Block */}
+                        <div className="space-y-1.5 bg-transparent">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">💵</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Amount ({currencySymbol} Equiv.)</label>
+                          </div>
+                          <input
+                            type="number"
+                            placeholder={`Enter amount eg: ${(100 * conversionRate).toFixed(0)}`}
+                            value={depAmount}
+                            onChange={(e) => setDepAmount(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                            min="1"
+                            step="any"
+                          />
+                        </div>
+
+                        {/* Tx Hash proof */}
+                        <div className="space-y-1.5 bg-transparent">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">⛓</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Blockchain TXID / TxHash</label>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Paste transaction receipt hash / TXID"
+                            value={depTxHash}
+                            onChange={(e) => setDepTxHash(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                          />
+                        </div>
+
+                        {/* Divider line style */}
+                        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/45 to-transparent my-1" />
+
+                        {/* Core metrics display */}
+                        <div className="grid grid-cols-2 gap-3.5 pt-1 text-xs">
+                          <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
+                            <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
+                              <span>⏱</span> Verification Time
+                            </p>
+                            <p className="text-[10px] font-black text-emerald-400 font-mono">⏱ Est: 5-15 Minutes</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
+                            <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
+                              <span>🔒</span> Core Safety
+                            </p>
+                            <p className="text-[10px] font-black text-[#D4AF37] font-mono">🔒 SSL Direct Escrow</p>
+                          </div>
+                        </div>
+
+                        {/* Status feedback alerts */}
+                        {depError && (
+                          <p className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+                            <span>⚠️ Error:</span>
+                            <span>{depError}</span>
+                          </p>
+                        )}
+                        {depSuccess && (
+                          <p className="text-[10.5px] font-extrabold text-[#10B981] leading-relaxed font-mono flex items-center gap-1.5 bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg select-all">
+                            <span>✅ Success:</span>
+                            <span>{depSuccess}</span>
+                          </p>
+                        )}
+
+                        <button
+                          type="submit"
+                          disabled={submitting}
+                          className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
+                        >
+                          {submitting ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                              <span>Routing Proof...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>🚀 Submit Deposit Proof</span>
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    </motion.div>
+                  )}
                 </div>
 
-                {/* 2. WITHDRAW PORTAL - UPGRADED GLASSMORPHISM CARD WITH BLACK & GOLD THEME */}
+                {/* 2. WITHDRAW PORTAL - UPGRADED WITH MULTI-RAIL PAKISTAN & CRYPTO SUPPORT */}
                 <div 
                   id="withdraw-section" 
-                  className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-[#10B981]/60 shadow-[0_0_40px_rgba(212,175,55,0.12)] hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl"
+                  className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ${withdrawMethodTab === 'pakistan' ? 'from-[#031d10] via-[#010905] to-black border-2 border-emerald-500/40 hover:border-emerald-500/70 shadow-[0_0_40px_rgba(16,185,129,0.15)]' : 'from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-emerald-500/60 shadow-[0_0_40px_rgba(212,175,55,0.12)]'} hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl`}
                 >
-                  {/* Premium gold particle overlay gradients */}
-                  <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-[#D4AF37]/8 via-[#10B981]/4 to-transparent blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
+                  {/* Premium color overlay gradients */}
+                  <div className={`absolute top-0 right-0 w-72 h-72 bg-gradient-to-br ${withdrawMethodTab === 'pakistan' ? 'from-emerald-500/10 to-transparent' : 'from-[#D4AF37]/6 via-[#10B981]/3 to-transparent'} blur-3xl pointer-events-none`} />
+                  <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
                   {/* Portal Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#D4AF37]/20 to-black flex items-center justify-center border border-[#D4AF37]/40 ring-1 ring-[#D4AF37]/15">
-                        <span className="text-xl">💰</span>
+                      <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${withdrawMethodTab === 'pakistan' ? 'from-emerald-500/25 to-black border border-emerald-500/40' : 'from-[#D4AF37]/20 to-black border border-[#D4AF37]/40'} flex items-center justify-center ring-1 ring-white/5`}>
+                        <span className="text-xl">{withdrawMethodTab === 'pakistan' ? '🇵🇰' : '💰'}</span>
                       </div>
                       <div>
-                        <h3 className="text-base font-black uppercase tracking-widest text-white font-serif leading-none">Withdraw Portal</h3>
-                        <p className="text-[9px] text-[#D4AF37] uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse">Gateway protocol active</p>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-white leading-none">Withdrawal Gateway</h3>
+                        <p className={`text-[8.5px] ${withdrawMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-[#D4AF37]'} uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse`}>
+                          {withdrawMethodTab === 'pakistan' ? 'PKR local rails active' : 'Crypto protocol active'}
+                        </p>
                       </div>
                     </div>
                     
-                    <span className="self-start sm:self-auto text-[8.5px] bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30 px-3 py-1.5 rounded-full uppercase tracking-widest font-black flex items-center gap-2">
-                      <span className="w-2 h-2 bg-[#10B981] rounded-full animate-ping"></span>
+                    <span className={`self-start sm:self-auto text-[8.5px] ${withdrawMethodTab === 'pakistan' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30'} px-3 py-1.5 rounded-full uppercase tracking-widest font-black flex items-center gap-2`}>
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
                       Verified Secure Core
                     </span>
                   </div>
 
                   {/* 💰 Live Available Balance Block */}
-                  <div className="bg-gradient-to-r from-white/[0.01] via-white/[0.02] to-transparent p-5 rounded-2xl border border-white/5 relative">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2 flex items-center gap-1.5">
-                      <span>💰 Available Balance</span>
-                      <span className="w-1 h-1 bg-[#D4AF37] rounded-full"></span>
+                  <div className={`bg-gradient-to-r ${withdrawMethodTab === 'pakistan' ? 'from-emerald-950/20 via-white/[0.01]' : 'from-white/[0.01] via-white/[0.02]'} to-transparent p-5 rounded-2xl border border-white/5 relative`}>
+                    <p className={`text-[9.5px] font-black uppercase tracking-[0.2em] ${withdrawMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-[#D4AF37]'} mb-2 flex items-center gap-1.5`}>
+                      <span>💰 Available balance</span>
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
                     </p>
                     <div className="flex items-baseline gap-2">
                       <span className="text-3xl font-mono font-black text-white tracking-tight">
@@ -1433,133 +1829,430 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </p>
                   </div>
 
-                  {/* Divider */}
-                  <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent my-1" />
-
-                  {/* Withdrawal Submission Form */}
-                  <form onSubmit={handleWithdrawSubmit} className="space-y-5 text-left">
-                    {/* Method Dropdown selection */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm">🏦</span>
-                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Withdraw To</label>
-                      </div>
-                      <select
-                        value={withdrawNetwork}
-                        onChange={(e) => {
-                          setWithdrawNetwork(e.target.value);
-                          setWithdrawError('');
-                          setWithdrawSuccess('');
-                        }}
-                        className="w-full bg-black/80 border border-[#D4AF37]/30 hover:border-[#10B981]/60 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
-                      >
-                        <option value="EASYPAISA">EasyPaisa (PKR Fast-Track)</option>
-                        <option value="JAZZCASH">JazzCash (PKR Fast-Track)</option>
-                        <option value="BNB">Binance BNB (BEP20)</option>
-                        <option value="TRX">Binance USDT (TRC20)</option>
-                        <option value="MATIC">Binance Polygon (MATIC)</option>
-                      </select>
-                    </div>
-
-                    {/* Target Address input */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm">📱</span>
-                        <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
-                          {withdrawNetwork === 'EASYPAISA' ? 'EasyPaisa Account Number & Title' : 
-                          withdrawNetwork === 'JAZZCASH' ? 'JazzCash Account Number & Title' : 
-                          'Destination Wallet Address / Binance Pay ID'}
-                        </label>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder={
-                          withdrawNetwork === 'EASYPAISA' ? 'e.g., 03487654321 - Danish Rehmani' : 
-                          withdrawNetwork === 'JAZZCASH' ? 'e.g., 03487654321 - Danish Rehmani' : 
-                          'e.g., Binance Pay ID or BEP20 Wallet Address'
-                        }
-                        value={withdrawWallet}
-                        onChange={(e) => setWithdrawWallet(e.target.value)}
-                        className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
-                      />
-                    </div>
-
-                    {/* Value Amount input */}
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-sans">💵</span>
-                          <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Amount to Withdraw ({currencySymbol})</label>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setWithdrawAmount((balance * conversionRate).toFixed(2))}
-                          className="text-[9px] font-extrabold text-[#D4AF37] uppercase tracking-wider hover:underline hover:text-[#10B981] transition-all"
-                        >
-                          Max Avail: {currencySymbol}{(balance * conversionRate).toFixed(2)}
-                        </button>
-                      </div>
-                      <input
-                        type="number"
-                        placeholder="$0.00 equivalent value"
-                        value={withdrawAmount}
-                        onChange={(e) => setWithdrawAmount(e.target.value)}
-                        className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
-                        step="any"
-                      />
-                    </div>
-
-                    {/* Divider line style */}
-                    <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/45 to-transparent my-1" />
-
-                    {/* Core metrics display */}
-                    <div className="grid grid-cols-2 gap-3.5 pt-1 text-xs">
-                      <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
-                        <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
-                          <span>⚡</span> Instant Withdrawal
-                        </p>
-                        <p className="text-[10px] font-black text-emerald-400 font-mono">⏱ Processing: 1-2 Minutes</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
-                        <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
-                          <span>🔒</span> Secure Gateway
-                        </p>
-                        <p className="text-[10px] font-black text-[#D4AF37] font-mono">✅ Min Withdraw: $1.00</p>
-                      </div>
-                    </div>
-
-                    {/* Status Feedback alerts */}
-                    {withdrawError && (
-                      <p className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
-                        <span>⚠️ Error:</span>
-                        <span>{withdrawError}</span>
-                      </p>
-                    )}
-                    {withdrawSuccess && (
-                      <p className="text-[10.5px] font-extrabold text-[#10B981] leading-relaxed font-mono flex items-center gap-1.5 bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg select-all">
-                        <span>✅ Success:</span>
-                        <span>{withdrawSuccess}</span>
-                      </p>
-                    )}
-
-                    {/* Gold Glowing Core Button with Custom hover scale & glow tracking */}
+                  {/* Custom Navigation Tab Toggle Bar */}
+                  <div className="bg-black/60 border border-white/5 p-1 rounded-xl grid grid-cols-2 gap-1.5 shadow-inner shadow-black">
                     <button
-                      type="submit"
-                      disabled={submitting}
-                      className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
+                      type="button"
+                      onClick={() => {
+                        setWithdrawMethodTab('pakistan');
+                        setPkWithdrawError('');
+                        setPkWithdrawSuccess('');
+                      }}
+                      className={`py-2 px-3 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+                        withdrawMethodTab === 'pakistan'
+                          ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                          : 'text-white/40 hover:text-white/70 border border-transparent'
+                      }`}
                     >
-                      {submitting ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin text-black" />
-                          <span>Routing Request...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>🚀 Withdraw Now</span>
-                        </>
-                      )}
+                      🇵🇰 Pakistan Center
                     </button>
-                  </form>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWithdrawMethodTab('crypto');
+                        setWithdrawError('');
+                        setWithdrawSuccess('');
+                      }}
+                      className={`py-2 px-3 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+                        withdrawMethodTab === 'crypto'
+                          ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/25 shadow-sm'
+                          : 'text-white/40 hover:text-white/70 border border-transparent'
+                      }`}
+                    >
+                      🌐 Crypto Payouts
+                    </button>
+                  </div>
+
+                  {/* Divider */}
+                  <div className={`w-full h-[1px] bg-gradient-to-r from-transparent ${withdrawMethodTab === 'pakistan' ? 'via-emerald-500/30' : 'via-[#D4AF37]/30'} to-transparent my-1`} />
+
+                  {/* SUBTAB 1: PAKISTAN WITHDRAWAL CENTER */}
+                  {withdrawMethodTab === 'pakistan' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-6"
+                    >
+                      {/* Section Title & Description */}
+                      <div className="text-left space-y-1.5">
+                        <h4 className="text-sm font-extrabold text-white flex items-center gap-2">
+                          <span>🇵🇰</span> Pakistan Withdrawal Center
+                        </h4>
+                        <p className="text-[11.5px] text-white/60 leading-relaxed font-sans">
+                          Withdraw your earnings safely and quickly through our available payment methods in Pakistan.
+                        </p>
+                      </div>
+
+                      {/* Payment Methods Grid */}
+                      <div className="space-y-2.5 text-left">
+                        <label className="block text-[9px] font-black text-white/50 uppercase tracking-widest">Available Withdrawal Methods (Select One)</label>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {/* Easypaisa */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPkMethod('EASYPAISA');
+                              setPkWithdrawError('');
+                              setPkWithdrawSuccess('');
+                            }}
+                            className={`p-3.5 rounded-xl flex items-center justify-between select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
+                              pkMethod === 'EASYPAISA' 
+                                ? 'bg-emerald-950/25 border-emerald-500' 
+                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">✅</span>
+                              <div>
+                                <p className="font-bold text-white leading-tight">Easypaisa</p>
+                                <p className="text-[8px] text-emerald-400 uppercase tracking-widest font-extrabold mt-0.5">Active</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] bg-white/10 text-white rounded border border-white/20 py-0.5 px-1.5 uppercase font-semibold">PKR</span>
+                          </button>
+
+                          {/* JazzCash */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPkMethod('JAZZCASH');
+                              setPkWithdrawError('');
+                              setPkWithdrawSuccess('');
+                            }}
+                            className={`p-3.5 rounded-xl flex items-center justify-between select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
+                              pkMethod === 'JAZZCASH' 
+                                ? 'bg-emerald-950/25 border-emerald-500' 
+                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">✅</span>
+                              <div>
+                                <p className="font-bold text-white leading-tight">JazzCash</p>
+                                <p className="text-[8px] text-emerald-400 uppercase tracking-widest font-extrabold mt-0.5">Active</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] bg-white/10 text-white rounded border border-white/20 py-0.5 px-1.5 uppercase font-semibold">PKR</span>
+                          </button>
+
+                          {/* SadaPay */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPkMethod('SADAPAY');
+                              setPkWithdrawError('');
+                              setPkWithdrawSuccess('');
+                            }}
+                            className={`p-3.5 rounded-xl flex items-center justify-between select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
+                              pkMethod === 'SADAPAY' 
+                                ? 'bg-emerald-950/25 border-emerald-500' 
+                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">✅</span>
+                              <div>
+                                <p className="font-bold text-white leading-tight">SadaPay</p>
+                                <p className="text-[8px] text-emerald-400 uppercase tracking-widest font-extrabold mt-0.5">Active</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] bg-white/10 text-white rounded border border-white/20 py-0.5 px-1.5 uppercase font-semibold">PKR</span>
+                          </button>
+
+                          {/* NayaPay */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPkMethod('NAYAPAY');
+                              setPkWithdrawError('');
+                              setPkWithdrawSuccess('');
+                            }}
+                            className={`p-3.5 rounded-xl flex items-center justify-between select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
+                              pkMethod === 'NAYAPAY' 
+                                ? 'bg-emerald-950/25 border-emerald-500' 
+                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">✅</span>
+                              <div>
+                                <p className="font-bold text-white leading-tight">NayaPay</p>
+                                <p className="text-[8px] text-emerald-400 uppercase tracking-widest font-extrabold mt-0.5">Active</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] bg-white/10 text-white rounded border border-white/20 py-0.5 px-1.5 uppercase font-semibold">PKR</span>
+                          </button>
+
+                          {/* Bank Transfer */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPkMethod('BANK');
+                              setPkWithdrawError('');
+                              setPkWithdrawSuccess('');
+                            }}
+                            className={`p-3.5 rounded-xl flex items-center justify-between col-span-2 select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
+                              pkMethod === 'BANK' 
+                                ? 'bg-emerald-950/25 border-emerald-500' 
+                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🏛️</span>
+                              <div>
+                                <p className="font-bold text-white leading-tight">Bank Transfer</p>
+                                <p className="text-[8px] text-emerald-400 uppercase tracking-widest font-extrabold mt-0.5">Active</p>
+                              </div>
+                            </div>
+                            <span className="text-[8px] bg-white/10 text-white rounded border border-white/20 py-0.5 px-1.5 uppercase font-semibold">Local Bank</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Pakistan submission form */}
+                      <form onSubmit={handlePkWithdrawSubmit} className="space-y-4 text-left">
+                        {/* Selected local account key details (Number/IBAN) */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">📱</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
+                              {pkMethod === 'BANK' ? 'Bank Account Number / IBAN' : `${pkMethod === 'EASYPAISA' ? 'Easypaisa' : pkMethod === 'JAZZCASH' ? 'JazzCash' : pkMethod === 'SADAPAY' ? 'SadaPay' : 'NayaPay'} Account Number`}
+                            </label>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder={pkMethod === 'BANK' ? 'e.g. PK00UNTY0000000000000000' : 'e.g. 03123456789'}
+                            value={pkWithdrawNumber}
+                            onChange={(e) => setPkWithdrawNumber(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                          />
+                        </div>
+
+                        {/* Selected local account title name */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">👤</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
+                              {pkMethod === 'BANK' ? 'Account Title / Holder Name' : `Your ${pkMethod === 'EASYPAISA' ? 'Easypaisa' : pkMethod === 'JAZZCASH' ? 'JazzCash' : pkMethod === 'SADAPAY' ? 'SadaPay' : 'NayaPay'} Account Title/Name`}
+                            </label>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="e.g. your name here"
+                            value={pkWithdrawName}
+                            onChange={(e) => setPkWithdrawName(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                          />
+                        </div>
+
+                        {/* Amount Box */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm">💵</span>
+                              <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Amount to Withdraw (USD)</label>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setPkWithdrawAmount(balance.toFixed(2))}
+                              className="text-[9px] font-extrabold text-emerald-400 uppercase tracking-wider hover:underline hover:text-white transition-all"
+                            >
+                              Max Avail: ${balance.toFixed(2)}
+                            </button>
+                          </div>
+                          <input
+                            type="number"
+                            placeholder="Min $10"
+                            value={pkWithdrawAmount}
+                            onChange={(e) => setPkWithdrawAmount(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                            step="any"
+                          />
+                          {parseFloat(pkWithdrawAmount) > 0 && (
+                            <p className="text-[10px] text-emerald-400 font-bold font-mono">
+                              💸 Approx payout value: ₨ {(parseFloat(pkWithdrawAmount) * 280).toFixed(0)} PKR (at current exchange rate)
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Notice Box */}
+                        <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/15 text-left text-xs leading-relaxed text-emerald-300">
+                          📢 All local payment networks in Pakistan are fully active and synchronized. Enter your account details correctly to initiate direct local clearing agent routing.
+                        </div>
+
+                        {/* Important Notice Box */}
+                        <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/15 text-left text-xs leading-relaxed text-amber-300">
+                          ⚠️ To ensure secure transactions and prevent fraudulent activity, all withdrawal requests are manually reviewed before processing. Please make sure your payment details are correct. Processing may take 2–24 hours after approval.
+                        </div>
+
+                        {/* Withdrawal Rules */}
+                        <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-left text-xs space-y-1 text-white/75 font-sans leading-relaxed">
+                          <p className="font-bold text-white text-[10px] uppercase tracking-widest mb-1 font-sans">Withdrawal Rules:</p>
+                          <p className="flex items-center gap-2">• Minimum Withdrawal: $10</p>
+                          <p className="flex items-center gap-2">• Processing Time: 2–24 Hours</p>
+                          <p className="flex items-center gap-2">• One withdrawal request at a time</p>
+                          <p className="flex items-center gap-2">• Ensure payment details are correct before submitting</p>
+                        </div>
+
+                        {/* Status feedback alerts */}
+                        {pkWithdrawError && (
+                          <div className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg select-all">
+                            <span>{pkWithdrawError}</span>
+                          </div>
+                        )}
+                        {pkWithdrawSuccess && (
+                          <div className="text-[10.5px] font-extrabold text-[#10B981] leading-relaxed font-mono flex items-center gap-1.5 bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg select-all">
+                            <span>{pkWithdrawSuccess}</span>
+                          </div>
+                        )}
+
+                        {/* Large "Withdraw Now" button */}
+                        <button
+                          type="submit"
+                          disabled={submitting}
+                          className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 bg-[length:200%_auto] hover:bg-right text-white shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:shadow-[0_0_45px_rgba(16,185,129,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
+                        >
+                          {submitting ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                              <span>Routing Request...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>💸 Withdraw Now</span>
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    </motion.div>
+                  )}
+
+                  {/* SUBTAB 2: GENERAL CRYPTO PORTAL */}
+                  {withdrawMethodTab === 'crypto' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-5"
+                    >
+                      <form onSubmit={handleWithdrawSubmit} className="space-y-5 text-left">
+                        {/* Method Dropdown selection */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">🏦</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Withdraw To</label>
+                          </div>
+                          <select
+                            value={withdrawNetwork}
+                            onChange={(e) => {
+                              setWithdrawNetwork(e.target.value);
+                              setWithdrawError('');
+                              setWithdrawSuccess('');
+                            }}
+                            className="w-full bg-black/80 border border-[#D4AF37]/30 hover:border-[#10B981]/60 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
+                          >
+                            <option value="BNB">Binance BNB (BEP20)</option>
+                            <option value="TRX">Binance USDT (TRC20)</option>
+                            <option value="MATIC">Binance Polygon (MATIC)</option>
+                          </select>
+                        </div>
+
+                        {/* Target Address input */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">📱</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
+                              Destination Wallet Address / Binance Pay ID
+                            </label>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="e.g., Binance Pay ID or BEP20 Wallet Address"
+                            value={withdrawWallet}
+                            onChange={(e) => setWithdrawWallet(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                          />
+                        </div>
+
+                        {/* Value Amount input */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-sans">💵</span>
+                              <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Amount to Withdraw ({currencySymbol})</label>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setWithdrawAmount((balance * conversionRate).toFixed(2))}
+                              className="text-[9px] font-extrabold text-[#D4AF37] uppercase tracking-wider hover:underline hover:text-[#10B981] transition-all"
+                            >
+                              Max Avail: {currencySymbol}{(balance * conversionRate).toFixed(2)}
+                            </button>
+                          </div>
+                          <input
+                            type="number"
+                            placeholder="$0.00 equivalent value"
+                            value={withdrawAmount}
+                            onChange={(e) => setWithdrawAmount(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                            step="any"
+                          />
+                        </div>
+
+                        {/* Divider line style */}
+                        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/45 to-transparent my-1" />
+
+                        {/* Core metrics display */}
+                        <div className="grid grid-cols-2 gap-3.5 pt-1 text-xs">
+                          <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
+                            <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
+                              <span>⚡</span> Instant Withdrawal
+                            </p>
+                            <p className="text-[10px] font-black text-emerald-400 font-mono">⏱ Processing: 1-2 Minutes</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
+                            <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
+                              <span>🔒</span> Secure Gateway
+                            </p>
+                            <p className="text-[10px] font-black text-[#D4AF37] font-mono">✅ Min Withdraw: $1.00</p>
+                          </div>
+                        </div>
+
+                        {/* Status Feedback alerts */}
+                        {withdrawError && (
+                          <p className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+                            <span>⚠️ Error:</span>
+                            <span>{withdrawError}</span>
+                          </p>
+                        )}
+                        {withdrawSuccess && (
+                          <p className="text-[10.5px] font-extrabold text-[#10B981] leading-relaxed font-mono flex items-center gap-1.5 bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg select-all">
+                            <span>✅ Success:</span>
+                            <span>{withdrawSuccess}</span>
+                          </p>
+                        )}
+
+                        {/* Gold Glowing Core Button with Custom hover scale & glow tracking */}
+                        <button
+                          type="submit"
+                          disabled={submitting}
+                          className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
+                        >
+                          {submitting ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                              <span>Routing Request...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>🚀 Withdraw Now</span>
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* 🔒 CERTIFIED TRUST SECTION */}
@@ -1807,23 +2500,66 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                   </p>
                                 </div>
 
-                                {isPending && (
-                                  <div className="pt-1.5">
-                                    <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden relative">
-                                      <motion.div 
-                                        className="bg-[#D4AF37] h-full rounded-full"
-                                        initial={{ x: '-100%' }}
-                                        animate={{ x: '100%' }}
-                                        transition={{ 
-                                          repeat: Infinity, 
-                                          duration: 1.5, 
-                                          ease: "linear" 
-                                        }}
-                                      />
+                                {/* Visual Progress Step Tracker Pipeline */}
+                                <div className="pt-4 border-t border-white/5 mt-2.5">
+                                  <p className="text-[8px] font-black uppercase text-white/40 tracking-widest mb-3 flex items-center justify-between">
+                                    <span>🔍 Payout Track Pipeline</span>
+                                    {isPending && <span className="text-amber-400 font-mono text-[7px] animate-pulse">Under Review (2–24h)</span>}
+                                    {isApproved && <span className="text-emerald-400 font-mono text-[7px]">Processed & Disbursed</span>}
+                                    {wit.status === 'rejected' && <span className="text-rose-400 font-mono text-[7px]">Audit Rejected</span>}
+                                  </p>
+                                  
+                                  <div className="relative flex items-center justify-between px-1.5">
+                                    {/* Line connector underneath */}
+                                    <div className="absolute left-3 right-3 top-[7px] h-[2px] bg-white/5 -z-10" />
+                                    {/* Active transition fill line */}
+                                    <div 
+                                      className={`absolute left-3 top-[7px] h-[2px] transition-all duration-700 -z-10 ${
+                                        isApproved ? 'bg-emerald-500 w-[calc(100%-1.5rem)]' : 
+                                        wit.status === 'rejected' ? 'bg-rose-500 w-[calc(100%-1.5rem)]' :
+                                        'bg-amber-500/60 w-[calc(50%-0.75rem)] animate-pulse'
+                                      }`}
+                                    />
+
+                                    {/* Step 1: Pending (Always Submitted successfully) */}
+                                    <div className="flex flex-col items-center gap-1.5 text-center">
+                                      <div className="w-4.5 h-4.5 rounded-full bg-emerald-500/20 border border-emerald-500 flex items-center justify-center text-[7.5px] text-emerald-400 font-black relative shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                                        ✓
+                                      </div>
+                                      <span className="text-[7px] font-black uppercase tracking-wider text-emerald-400">Pending</span>
                                     </div>
-                                    <p className="text-[7.5px] text-amber-500/80 font-mono uppercase tracking-widest mt-1">Simulated Auditing Queue...</p>
+
+                                    {/* Step 2: Under Review */}
+                                    <div className="flex flex-col items-center gap-1.5 text-center">
+                                      <div className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[7.5px] font-black relative transition-all duration-300 ${
+                                        isApproved || wit.status === 'rejected'
+                                          ? 'bg-emerald-500/20 border border-emerald-500 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                                          : 'bg-amber-500/20 border border-amber-500 text-amber-400 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                                      }`}>
+                                        {(isApproved || wit.status === 'rejected') ? '✓' : '•'}
+                                      </div>
+                                      <span className={`text-[7px] font-black uppercase tracking-wider ${
+                                        isApproved || wit.status === 'rejected' ? 'text-emerald-400/80' : 'text-amber-400'
+                                      }`}>Under Review</span>
+                                    </div>
+
+                                    {/* Step 3: Approved / Paid */}
+                                    <div className="flex flex-col items-center gap-1.5 text-center">
+                                      <div className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[7.5px] font-black relative transition-all duration-300 ${
+                                        isApproved
+                                          ? 'bg-emerald-500 border border-emerald-400 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                                          : wit.status === 'rejected'
+                                          ? 'bg-rose-500 border border-rose-400 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+                                          : 'bg-white/5 border border-white/10 text-white/30'
+                                      }`}>
+                                        {isApproved ? '✓' : wit.status === 'rejected' ? '✗' : '3'}
+                                      </div>
+                                      <span className={`text-[7px] font-black uppercase tracking-wider ${
+                                        isApproved ? 'text-emerald-400 font-bold' : wit.status === 'rejected' ? 'text-rose-400 font-bold' : 'text-white/30'
+                                      }`}>{wit.status === 'rejected' ? 'Rejected' : 'Approved'}</span>
+                                    </div>
                                   </div>
-                                )}
+                                </div>
                               </div>
                             </motion.div>
                           );
