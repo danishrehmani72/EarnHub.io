@@ -304,8 +304,9 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     setPkDepSuccess('');
 
     const amtInput = parseFloat(pkDepAmount);
-    if (!amtInput || amtInput < 5) {
-      setPkDepError('❌ Minimum deposit amount is $5.');
+    const amtUSD = amtInput / conversionRate;
+    if (!amtInput || amtUSD < 5) {
+      setPkDepError(`❌ Minimum deposit amount is ${currencySymbol}${Math.ceil(5 * conversionRate)}.`);
       return;
     }
 
@@ -318,7 +319,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     try {
       if (onCreateDeposit) {
         const depositDetails = `${pkDepMethod === 'EASYPAISA' ? 'Easypaisa' : pkDepMethod === 'JAZZCASH' ? 'JazzCash' : pkDepMethod === 'SADAPAY' ? 'SadaPay' : pkDepMethod === 'NAYAPAY' ? 'NayaPay' : 'Bank Transfer'} - Number: ${pkDepSenderNumber.trim()} | Name: ${pkDepSenderName.trim()}`;
-        await onCreateDeposit(amtInput, pkDepMethod, `${pkDepTxid.trim()} (${depositDetails})`);
+        await onCreateDeposit(amtUSD, pkDepMethod, `${pkDepTxid.trim()} (${depositDetails})`);
         
         setPkDepSuccess('✅ Your deposit request has been submitted successfully. It will be credited after verification within 2 minutes to 2 hours.');
         setPkDepAmount('');
@@ -423,12 +424,13 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     setPkWithdrawSuccess('');
 
     const amtInput = parseFloat(pkWithdrawAmount);
-    if (!amtInput || amtInput < 10) {
-      setPkWithdrawError('❌ Minimum withdrawal amount is $10.');
+    const amtUSD = amtInput / conversionRate;
+    if (!amtInput || amtUSD < 10) {
+      setPkWithdrawError(`❌ Minimum withdrawal amount is ${currencySymbol}${Math.ceil(10 * conversionRate)}.`);
       return;
     }
 
-    if (amtInput > balance) {
+    if (amtUSD > balance) {
       setPkWithdrawError(`❌ Insufficient funds. Your live balance is ${currencySymbol}${(balance * conversionRate).toFixed(2)}.`);
       return;
     }
@@ -446,8 +448,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                            pkMethod === 'SADAPAY' ? 'SadaPay' :
                            pkMethod === 'NAYAPAY' ? 'NayaPay' : 'Bank Transfer';
         const walletDetails = `${methodName} - Number/Account: ${pkWithdrawNumber.trim()} | Account Title: ${pkWithdrawName.trim()}`;
-        await onCreateWithdrawal(amtInput, pkMethod, walletDetails);
-        setPkWithdrawSuccess('✅ Your withdrawal request has been submitted successfully. Processing may take 2–24 hours.');
+        await onCreateWithdrawal(amtUSD, pkMethod, walletDetails);
+        setPkWithdrawSuccess('✅ Your withdrawal request has been submitted successfully. Processing may take 2 minutes to 2 hours after verification (24/7).');
         setPkWithdrawAmount('');
         setPkWithdrawNumber('');
         setPkWithdrawName('');
@@ -1550,11 +1552,11 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm">💵</span>
-                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Deposit Amount (USD)</label>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Deposit Amount ({currency})</label>
                           </div>
                           <input
                             type="number"
-                            placeholder="Minimum $5"
+                            placeholder={`Minimum ${currencySymbol}${Math.ceil(5 * conversionRate)}`}
                             value={pkDepAmount}
                             onChange={(e) => setPkDepAmount(e.target.value)}
                             className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
@@ -1562,7 +1564,11 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             step="any"
                           />
                           <p className="text-[9px] text-[#10B981] font-mono tracking-wider">
-                            Approximate equivalent: {pkDepAmount ? `₨ ${(parseFloat(pkDepAmount) * conversionRate).toFixed(2)} PKR` : `₨ ${(5 * conversionRate).toFixed(0)} PKR`}
+                            {currency === 'USD' ? (
+                              `Approximate equivalent: ₨ ${(pkDepAmount ? parseFloat(pkDepAmount) * 280 : 1400).toFixed(2)} PKR`
+                            ) : (
+                              `Approximate equivalent: $ ${(pkDepAmount ? parseFloat(pkDepAmount) / conversionRate : 5).toFixed(2)} USD`
+                            )}
                           </p>
                         </div>
 
@@ -1621,7 +1627,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-left space-y-2 text-xs">
                           <p className="font-black text-white uppercase tracking-wider text-[9px] text-[#10B981]">🇵🇰 Deposit Rules & requirements</p>
                           <ul className="space-y-1 text-white/70 list-disc list-inside">
-                            <li>Minimum Deposit: $5</li>
+                            <li>Minimum Deposit: {currencySymbol}{Math.ceil(5 * conversionRate)}</li>
                             <li>Processing Time: 2 Minutes to 2 Hours</li>
                             <li>One deposit request at a time</li>
                             <li>Always keep payment proof (screenshot/receipt)</li>
@@ -2067,19 +2073,19 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-1.5">
                               <span className="text-sm">💵</span>
-                              <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Amount to Withdraw (USD)</label>
+                              <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Amount to Withdraw ({currency})</label>
                             </div>
                             <button
                               type="button"
-                              onClick={() => setPkWithdrawAmount(balance.toFixed(2))}
+                              onClick={() => setPkWithdrawAmount((balance * conversionRate).toFixed(2))}
                               className="text-[9px] font-extrabold text-emerald-400 uppercase tracking-wider hover:underline hover:text-white transition-all"
                             >
-                              Max Avail: ${balance.toFixed(2)}
+                              Max Avail: {currencySymbol}{(balance * conversionRate).toFixed(2)}
                             </button>
                           </div>
                           <input
                             type="number"
-                            placeholder="Min $10"
+                            placeholder={`Min ${currencySymbol}${Math.ceil(10 * conversionRate)}`}
                             value={pkWithdrawAmount}
                             onChange={(e) => setPkWithdrawAmount(e.target.value)}
                             className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
@@ -2087,7 +2093,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                           />
                           {parseFloat(pkWithdrawAmount) > 0 && (
                             <p className="text-[10px] text-emerald-400 font-bold font-mono">
-                              💸 Approx payout value: ₨ {(parseFloat(pkWithdrawAmount) * 280).toFixed(0)} PKR (at current exchange rate)
+                              💸 Approx equivalent: {currency === 'USD' ? `₨ ${(parseFloat(pkWithdrawAmount) * 280).toFixed(0)} PKR` : `$ ${(parseFloat(pkWithdrawAmount) / conversionRate).toFixed(2)} USD`} (at current rate)
                             </p>
                           )}
                         </div>
@@ -2105,7 +2111,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         {/* Withdrawal Rules */}
                         <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-left text-xs space-y-1 text-white/75 font-sans leading-relaxed">
                           <p className="font-bold text-white text-[10px] uppercase tracking-widest mb-1 font-sans">Withdrawal Rules:</p>
-                          <p className="flex items-center gap-2">• Minimum Withdrawal: $10</p>
+                          <p className="flex items-center gap-2">• Minimum Withdrawal: {currencySymbol}{Math.ceil(10 * conversionRate)}</p>
                           <p className="flex items-center gap-2">• Processing Time: 2–24 Hours</p>
                           <p className="flex items-center gap-2">• One withdrawal request at a time</p>
                           <p className="flex items-center gap-2">• Ensure payment details are correct before submitting</p>
