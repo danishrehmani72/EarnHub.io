@@ -23,7 +23,9 @@ import {
   LogOut,
   HelpCircle,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { 
@@ -108,6 +110,22 @@ export default function DashboardCard({
 
   // Cooldown calculation for daily check-in claims
   const [claimCooldown, setClaimCooldown] = useState('');
+
+  // Pagination states
+  const [depositsPage, setDepositsPage] = useState(1);
+  const depositsPerPage = 5;
+  const totalDepositsPages = Math.ceil((deposits || []).length / depositsPerPage);
+  const paginatedDeposits = useMemo(() => {
+    return (deposits || []).slice((depositsPage - 1) * depositsPerPage, depositsPage * depositsPerPage);
+  }, [deposits, depositsPage, depositsPerPage]);
+
+  const [withdrawalsPage, setWithdrawalsPage] = useState(1);
+  const withdrawalsPerPage = 4;
+  const totalWithdrawalsPages = Math.ceil((withdrawals || []).length / withdrawalsPerPage);
+  const reversedWithdrawals = useMemo(() => (withdrawals || []).slice().reverse(), [withdrawals]);
+  const paginatedWithdrawals = useMemo(() => {
+    return reversedWithdrawals.slice((withdrawalsPage - 1) * withdrawalsPerPage, withdrawalsPage * withdrawalsPerPage);
+  }, [reversedWithdrawals, withdrawalsPage, withdrawalsPerPage]);
 
 type CurrencyCode = 'USD' | 'PKR' | 'AFN' | 'INR' | 'EUR' | 'GBP' | 'IDR' | 'OMR' | 'MYR' | 'PHP';
 
@@ -2404,7 +2422,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-white/5">
-                            {deposits.map((dep, idx) => (
+                            {paginatedDeposits.map((dep, idx) => (
                               <motion.tr 
                                 key={dep.id} 
                                 initial={{ opacity: 0, y: 15 }}
@@ -2459,6 +2477,28 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             ))}
                           </tbody>
                         </table>
+
+                        {totalDepositsPages > 1 && (
+                          <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-4">
+                            <button
+                              disabled={depositsPage === 1}
+                              onClick={() => setDepositsPage(prev => Math.max(prev - 1, 1))}
+                              className="px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/[0.02] disabled:opacity-30 disabled:pointer-events-none transition-all duration-150 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                            >
+                              <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                            </button>
+                            <span className="text-[10px] text-white/50 font-mono">
+                              Page {depositsPage} of {totalDepositsPages}
+                            </span>
+                            <button
+                              disabled={depositsPage === totalDepositsPages}
+                              onClick={() => setDepositsPage(prev => Math.min(prev + 1, totalDepositsPages))}
+                              className="px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/[0.02] disabled:opacity-30 disabled:pointer-events-none transition-all duration-150 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                            >
+                              Next <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2483,7 +2523,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {withdrawals.slice().reverse().map((wit, idx) => {
+                        {paginatedWithdrawals.map((wit, idx) => {
                           const isApproved = wit.status === 'approved';
                           const isPending = wit.status === 'pending';
                           return (
@@ -2601,6 +2641,28 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             </motion.div>
                           );
                         })}
+
+                        {totalWithdrawalsPages > 1 && (
+                          <div className="col-span-1 md:col-span-2 flex items-center justify-between pt-4 border-t border-white/5 mt-4">
+                            <button
+                              disabled={withdrawalsPage === 1}
+                              onClick={() => setWithdrawalsPage(prev => Math.max(prev - 1, 1))}
+                              className="px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/[0.02] disabled:opacity-30 disabled:pointer-events-none transition-all duration-150 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                            >
+                              <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                            </button>
+                            <span className="text-[10px] text-white/50 font-mono">
+                              Page {withdrawalsPage} of {totalWithdrawalsPages}
+                            </span>
+                            <button
+                              disabled={withdrawalsPage === totalWithdrawalsPages}
+                              onClick={() => setWithdrawalsPage(prev => Math.min(prev + 1, totalWithdrawalsPages))}
+                              className="px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/[0.02] disabled:opacity-30 disabled:pointer-events-none transition-all duration-150 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                            >
+                              Next <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

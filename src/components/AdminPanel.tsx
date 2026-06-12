@@ -262,76 +262,66 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
     fetchAllData();
   };
 
-  // Retrieve global users and nested logs (deposits, referrals, withdrawals) Real-time simulator
+  // Retrieve global users and nested logs (deposits, referrals, withdrawals) - Super-fast parallelized retrieval
   const fetchAllData = async () => {
     setIsDataLoading(true);
     try {
       const usersSnap = await getDocs(collection(db, 'users'));
-      const fetchedUsers: AdminUser[] = [];
 
-      // Loop through all profiles to fetch subcollections sequentially/parallel for absolute fail-safe
-      for (const userDoc of usersSnap.docs) {
-        const userData = userDoc.data();
-        const userId = userDoc.id;
+      // Fetch all user subcollections in parallel using Promise.all for unmatched speed
+      const fetchedUsers: AdminUser[] = await Promise.all(
+        usersSnap.docs.map(async (userDoc) => {
+          const userData = userDoc.data();
+          const userId = userDoc.id;
 
-        // Deposits subcollection
-        let userDeps: any[] = [];
-        try {
-          const depSnap = await getDocs(collection(db, 'users', userId, 'deposits'));
-          userDeps = depSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        } catch (err) {
-          console.warn(`Fallback: Failed to fetch deposits for ${userId}`, err);
-        }
+          // Fetch all 4 subcollections concurrently
+          const [depSnap, witSnap, invSnap, refSnap] = await Promise.all([
+            getDocs(collection(db, 'users', userId, 'deposits')).catch((err) => {
+              console.warn(`Fallback: Failed to fetch deposits for ${userId}`, err);
+              return { docs: [] };
+            }),
+            getDocs(collection(db, 'users', userId, 'withdrawals')).catch((err) => {
+              console.warn(`Fallback: Failed to fetch withdrawals for ${userId}`, err);
+              return { docs: [] };
+            }),
+            getDocs(collection(db, 'users', userId, 'investments')).catch((err) => {
+              console.warn(`Fallback: Failed to fetch investments for ${userId}`, err);
+              return { docs: [] };
+            }),
+            getDocs(collection(db, 'users', userId, 'referrals')).catch((err) => {
+              console.warn(`Fallback: Failed to fetch referrals for ${userId}`, err);
+              return { docs: [] };
+            })
+          ]);
 
-        // Withdrawals subcollection
-        let userWits: any[] = [];
-        try {
-          const witSnap = await getDocs(collection(db, 'users', userId, 'withdrawals'));
-          userWits = witSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        } catch (err) {
-          console.warn(`Fallback: Failed to fetch withdrawals for ${userId}`, err);
-        }
+          const userDeps = depSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+          const userWits = witSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+          const userInvs = invSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+          const userRefs = refSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
 
-        // Investments subcollection
-        let userInvs: any[] = [];
-        try {
-          const invSnap = await getDocs(collection(db, 'users', userId, 'investments'));
-          userInvs = invSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        } catch (err) {
-          console.warn(`Fallback: Failed to fetch investments for ${userId}`, err);
-        }
+          return {
+            userId,
+            name: userData.name || 'Anonymous VIP',
+            email: userData.email || 'no-email@wealthhub.com',
+            avatar: userData.avatar,
+            blocked: userData.blocked || false,
+            isSuspicious: userData.isSuspicious || false,
+            ipAddress: userData.ipAddress || '',
+            deviceFingerprint: userData.deviceFingerprint || '',
+            browserInfo: userData.browserInfo || '',
+            emailVerified: userData.emailVerified || false,
+            signupBonus: userData.signupBonus !== undefined ? userData.signupBonus : 0.10,
+            createdAt: userData.createdAt,
+            deposits: userDeps,
+            withdrawals: userWits,
+            investments: userInvs,
+            referrals: userRefs,
+            dailyBonusEarnings: userData.dailyBonusEarnings || 0
+          };
+        })
+      );
 
-        // Referrals subcollection
-        let userRefs: any[] = [];
-        try {
-          const refSnap = await getDocs(collection(db, 'users', userId, 'referrals'));
-          userRefs = refSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        } catch (err) {
-          console.warn(`Fallback: Failed to fetch referrals for ${userId}`, err);
-        }
-
-        fetchedUsers.push({
-          userId,
-          name: userData.name || 'Anonymous VIP',
-          email: userData.email || 'no-email@wealthhub.com',
-          avatar: userData.avatar,
-          blocked: userData.blocked || false,
-          isSuspicious: userData.isSuspicious || false,
-          ipAddress: userData.ipAddress || '',
-          deviceFingerprint: userData.deviceFingerprint || '',
-          browserInfo: userData.browserInfo || '',
-          emailVerified: userData.emailVerified || false,
-          signupBonus: userData.signupBonus !== undefined ? userData.signupBonus : 0.10,
-          createdAt: userData.createdAt,
-          deposits: userDeps,
-          withdrawals: userWits,
-          investments: userInvs,
-          referrals: userRefs,
-          dailyBonusEarnings: userData.dailyBonusEarnings || 0
-        });
-      }
-
-      // Fetch dynamic security logs
+      // Fetch dynamic security logs in parallel
       try {
         const secLogsSnap = await getDocs(collection(db, 'security_logs'));
         const fetchedSecLogs = secLogsSnap.docs.map(docSnap => ({

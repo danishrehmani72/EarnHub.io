@@ -19,7 +19,9 @@ import {
   Activity,
   ArrowUpRight,
   ShieldAlert,
-  User
+  User,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from '../lib/avatars';
@@ -33,6 +35,12 @@ interface ReferralHistoryProps {
 export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }: ReferralHistoryProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'tree'>('overview');
   const [copied, setCopied] = useState(false);
+
+  // Pagination for Referral History logs list
+  const [logsPage, setLogsPage] = useState(1);
+  const logsPerPage = 5;
+  const totalLogsPages = Math.ceil(logs.length / logsPerPage);
+  const paginatedLogs = logs.slice((logsPage - 1) * logsPerPage, logsPage * logsPerPage);
 
   // Derive levels
   const level1Logs = logs.filter(log => !log.level || log.level === 1);
@@ -237,7 +245,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
             transition={{ duration: 0.2 }}
             className="space-y-4"
           >
-            <div className="max-h-[350px] overflow-y-auto scrollbar-thin pr-1">
+            <div className="max-h-[380px] overflow-y-auto scrollbar-thin pr-1">
               {logs.length === 0 ? (
                 <div className="text-center py-16 space-y-3">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/5 text-white/20 border border-white/5">
@@ -252,7 +260,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {logs.map((log) => {
+                  {paginatedLogs.map((log) => {
                     const levelNum = log.level || 1;
                     const levelColors = levelNum === 1 
                       ? { text: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/5 border-[#D4AF37]/15', label: 'Level 1 (Direct)' }
@@ -289,6 +297,28 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                       </div>
                     );
                   })}
+
+                  {totalLogsPages > 1 && (
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-4">
+                      <button
+                        disabled={logsPage === 1}
+                        onClick={() => setLogsPage(prev => Math.max(prev - 1, 1))}
+                        className="px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/[0.02] disabled:opacity-30 disabled:pointer-events-none transition-all duration-150 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                      </button>
+                      <span className="text-[10px] text-white/50 font-mono">
+                        Page {logsPage} of {totalLogsPages}
+                      </span>
+                      <button
+                        disabled={logsPage === totalLogsPages}
+                        onClick={() => setLogsPage(prev => Math.min(prev + 1, totalLogsPages))}
+                        className="px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:bg-white/[0.02] disabled:opacity-30 disabled:pointer-events-none transition-all duration-150 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                      >
+                        Next <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
