@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { UserPlus, Sparkles, TrendingUp, HelpCircle, Key, LogIn, UserCheck, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import CodeModal from './CodeModal';
 import earnhubLogo from '../assets/images/earnhub_logo_1780161493423.png';
 import { db } from '../lib/firebase';
 import { doc, setDoc, serverTimestamp, getDoc, collection, getDocFromServer, query, where, getDocs } from 'firebase/firestore';
@@ -67,6 +68,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
   // 1. Store and track User IP, Device Fingerprint, Browser info, Email verification & Captcha states
   const [email, setEmail] = useState('');
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [emailVerificationCode, setEmailVerificationCode] = useState('');
   const [sentCode, setSentCode] = useState<string | null>(null);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -117,18 +119,22 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       
       if (data.success) {
         if (data.mode === 'demo') {
-          setSentCode(`📧 Dynamic mock OTP generated: ${randomVal} (Admin: Configure SMTP in your settings to dispatch real emails directly!)`);
+          setSentCode(`📧 Verification code: ${randomVal} (Demo Mode).`);
+          setIsCodeModalOpen(true);
         } else {
-          setSentCode(`📧 Real OTP verification code dispatched to ${email}. Please check your Inbox and Spam/Junk folder.`);
+          setSentCode(`📧 Verification code dispatched to ${email}. Please check your Inbox.`);
+          setIsCodeModalOpen(true);
         }
       } else {
-        setError(data.error || 'SMTP dispatch failure. Emulating client OTP code for demonstration safety.');
-        setSentCode(`📧 Dynamic mock OTP generated: ${randomVal}`);
+        setError(data.error || 'SMTP dispatch failure.');
+        setSentCode(`📧 Email failed. Your verification code is: ${randomVal}. Please use this code to verify.`);
+        setIsCodeModalOpen(true);
       }
     } catch (err) {
-      console.warn("Express backend SMTP proxy inaccessible or offline, falling back to local client generator:", err);
+      console.warn("Express backend SMTP proxy inaccessible or offline:", err);
       setIsSendingCode(false);
-      setSentCode(`📧 Dynamic mock OTP generated: ${randomVal}`);
+      setSentCode(`📧 Email failed. Your verification code is: ${randomVal}. Please use this code to verify.`);
+      setIsCodeModalOpen(true);
     }
   };
 
@@ -258,6 +264,15 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       const userSnap = await getDocWithRetry(userRef);
       if (userSnap.exists()) {
         setError('This User ID is already occupied by another registered member.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if email already exists
+      const emailQuery = query(collection(db, 'users'), where('email', '==', email.trim()));
+      const emailSnap = await getDocs(emailQuery);
+      if (!emailSnap.empty) {
+        setError('This email address is already associated with an existing account.');
         setIsLoading(false);
         return;
       }
@@ -1211,34 +1226,27 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                 </button>
               </div>
 
-              {sentCode && !isEmailVerified && (
-                <div className="space-y-2 p-3.5 bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 rounded-xl text-left animate-fade-in mt-1.5">
-                  <p className="text-[10px] text-amber-400 font-medium leading-relaxed font-mono">
-                    {sentCode}
-                  </p>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="Enter 6-Digit Code"
-                      value={enteredCode}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, '');
-                        setEnteredCode(val);
-                        if (val) setError('');
-                      }}
-                      className="flex-1 text-center bg-black border border-white/10 rounded-xl p-2 font-mono text-xs tracking-widest text-[#D4AF37] focus:border-[#D4AF37]/50 outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleVerifyEmailCode}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-black text-[10px] font-black rounded-xl transition-all uppercase cursor-pointer"
-                    >
-                      Verify
-                    </button>
-                  </div>
-                </div>
-              )}
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder="Enter 6-Digit Code"
+                  value={enteredCode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setEnteredCode(val);
+                    if (val) setError('');
+                  }}
+                  className="flex-1 text-center bg-black border border-white/10 rounded-xl p-2 font-mono text-xs tracking-widest text-[#D4AF37] focus:border-[#D4AF37]/50 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleVerifyEmailCode}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-black text-[10px] font-black rounded-xl transition-all uppercase cursor-pointer"
+                >
+                  Verify
+                </button>
+              </div>
 
               {isEmailVerified && (
                 <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-1">
@@ -1258,11 +1266,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                     disabled={isCaptchaVerified || isCaptchaLoading}
                     className="w-6 h-6 rounded border border-white/20 bg-black/80 flex items-center justify-center transition-all cursor-pointer hover:border-[#D4AF37]/50 active:scale-95 disabled:hover:border-white/20 select-none animate-none"
                   >
-                    {isCaptchaVerified ? (
-                      <span className="text-xs text-[#D4AF37] font-bold">✔</span>
-                    ) : isCaptchaLoading ? (
-                      <div className="w-3.5 h-3.5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-                    ) : null}
+                    {isCaptchaVerified ? '✔' : '...'}
                   </button>
                   <span className="text-[11px] font-bold text-white/80 font-sans tracking-wide">
                     I'm not a robot
@@ -1276,41 +1280,14 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                 </div>
               </div>
 
-              {/* Captcha Interactive Math Block */}
-              {showCaptchaPuzzle && !isCaptchaVerified && (
-                <div className="p-3 bg-black border border-red-500/15 rounded-xl space-y-2 animate-fade-in text-left">
-                  <p className="text-[10px] font-bold text-red-400 flex items-center gap-1.5">
-                     <span>🛡️ Secure Verification:</span>
-                     <span>Solve sum to prove humanity</span>
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#D4AF37] font-black text-xs font-mono">{captchaNum1} + {captchaNum2} =</span>
-                    <input
-                      type="text"
-                      maxLength={3}
-                      placeholder="?"
-                      value={userCaptchaVal}
-                      onChange={(e) => {
-                        setUserCaptchaVal(e.target.value.replace(/\D/g, ''));
-                        setError('');
-                      }}
-                      className="w-16 text-center bg-black border border-white/10 rounded-lg p-1.5 font-mono text-xs text-white focus:border-[#D4AF37]/50 outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleVerifyCaptcha}
-                      className="px-3 py-1.5 bg-[#D4AF37] hover:bg-[#c39e2e] text-black text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
-                    >
-                      Solve
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-        )}
-
+          
         {/* Feedback Messages */}
+        {sentCode && (
+           <div className="mt-2 p-2 bg-black border border-[#D4AF37]/30 rounded-lg text-[#D4AF37] font-mono text-[10px] text-center">
+             {sentCode}
+           </div>
+        )}
         {error && (
           <p className="text-[10px] font-semibold text-rose-500 leading-relaxed font-mono flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
             <span>⚠️ Error:</span>
@@ -1395,8 +1372,6 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             </button>
           </div>
         )}
-      </form>
-
       {/* Alternative View triggers */}
       <div className="text-center relative z-10">
         {mode === 'signup' ? (
@@ -1492,112 +1467,10 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
+      </div>
 
-    {/* Reset Password Modal Overlay */}
-    <AnimatePresence>
-      {isResetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.99 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className="relative w-full max-w-sm bg-gradient-to-b from-[#0F0F0E] to-[#040404] border-2 border-[#D4AF37] rounded-3xl p-6 shadow-[0_0_50px_rgba(212,175,55,0.25)] text-left space-y-5"
-          >
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={() => setIsResetModalOpen(false)}
-              className="absolute top-4 right-4 text-white/40 hover:text-white transition-all cursor-pointer font-bold text-sm bg-white/5 hover:bg-white/10 p-1.5 rounded-lg border border-white/5"
-            >
-              ✕
-            </button>
-
-            <div className="space-y-1">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[#D4AF37] text-[8.5px] uppercase font-black tracking-widest">
-                Support Reset Panel
-              </span>
-              <h3 className="text-base font-black text-white uppercase tracking-wider">
-                Reset Password
-              </h3>
-              <p className="text-[10px] text-white/55">
-                Confirm your registered identity details to safely establish a new secure entry key.
-              </p>
-            </div>
-
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              {/* User ID */}
-              <div className="space-y-1.5">
-                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
-                  User ID
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter your registered User ID"
-                  value={resetUserId}
-                  onChange={(e) => setResetUserId(e.target.value.replace(/\s+/g, '').toLowerCase())}
-                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/60"
-                />
-              </div>
-
-
-
-              {/* New Password */}
-              <div className="space-y-1.5">
-                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Create security password (min 6 chars)"
-                  value={resetNewPassword}
-                  onChange={(e) => setResetNewPassword(e.target.value)}
-                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
-                />
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-1.5">
-                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Re-enter new secure password"
-                  value={resetConfirmPassword}
-                  onChange={(e) => setResetConfirmPassword(e.target.value)}
-                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
-                />
-              </div>
-
-              {/* Notifications */}
-              {resetError && (
-                <p className="text-[9.5px] font-bold text-rose-500 leading-normal bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg font-mono">
-                  ⚠️ Error: {resetError}
-                </p>
-              )}
-              {resetSuccess && (
-                <p className="text-[10px] font-black text-[#10B981] leading-normal bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg font-mono">
-                  ✅ Success: {resetSuccess}
-                </p>
-              )}
-
-              {/* Submit Reset */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-[#D4AF37]/10 cursor-pointer disabled:opacity-40"
-              >
-                {isLoading ? 'Resetting Password...' : 'Reset Password'}
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+  </motion.div>
   </>
 );
 }
