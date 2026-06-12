@@ -15,7 +15,41 @@ async function startServer() {
 
   // API route to dispatch OTP codes to user emails via SMTP
   app.post("/api/send-otp", async (req, res) => {
-    // ... (code unchanged)
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: "Email and Verification Code are required." });
+    }
+
+    const host = process.env.EMAIL_SMTP_HOST || "smtp.gmail.com";
+    const port = parseInt(process.env.EMAIL_SMTP_PORT || "465");
+    const secure = process.env.EMAIL_SMTP_SECURE !== "false";
+    const user = process.env.EMAIL_SMTP_USER;
+    const pass = process.env.EMAIL_SMTP_PASS;
+
+    if (!user || !pass) {
+      return res.json({ success: true, mode: "demo", message: "Demo mode: No SMTP credentials." });
+    }
+
+    try {
+      const transporter = nodemailer.createTransport({
+        host, port, secure,
+        auth: { user, pass },
+        tls: { rejectUnauthorized: false }
+      });
+
+      await transporter.sendMail({
+        from: `"MoneyMind Space" <${user}>`,
+        to: email,
+        subject: `[MoneyMind Space] Your Verification Code: ${code}`,
+        text: `Your verification code is: ${code}`,
+        html: `<p>Your verification code is: <strong>${code}</strong></p>`
+      });
+
+      return res.json({ success: true, mode: "live" });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Failed to send email." });
+    }
   });
 
   // API route to notify users about transaction status changes
