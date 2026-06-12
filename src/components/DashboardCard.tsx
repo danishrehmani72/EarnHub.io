@@ -1117,6 +1117,21 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     <p className="text-xs text-white/50 leading-relaxed max-w-md">
                       Onboard daily to claim active mining yield boosts! Maintain your daily streak to access higher premium dividend tiers. (Streak: <strong className="text-[#D4AF37]">{userProfile?.claimStreak || 0} days</strong>)
                     </p>
+                    {/* Streak Progress Bar */}
+                    <div className="pt-2 max-w-md">
+                      <div className="flex justify-between items-center mb-1.5 mt-2">
+                        <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">Streak Milestone Progress</span>
+                        <span className="text-[10px] text-[#D4AF37] font-black">{userProfile?.claimStreak || 0} / {Math.floor((userProfile?.claimStreak || 0) / 5) * 5 + 5} Days</span>
+                      </div>
+                      <div className="w-full bg-black/50 rounded-full h-2 overflow-hidden border border-white/10 relative">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(((userProfile?.claimStreak || 0) % 5) / 5) * 100}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#D4AF37]/40 to-[#D4AF37] rounded-full shadow-[0_0_10px_rgba(212,175,55,0.7)]"
+                        />
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-lg py-1 px-3 text-right">

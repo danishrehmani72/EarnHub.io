@@ -20,7 +20,8 @@ async function startServer() {
       return res.status(400).json({ error: "Email and Verification Code are required." });
     }
 
-    const host = process.env.EMAIL_SMTP_HOST || "smtp.gmail.com";
+    let hostStr = (process.env.EMAIL_SMTP_HOST || "smtp.gmail.com").trim();
+    const host = hostStr.split(" ")[0] || "smtp.gmail.com";
     const port = parseInt(process.env.EMAIL_SMTP_PORT || "465");
     const secure = process.env.EMAIL_SMTP_SECURE !== "false";
     const user = process.env.EMAIL_SMTP_USER;
@@ -59,7 +60,8 @@ async function startServer() {
       return res.status(400).json({ error: "Required fields missing." });
     }
 
-    const host = process.env.EMAIL_SMTP_HOST || "smtp.gmail.com";
+    let hostStr = (process.env.EMAIL_SMTP_HOST || "smtp.gmail.com").trim();
+    const host = hostStr.split(" ")[0] || "smtp.gmail.com";
     const port = parseInt(process.env.EMAIL_SMTP_PORT || "465");
     const secure = process.env.EMAIL_SMTP_SECURE !== "false";
     const user = process.env.EMAIL_SMTP_USER;

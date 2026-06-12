@@ -1266,7 +1266,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                     disabled={isCaptchaVerified || isCaptchaLoading}
                     className="w-6 h-6 rounded border border-white/20 bg-black/80 flex items-center justify-center transition-all cursor-pointer hover:border-[#D4AF37]/50 active:scale-95 disabled:hover:border-white/20 select-none animate-none"
                   >
-                    {isCaptchaVerified ? '✔' : '...'}
+                    {isCaptchaLoading ? <div className="w-3 h-3 border border-t-white border-[#D4AF37] rounded-full animate-spin"></div> : isCaptchaVerified ? '✔' : ''}
                   </button>
                   <span className="text-[11px] font-bold text-white/80 font-sans tracking-wide">
                     I'm not a robot
@@ -1279,6 +1279,30 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                   <span className="text-[6.5px] text-white/35 uppercase tracking-widest mt-1.5 font-sans font-black">reCAPTCHA</span>
                 </div>
               </div>
+
+              {showCaptchaPuzzle && (
+                <div className="mt-2 p-3 bg-black/60 border border-[#D4AF37]/20 rounded-lg space-y-3 animate-fade-in shadow-[inset_0_0_15px_rgba(212,175,55,0.05)]">
+                  <p className="text-[9.5px] text-white/70 font-medium uppercase tracking-widest">Human Verification Challenge</p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl font-bold tracking-widest text-[#D4AF37] font-mono">{captchaNum1} + {captchaNum2} = </span>
+                    <input
+                      type="text"
+                      pattern="[0-9]*"
+                      value={userCaptchaVal}
+                      onChange={(e) => setUserCaptchaVal(e.target.value.replace(/\D/g, ''))}
+                      className="w-16 bg-black border border-white/20 rounded-md p-1.5 text-center text-[#D4AF37] text-sm outline-none focus:border-[#D4AF37]/60 font-mono font-bold"
+                      placeholder="?"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyCaptcha}
+                      className="bg-[#D4AF37]/10 border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-[10px] px-3 py-1.5 rounded-md hover:bg-[#D4AF37]/20 transition-all uppercase tracking-wider h-full whitespace-nowrap"
+                    >
+                      Verify
+                    </button>
+                  </div>
+                </div>
+              )}
 
             </div>
           </div>
@@ -1471,6 +1495,126 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         </div>
       </div>
     </motion.div>
+
+    <AnimatePresence>
+      {isResetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.99 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="relative w-full max-w-sm bg-gradient-to-b from-[#0F0F0E] to-[#040404] border-2 border-[#D4AF37] rounded-3xl p-6 shadow-[0_0_50px_rgba(212,175,55,0.25)] text-left space-y-5"
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setIsResetModalOpen(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white transition-all cursor-pointer font-bold text-sm bg-white/5 hover:bg-white/10 p-1.5 rounded-lg border border-white/5"
+            >
+              ✕
+            </button>
+
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[#D4AF37] text-[8.5px] uppercase font-black tracking-widest">
+                Support Reset Panel
+              </span>
+              <h3 className="text-base font-black text-white uppercase tracking-wider">
+                Reset Password
+              </h3>
+              <p className="text-[10px] text-white/55">
+                Confirm your registered identity details to safely establish a new secure entry key.
+              </p>
+            </div>
+
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              {/* User ID */}
+              <div className="space-y-1.5">
+                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
+                  User ID
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter your registered User ID"
+                  value={resetUserId}
+                  onChange={(e) => setResetUserId(e.target.value.replace(/\s+/g, '').toLowerCase())}
+                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/60"
+                />
+              </div>
+
+              {/* Security PIN */}
+              <div className="space-y-1.5">
+                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
+                  4-Digit Security PIN
+                </label>
+                <input
+                  type="password"
+                  required
+                  maxLength={4}
+                  pattern="[0-9]*"
+                  placeholder="Enter 4-digit setup PIN"
+                  value={resetPin}
+                  onChange={(e) => setResetPin(e.target.value.replace(/\D/g, ''))}
+                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 text-center tracking-widest font-mono outline-none focus:border-[#D4AF37]/60 transition-all font-black"
+                />
+              </div>
+
+              {/* New Password */}
+              <div className="space-y-1.5">
+                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Create security password (min 6 chars)"
+                  value={resetNewPassword}
+                  onChange={(e) => setResetNewPassword(e.target.value)}
+                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
+                />
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-1.5">
+                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Re-enter new secure password"
+                  value={resetConfirmPassword}
+                  onChange={(e) => setResetConfirmPassword(e.target.value)}
+                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
+                />
+              </div>
+
+              {/* Notifications */}
+              {resetError && (
+                <p className="text-[9.5px] font-bold text-rose-500 leading-normal bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg font-mono">
+                  ⚠️ Error: {resetError}
+                </p>
+              )}
+              {resetSuccess && (
+                <p className="text-[10px] font-black text-[#10B981] leading-normal bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg font-mono">
+                  ✅ Success: {resetSuccess}
+                </p>
+              )}
+
+              {/* Submit Reset */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-[#D4AF37]/10 cursor-pointer disabled:opacity-40"
+              >
+                {isLoading ? 'Resetting Password...' : 'Reset Password'}
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+
     <CodeModal isOpen={isCodeModalOpen} onClose={() => setIsCodeModalOpen(false)} sentCode={sentCode} />
   </>
 );
