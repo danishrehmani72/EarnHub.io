@@ -23,6 +23,7 @@ import RegistrationCard from './components/RegistrationCard';
 import DashboardCard from './components/DashboardCard';
 import ReferralHistory from './components/ReferralHistory';
 import AdminPanel from './components/AdminPanel';
+import LiveChatBot from './components/LiveChatBot';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
 import earnhubLogo from './assets/images/earnhub_logo_1780161493423.png';
@@ -1628,6 +1629,8 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      <LiveChatBot />
 
       {/* Real-time Simulated Recent Payout & Withdrawal Feed Popups */}
     </div>
