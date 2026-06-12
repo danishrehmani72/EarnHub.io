@@ -1281,6 +1281,8 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               </div>
 
             </div>
+          </div>
+        )}
           
         {/* Feedback Messages */}
         {sentCode && (
@@ -1352,6 +1354,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             )}
           </button>
         )}
+      </form>
 
         {mode === 'login' && (
           <div className="text-center pt-2 select-none animate-fade-in">
@@ -1467,11 +1470,8 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           </div>
         </div>
       </div>
-    </div>
-      </div>
-
-  </motion.div>
+    </motion.div>
+    <CodeModal isOpen={isCodeModalOpen} onClose={() => setIsCodeModalOpen(false)} sentCode={sentCode} />
   </>
 );
 }
-
