@@ -274,7 +274,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
     fetchAllData();
   };
 
-  // Retrieve global users and nested logs (deposits, referrals, withdrawals) - Blazing-fast parallel collection group architecture
+  // Retrieve global users and nested logs (deposits, referrals, withdrawals) - Blazing-fast parallel collection group architecture with zero-composite-index failover
   const fetchAllData = async () => {
     setIsDataLoading(true);
     try {
@@ -309,37 +309,87 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       const investmentsByUserId: Record<string, any[]> = {};
       const referralsByUserId: Record<string, any[]> = {};
 
-      depositsSnap.docs.forEach((docSnap: any) => {
-        const userId = docSnap.ref.parent?.parent?.id;
-        if (userId) {
-          if (!depositsByUserId[userId]) depositsByUserId[userId] = [];
-          depositsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
-        }
-      });
+      let hasDeposits = depositsSnap.docs && depositsSnap.docs.length > 0;
+      let hasWithdrawals = withdrawalsSnap.docs && withdrawalsSnap.docs.length > 0;
+      let hasInvestments = investmentsSnap.docs && investmentsSnap.docs.length > 0;
+      let hasReferrals = referralsSnap.docs && referralsSnap.docs.length > 0;
 
-      withdrawalsSnap.docs.forEach((docSnap: any) => {
-        const userId = docSnap.ref.parent?.parent?.id;
-        if (userId) {
-          if (!withdrawalsByUserId[userId]) withdrawalsByUserId[userId] = [];
-          withdrawalsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
-        }
-      });
+      // If any collection group returned empty or was blocked by missing composite indexes in Firestore,
+      // run an ultra-reliable, index-free fallback that queries each user's subcollections in parallel.
+      if (!hasDeposits || !hasWithdrawals || !hasInvestments || !hasReferrals) {
+        console.log("No collection group data detected (possible missing composite index on Firestore). Executing failover collection scan...");
+        await Promise.all(usersSnap.docs.map(async (userDoc) => {
+          const userId = userDoc.id;
+          const [uDeps, uWits, uInvs, uRefs] = await Promise.all([
+            getDocs(collection(db, 'users', userId, 'deposits')).catch(() => ({ docs: [] })),
+            getDocs(collection(db, 'users', userId, 'withdrawals')).catch(() => ({ docs: [] })),
+            getDocs(collection(db, 'users', userId, 'investments')).catch(() => ({ docs: [] })),
+            getDocs(collection(db, 'users', userId, 'referrals')).catch(() => ({ docs: [] }))
+          ]);
 
-      investmentsSnap.docs.forEach((docSnap: any) => {
-        const userId = docSnap.ref.parent?.parent?.id;
-        if (userId) {
-          if (!investmentsByUserId[userId]) investmentsByUserId[userId] = [];
-          investmentsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
-        }
-      });
+          if (uDeps.docs.length > 0) {
+            depositsByUserId[userId] = uDeps.docs.map(d => ({ id: d.id, ...d.data() }));
+          }
+          if (uWits.docs.length > 0) {
+            withdrawalsByUserId[userId] = uWits.docs.map(d => ({ id: d.id, ...d.data() }));
+          }
+          if (uInvs.docs.length > 0) {
+            investmentsByUserId[userId] = uInvs.docs.map(d => ({ id: d.id, ...d.data() }));
+          }
+          if (uRefs.docs.length > 0) {
+            referralsByUserId[userId] = uRefs.docs.map(d => ({ id: d.id, ...d.data() }));
+          }
+        }));
+      }
 
-      referralsSnap.docs.forEach((docSnap: any) => {
-        const userId = docSnap.ref.parent?.parent?.id;
-        if (userId) {
-          if (!referralsByUserId[userId]) referralsByUserId[userId] = [];
-          referralsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
-        }
-      });
+      // Merge any group results with fallback results to ensure maximum data coverage without duplicates 
+      if (hasDeposits) {
+        depositsSnap.docs.forEach((docSnap: any) => {
+          const userId = docSnap.ref.parent?.parent?.id;
+          if (userId) {
+            if (!depositsByUserId[userId]) depositsByUserId[userId] = [];
+            if (!depositsByUserId[userId].some(x => x.id === docSnap.id)) {
+              depositsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
+            }
+          }
+        });
+      }
+
+      if (hasWithdrawals) {
+        withdrawalsSnap.docs.forEach((docSnap: any) => {
+          const userId = docSnap.ref.parent?.parent?.id;
+          if (userId) {
+            if (!withdrawalsByUserId[userId]) withdrawalsByUserId[userId] = [];
+            if (!withdrawalsByUserId[userId].some(x => x.id === docSnap.id)) {
+              withdrawalsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
+            }
+          }
+        });
+      }
+
+      if (hasInvestments) {
+        investmentsSnap.docs.forEach((docSnap: any) => {
+          const userId = docSnap.ref.parent?.parent?.id;
+          if (userId) {
+            if (!investmentsByUserId[userId]) investmentsByUserId[userId] = [];
+            if (!investmentsByUserId[userId].some(x => x.id === docSnap.id)) {
+              investmentsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
+            }
+          }
+        });
+      }
+
+      if (hasReferrals) {
+        referralsSnap.docs.forEach((docSnap: any) => {
+          const userId = docSnap.ref.parent?.parent?.id;
+          if (userId) {
+            if (!referralsByUserId[userId]) referralsByUserId[userId] = [];
+            if (!referralsByUserId[userId].some(x => x.id === docSnap.id)) {
+              referralsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
+            }
+          }
+        });
+      }
 
       // 3. Construct all complete user profiles in one fast step
       const fetchedUsers: AdminUser[] = usersSnap.docs.map((userDoc) => {
