@@ -54,7 +54,8 @@ import {
   serverTimestamp, 
   query, 
   orderBy, 
-  onSnapshot 
+  onSnapshot,
+  collectionGroup
 } from 'firebase/firestore';
 import { playSound } from '../lib/sounds';
 
@@ -262,90 +263,124 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
     fetchAllData();
   };
 
-  // Retrieve global users and nested logs (deposits, referrals, withdrawals) - Super-fast parallelized retrieval
+  // Retrieve global users and nested logs (deposits, referrals, withdrawals) - Blazing-fast parallel collection group architecture
   const fetchAllData = async () => {
     setIsDataLoading(true);
     try {
-      const usersSnap = await getDocs(collection(db, 'users'));
-
-      // Fetch all user subcollections in parallel using Promise.all for unmatched speed
-      const fetchedUsers: AdminUser[] = await Promise.all(
-        usersSnap.docs.map(async (userDoc) => {
-          const userData = userDoc.data();
-          const userId = userDoc.id;
-
-          // Fetch all 4 subcollections concurrently
-          const [depSnap, witSnap, invSnap, refSnap] = await Promise.all([
-            getDocs(collection(db, 'users', userId, 'deposits')).catch((err) => {
-              console.warn(`Fallback: Failed to fetch deposits for ${userId}`, err);
-              return { docs: [] };
-            }),
-            getDocs(collection(db, 'users', userId, 'withdrawals')).catch((err) => {
-              console.warn(`Fallback: Failed to fetch withdrawals for ${userId}`, err);
-              return { docs: [] };
-            }),
-            getDocs(collection(db, 'users', userId, 'investments')).catch((err) => {
-              console.warn(`Fallback: Failed to fetch investments for ${userId}`, err);
-              return { docs: [] };
-            }),
-            getDocs(collection(db, 'users', userId, 'referrals')).catch((err) => {
-              console.warn(`Fallback: Failed to fetch referrals for ${userId}`, err);
-              return { docs: [] };
-            })
-          ]);
-
-          const userDeps = depSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
-          const userWits = witSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
-          const userInvs = invSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
-          const userRefs = refSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
-
-          return {
-            userId,
-            name: userData.name || 'Anonymous VIP',
-            email: userData.email || 'no-email@wealthhub.com',
-            avatar: userData.avatar,
-            blocked: userData.blocked || false,
-            isSuspicious: userData.isSuspicious || false,
-            ipAddress: userData.ipAddress || '',
-            deviceFingerprint: userData.deviceFingerprint || '',
-            browserInfo: userData.browserInfo || '',
-            emailVerified: userData.emailVerified || false,
-            signupBonus: userData.signupBonus !== undefined ? userData.signupBonus : 0.10,
-            createdAt: userData.createdAt,
-            deposits: userDeps,
-            withdrawals: userWits,
-            investments: userInvs,
-            referrals: userRefs,
-            dailyBonusEarnings: userData.dailyBonusEarnings || 0
-          };
+      // 1. Fetch user base profiles plus all subcollections concurrently using collection group queries (exactly 5 parallel queries total!)
+      const [usersSnap, depositsSnap, withdrawalsSnap, investmentsSnap, referralsSnap, secLogsSnap] = await Promise.all([
+        getDocs(collection(db, 'users')),
+        getDocs(collectionGroup(db, 'deposits')).catch((err) => {
+          console.warn("Failed to fetch collectionGroup deposits", err);
+          return { docs: [] } as any;
+        }),
+        getDocs(collectionGroup(db, 'withdrawals')).catch((err) => {
+          console.warn("Failed to fetch collectionGroup withdrawals", err);
+          return { docs: [] } as any;
+        }),
+        getDocs(collectionGroup(db, 'investments')).catch((err) => {
+          console.warn("Failed to fetch collectionGroup investments", err);
+          return { docs: [] } as any;
+        }),
+        getDocs(collectionGroup(db, 'referrals')).catch((err) => {
+          console.warn("Failed to fetch collectionGroup referrals", err);
+          return { docs: [] } as any;
+        }),
+        getDocs(collection(db, 'security_logs')).catch((err) => {
+          console.warn("Silent failure loading database security logs collection", err);
+          return { docs: [] } as any;
         })
-      );
+      ]);
 
-      // Fetch dynamic security logs in parallel
-      try {
-        const secLogsSnap = await getDocs(collection(db, 'security_logs'));
-        const fetchedSecLogs = secLogsSnap.docs.map(docSnap => ({
-          id: docSnap.id,
-          ...docSnap.data()
-        })).sort((a: any, b: any) => {
-          const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-          const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-          return timeB - timeA;
-        });
-        setSecurityLogs(fetchedSecLogs);
-      } catch (secError) {
-        console.warn("Silent failure loading database security logs collection:", secError);
-      }
+      // 2. Maps to aggregate subcollection details under each respective userId
+      const depositsByUserId: Record<string, any[]> = {};
+      const withdrawalsByUserId: Record<string, any[]> = {};
+      const investmentsByUserId: Record<string, any[]> = {};
+      const referralsByUserId: Record<string, any[]> = {};
 
+      depositsSnap.docs.forEach((docSnap: any) => {
+        const userId = docSnap.ref.parent?.parent?.id;
+        if (userId) {
+          if (!depositsByUserId[userId]) depositsByUserId[userId] = [];
+          depositsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
+        }
+      });
+
+      withdrawalsSnap.docs.forEach((docSnap: any) => {
+        const userId = docSnap.ref.parent?.parent?.id;
+        if (userId) {
+          if (!withdrawalsByUserId[userId]) withdrawalsByUserId[userId] = [];
+          withdrawalsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
+        }
+      });
+
+      investmentsSnap.docs.forEach((docSnap: any) => {
+        const userId = docSnap.ref.parent?.parent?.id;
+        if (userId) {
+          if (!investmentsByUserId[userId]) investmentsByUserId[userId] = [];
+          investmentsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
+        }
+      });
+
+      referralsSnap.docs.forEach((docSnap: any) => {
+        const userId = docSnap.ref.parent?.parent?.id;
+        if (userId) {
+          if (!referralsByUserId[userId]) referralsByUserId[userId] = [];
+          referralsByUserId[userId].push({ id: docSnap.id, ...docSnap.data() });
+        }
+      });
+
+      // 3. Construct all complete user profiles in one fast step
+      const fetchedUsers: AdminUser[] = usersSnap.docs.map((userDoc) => {
+        const userData = userDoc.data();
+        const userId = userDoc.id;
+        return {
+          userId,
+          name: userData.name || 'Anonymous VIP',
+          email: userData.email || 'no-email@wealthhub.com',
+          avatar: userData.avatar,
+          blocked: userData.blocked || false,
+          isSuspicious: userData.isSuspicious || false,
+          ipAddress: userData.ipAddress || '',
+          deviceFingerprint: userData.deviceFingerprint || '',
+          browserInfo: userData.browserInfo || '',
+          emailVerified: userData.emailVerified || false,
+          signupBonus: userData.signupBonus !== undefined ? userData.signupBonus : 0.10,
+          createdAt: userData.createdAt,
+          deposits: depositsByUserId[userId] || [],
+          withdrawals: withdrawalsByUserId[userId] || [],
+          investments: investmentsByUserId[userId] || [],
+          referrals: referralsByUserId[userId] || [],
+          dailyBonusEarnings: userData.dailyBonusEarnings || 0
+        };
+      });
+
+      // Update state instantly and trigger anti-fraud analysis
       setAllUsers(fetchedUsers);
-      analyzeSecurityAntiFraud(fetchedUsers);
+
+      // Process security logs list with desc date sort
+      const fetchedSecLogs = secLogsSnap.docs.map((docSnap: any) => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      })).sort((a: any, b: any) => {
+        const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timeB - timeA;
+      });
+      setSecurityLogs(fetchedSecLogs);
+
+      setIsDataLoading(false);
     } catch (e) {
       console.error("Critical Admin Retrieval Error:", e);
       onAddToast("Error pulling global admin database matrices.", "error");
-    } finally {
       setIsDataLoading(false);
     }
   };
+
+  // Synchronously analyze anti-fraud rules whenever any user data updates
+  useEffect(() => {
+    analyzeSecurityAntiFraud(allUsers);
+  }, [allUsers]);
 
   // Load audit logs in real-time if available
   useEffect(() => {
