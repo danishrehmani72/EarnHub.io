@@ -24,8 +24,8 @@ async function startServer() {
     const host = hostStr.split(" ")[0] || "smtp.gmail.com";
     const port = parseInt(process.env.EMAIL_SMTP_PORT || "465");
     const secure = process.env.EMAIL_SMTP_SECURE !== "false";
-    const user = process.env.EMAIL_SMTP_USER;
-    const pass = process.env.EMAIL_SMTP_PASS;
+    const user = process.env.EMAIL_SMTP_USER?.trim();
+    const pass = process.env.EMAIL_SMTP_PASS?.trim();
 
     if (!user || !pass) {
       return res.json({ success: true, mode: "demo", message: "Demo mode: No SMTP credentials." });
@@ -47,9 +47,9 @@ async function startServer() {
       });
 
       return res.json({ success: true, mode: "live" });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      return res.status(500).json({ error: "Failed to send email." });
+      return res.status(500).json({ error: `SMTP Error: ${err.message || 'Unknown'}` });
     }
   });
 
@@ -64,8 +64,8 @@ async function startServer() {
     const host = hostStr.split(" ")[0] || "smtp.gmail.com";
     const port = parseInt(process.env.EMAIL_SMTP_PORT || "465");
     const secure = process.env.EMAIL_SMTP_SECURE !== "false";
-    const user = process.env.EMAIL_SMTP_USER;
-    const pass = process.env.EMAIL_SMTP_PASS;
+    const user = process.env.EMAIL_SMTP_USER?.trim();
+    const pass = process.env.EMAIL_SMTP_PASS?.trim();
 
     if (!user || !pass) {
       return res.json({ success: true, message: "Demo mode: No SMTP credentials." });
@@ -88,8 +88,8 @@ async function startServer() {
 
       await transporter.sendMail(mailOptions);
       return res.json({ success: true });
-    } catch (err) {
-      return res.status(500).json({ error: "Failed to send email." });
+    } catch (err: any) {
+      return res.status(500).json({ error: `SMTP Error: ${err.message || 'Unknown'}` });
     }
   });
 
