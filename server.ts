@@ -1,0 +1,80 @@
+import dotenv from "dotenv";
+dotenv.config();
+
+import express from "express";
+import path from "path";
+import { createServer as createViteServer } from "vite";
+import nodemailer from "nodemailer";
+
+async function startServer() {
+  const app = express();
+  const PORT = 3000;
+
+  // Middleware for body parsing
+  app.use(express.json());
+
+  // API route to dispatch OTP codes to user emails via SMTP
+  app.post("/api/send-otp", async (req, res) => {
+    // ... (code unchanged)
+  });
+
+  // API route to notify users about transaction status changes
+  app.post("/api/send-tx-notification", async (req, res) => {
+    const { email, userName, type, status, amount } = req.body;
+    if (!email || !type || !status) {
+      return res.status(400).json({ error: "Required fields missing." });
+    }
+
+    const host = process.env.EMAIL_SMTP_HOST || "smtp.gmail.com";
+    const port = parseInt(process.env.EMAIL_SMTP_PORT || "465");
+    const secure = process.env.EMAIL_SMTP_SECURE !== "false";
+    const user = process.env.EMAIL_SMTP_USER;
+    const pass = process.env.EMAIL_SMTP_PASS;
+
+    if (!user || !pass) {
+      return res.json({ success: true, message: "Demo mode: No SMTP credentials." });
+    }
+
+    try {
+      const transporter = nodemailer.createTransport({
+        host, port, secure,
+        auth: { user, pass },
+        tls: { rejectUnauthorized: false }
+      });
+
+      const mailOptions = {
+        from: `"MoneyMind Space" <${user}>`,
+        to: email,
+        subject: `[MoneyMind Space] Your ${type.charAt(0).toUpperCase() + type.slice(1)} has been ${status.toUpperCase()}`,
+        text: `Hello ${userName || 'User'},\n\nYour ${type} of $${amount?.toFixed(2) || 'N/A'} has been ${status}.\n\nBest regards,\nMoneyMind Space Administration`,
+        html: `<p>Hello ${userName || 'User'},</p><p>Your ${type} of $${amount?.toFixed(2) || 'N/A'} has been ${status}.</p>`
+      };
+
+      await transporter.sendMail(mailOptions);
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ error: "Failed to send email." });
+    }
+  });
+
+  // Vite middleware for development
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Full-stack server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();

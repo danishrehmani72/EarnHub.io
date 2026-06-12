@@ -27,6 +27,13 @@ export interface UserProfile {
   lastClaimedAt?: string;
   claimStreak?: number;
   dailyBonusEarnings?: number;
+  blocked?: boolean;
+  isSuspicious?: boolean;
+  ipAddress?: string;
+  deviceFingerprint?: string;
+  browserInfo?: string;
+  email?: string;
+  emailVerified?: boolean;
 }
 
 export interface DepositLog {

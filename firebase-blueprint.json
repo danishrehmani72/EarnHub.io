@@ -35,6 +35,30 @@
           "type": "boolean",
           "description": "True if the user's account has been administratively suspended."
         },
+        "isSuspicious": {
+          "type": "boolean",
+          "description": "True if flagged for suspected duplicate behavior or referral abuse."
+        },
+        "ipAddress": {
+          "type": "string",
+          "description": "Last recorded sign-up or sign-in IP address."
+        },
+        "deviceFingerprint": {
+          "type": "string",
+          "description": "Device hardware and browser capabilities seed fingerprint hash."
+        },
+        "browserInfo": {
+          "type": "string",
+          "description": "Browser details and HTTP User Agent signature."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the registered member."
+        },
+        "emailVerified": {
+          "type": "boolean",
+          "description": "Whether the email was verified with verification code."
+        },
         "lastClaimedAt": {
           "type": "string",
           "format": "date-time",
@@ -149,6 +173,9 @@
     },
     "/audit_logs/{logId}": {
       "description": "Administrative historical trailing ledger recorded on cloud nodes."
+    },
+    "/security_logs/{logId}": {
+      "description": "Security and fraud detection activity logs tracked dynamically by the system."
     }
   }
 }

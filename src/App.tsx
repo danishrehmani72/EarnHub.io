@@ -516,6 +516,13 @@ export default function App() {
   // Submit a withdrawal request
   const handleCreateWithdrawal = async (amount: number, network: string, wallet: string) => {
     if (!currentUid) return;
+
+    // Withdrawal Protection for suspicious or blocked accounts
+    if (userProfile?.blocked || userProfile?.isSuspicious) {
+      addToast("Your account is under security review. Please contact support.", "error");
+      return;
+    }
+
     try {
       const withdrawRef = doc(collection(db, 'users', currentUid, 'withdrawals'));
       const now = new Date();

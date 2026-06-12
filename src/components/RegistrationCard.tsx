@@ -65,6 +65,140 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
 
+  // 1. Store and track User IP, Device Fingerprint, Browser info, Email verification & Captcha states
+  const [email, setEmail] = useState('');
+  const [emailVerificationCode, setEmailVerificationCode] = useState('');
+  const [sentCode, setSentCode] = useState<string | null>(null);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [userCaptchaVal, setUserCaptchaVal] = useState('');
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+  const [captchaNum1, setCaptchaNum1] = useState(() => Math.floor(2 + Math.random() * 8));
+  const [captchaNum2, setCaptchaNum2] = useState(() => Math.floor(1 + Math.random() * 9));
+
+  const [enteredCode, setEnteredCode] = useState('');
+  const [isCaptchaLoading, setIsCaptchaLoading] = useState(false);
+  const [showCaptchaPuzzle, setShowCaptchaPuzzle] = useState(false);
+
+  // Regenerate secure verification Captcha
+  const regenerateCaptcha = () => {
+    const n1 = Math.floor(2 + Math.random() * 8);
+    const n2 = Math.floor(1 + Math.random() * 9);
+    setCaptchaNum1(n1);
+    setCaptchaNum2(n2);
+    setUserCaptchaVal('');
+    setIsCaptchaVerified(false);
+  };
+
+  const handleSendVerificationCode = async () => {
+    if (!email.trim() || !email.includes('@') || email.trim().length < 5) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    setError('');
+    setIsSendingCode(true);
+    setSentCode(null);
+    
+    const randomVal = Math.floor(100000 + Math.random() * 900000).toString();
+    setEmailVerificationCode(randomVal);
+    
+    try {
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email.trim(), code: randomVal }),
+      });
+      
+      const data = await response.json();
+      setIsSendingCode(false);
+      
+      if (data.success) {
+        if (data.mode === 'demo') {
+          setSentCode(`📧 Dynamic mock OTP generated: ${randomVal} (Admin: Configure SMTP in your settings to dispatch real emails directly!)`);
+        } else {
+          setSentCode(`📧 Real OTP verification code dispatched to ${email}. Please check your Inbox and Spam/Junk folder.`);
+        }
+      } else {
+        setError(data.error || 'SMTP dispatch failure. Emulating client OTP code for demonstration safety.');
+        setSentCode(`📧 Dynamic mock OTP generated: ${randomVal}`);
+      }
+    } catch (err) {
+      console.warn("Express backend SMTP proxy inaccessible or offline, falling back to local client generator:", err);
+      setIsSendingCode(false);
+      setSentCode(`📧 Dynamic mock OTP generated: ${randomVal}`);
+    }
+  };
+
+  const handleVerifyEmailCode = () => {
+    if (enteredCode.trim() === emailVerificationCode && emailVerificationCode !== '') {
+      setIsEmailVerified(true);
+      setError('');
+    } else {
+      setError('❌ Incorrect 6-Digit Email Verification Code. Please try again.');
+    }
+  };
+
+  const handleCaptchaCheckboxClick = () => {
+    if (isCaptchaVerified) return;
+    setIsCaptchaLoading(true);
+    setError('');
+    setTimeout(() => {
+      setIsCaptchaLoading(false);
+      setShowCaptchaPuzzle(true);
+    }, 600);
+  };
+
+  const handleVerifyCaptcha = () => {
+    if (parseInt(userCaptchaVal) === (captchaNum1 + captchaNum2)) {
+      setIsCaptchaVerified(true);
+      setShowCaptchaPuzzle(false);
+      setError('');
+    } else {
+      setError('❌ Math check failed. Please solve the arithmetic correctly.');
+      regenerateCaptcha();
+    }
+  };
+
+  // Dynamic IP hook on assembly mount
+  const [clientIp, setClientIp] = useState('192.168.1.100'); // secure local default
+  React.useEffect(() => {
+    let active = true;
+    const loadIp = async () => {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const d = await res.json();
+        if (d && d.ip && active) {
+          setClientIp(d.ip);
+        }
+      } catch (err) {
+        console.warn('Unable to reach IP service endpoint. Falling back to local address tracker.');
+      }
+    };
+    loadIp();
+    return () => { active = false; };
+  }, []);
+
+  // Secure canvas/UUID device fingerprinting identifier
+  const getDeviceFingerprint = () => {
+    let mmsUuid = localStorage.getItem('mms_device_uuid');
+    if (!mmsUuid) {
+      mmsUuid = 'mms_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
+      localStorage.setItem('mms_device_uuid', mmsUuid);
+    }
+    const screenVal = `${window.screen.width}x${window.screen.height}x${window.screen.colorDepth}`;
+    const userAgentStr = navigator.userAgent;
+    let computedHash = 0;
+    const combinedStr = `${screenVal}:${userAgentStr}:${navigator.language || 'en'}`;
+    for (let idx = 0; idx < combinedStr.length; idx++) {
+      computedHash = (computedHash << 5) - computedHash + combinedStr.charCodeAt(idx);
+      computedHash |= 0;
+    }
+    return `${mmsUuid}_F${Math.abs(computedHash).toString(16)}`;
+  };
+
   // Process Signup Form Submission
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,16 +224,24 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       setError('Password must be at least 6 characters.');
       return;
     }
-    if (!recoveryCode.trim()) {
-      setError('Please create your 4-Digit Security PIN.');
+
+    if (!email.trim() || !email.includes('@') || email.length < 5) {
+      setError('Please provide a valid email address.');
       return;
     }
-    if (recoveryCode.trim().length !== 4) {
-      setError('Security PIN must be exactly a 4-Digit code.');
+    if (!isEmailVerified) {
+      setError('Email address must be verified using the 6-Digit code.');
       return;
     }
-    if (recoveryCode.trim() !== confirmPin.trim()) {
-      setError('Confirm PIN does not match your 4-Digit Security PIN.');
+    if (!isCaptchaVerified) {
+      setError('Please solve the secure Google reCAPTCHA math puzzle to verify you are a human.');
+      return;
+    }
+
+    // Local registration rate limit
+    const lastReg = localStorage.getItem('mms_last_reg_time');
+    if (lastReg && Date.now() - parseInt(lastReg) < 30 * 1000) {
+      setError(`Registration rate limit exceeded. Please wait ${Math.ceil((30 * 1000 - (Date.now() - parseInt(lastReg))) / 1000)} seconds before trying again.`);
       return;
     }
 
@@ -120,9 +262,96 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         return;
       }
 
+      // Compute current device fingerprint
+      const currentFingerprint = getDeviceFingerprint();
+
+      // Check 24 hour IP registration count for rate-limiting
+      // "If more than 3 accounts are created from the same IP address within 24 hours, block further registrations."
+      const qIp = query(collection(db, 'users'), where('ipAddress', '==', clientIp));
+      const snapIp = await getDocs(qIp);
+      
+      const nowMs = Date.now();
+      const twentyFourHoursAgo = nowMs - 24 * 60 * 60 * 1000;
+      let ipRegsIn24h = 0;
+      snapIp.docs.forEach(docSnap => {
+        const u = docSnap.data();
+        let createdMs = 0;
+        if (u.createdAt) {
+          createdMs = u.createdAt.seconds ? u.createdAt.seconds * 1000 : new Date(u.createdAt).getTime();
+        }
+        if (createdMs > twentyFourHoursAgo) {
+          ipRegsIn24h++;
+        }
+      });
+
+      if (ipRegsIn24h >= 3) {
+        // Save security rate limit log
+        const blockLogId = doc(collection(db, 'security_logs')).id;
+        await setDoc(doc(db, 'security_logs', blockLogId), {
+          id: blockLogId,
+          userId: cleanUserId,
+          username: cleanName,
+          type: 'rate_limit_exceeded',
+          severity: 'critical',
+          description: `Blocked registration from IP ${clientIp} due to exceeding limit (3 accounts in 24 hours).`,
+          ipAddress: clientIp,
+          deviceFingerprint: currentFingerprint,
+          timestamp: new Date().toISOString(),
+          createdAt: serverTimestamp()
+        });
+
+        setError('❌ Registration Blocked: Exceeded maximum allowed account registrations (3 accounts max) from this IP address within 24 hours.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if device fingerprint is banned 
+      // "Prevent banned devices from creating new accounts."
+      const qDevice = query(collection(db, 'users'), where('deviceFingerprint', '==', currentFingerprint));
+      const snapDevice = await getDocs(qDevice);
+
+      const hasBannedDevice = snapDevice.docs.some(docSnap => {
+        const u = docSnap.data();
+        return u.blocked === true;
+      });
+
+      if (hasBannedDevice) {
+        // Log banned device attempt
+        const blockLogId = doc(collection(db, 'security_logs')).id;
+        await setDoc(doc(db, 'security_logs', blockLogId), {
+          id: blockLogId,
+          userId: cleanUserId,
+          username: cleanName,
+          type: 'banned_device_signup_attempt',
+          severity: 'critical',
+          description: `Registration blocked: Banned device/fingerprint ${currentFingerprint} tried to register new account.`,
+          ipAddress: clientIp,
+          deviceFingerprint: currentFingerprint,
+          timestamp: new Date().toISOString(),
+          createdAt: serverTimestamp()
+        });
+
+        setError('❌ This device has been restricted for violating terms of service. Registration is blocked.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Check multi account count on this device:
+      // "If more than 2 accounts are created from the same device fingerprint, automatically mark them as suspicious AND Auto-Ban them"
+      const sameDeviceCount = snapDevice.docs.length;
+      let shouldAutoBan = false;
+      let shouldMarkSuspicious = false;
+
+      if (sameDeviceCount >= 2) {
+        shouldMarkSuspicious = true;
+        shouldAutoBan = true; // Auto Ban duplicate accounts!
+      }
+
       // Determine signup bonus: standard is $0.10, but if referred by a valid user, they get $0.30 (invitee bonus)
       let signupBonusAmount = 0.10;
       let isReferralValid = false;
+      let isReferralSelfAbuse = false;
+      let isReferralRepeatedIpAbuse = false;
 
       if (referredBy && referredBy !== cleanUserId) {
         try {
@@ -131,11 +360,92 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           if (inviterSnap.exists()) {
             isReferralValid = true;
             signupBonusAmount = 0.30;
+            const inviterData = inviterSnap.data();
+
+            // Referral fraud: Do not allow referral rewards if on same device
+            if (inviterData.deviceFingerprint === currentFingerprint) {
+              isReferralSelfAbuse = true;
+              isReferralValid = false; // Disallow referrer reward and invitee bonus!
+              signupBonusAmount = 0.10; // Reset signup bonus to standard
+
+              // Log direct referral fraud alert
+              const selfRefLogId = doc(collection(db, 'security_logs')).id;
+              await setDoc(doc(db, 'security_logs', selfRefLogId), {
+                id: selfRefLogId,
+                userId: cleanUserId,
+                username: cleanName,
+                type: 'referral_fraud',
+                severity: 'warning',
+                description: `Self-referral fraud: referee same device fingerprint "${currentFingerprint}" as referrer "${referredBy}". Rewards denied.`,
+                ipAddress: clientIp,
+                deviceFingerprint: currentFingerprint,
+                timestamp: new Date().toISOString(),
+                createdAt: serverTimestamp()
+              });
+            }
+
+            // Referral fraud: Flag accounts that use same IP and same referral code repeatedly
+            if (inviterData.ipAddress === clientIp) {
+              const qIpRef = query(collection(db, 'users'), where('ipAddress', '==', clientIp), where('referredBy', '==', referredBy));
+              const snapIpRef = await getDocs(qIpRef);
+              if (snapIpRef.docs.length >= 1) {
+                isReferralRepeatedIpAbuse = true;
+                shouldMarkSuspicious = true;
+
+                // Log repeated IP referral alert
+                const abuseLogId = doc(collection(db, 'security_logs')).id;
+                await setDoc(doc(db, 'security_logs', abuseLogId), {
+                  id: abuseLogId,
+                  userId: cleanUserId,
+                  username: cleanName,
+                  type: 'referral_fraud',
+                  severity: 'warning',
+                  description: `Referral IP abuse flag: Repeated referral code "${referredBy}" usage from same IP: ${clientIp}. Flagged suspicious.`,
+                  ipAddress: clientIp,
+                  deviceFingerprint: currentFingerprint,
+                  timestamp: new Date().toISOString(),
+                  createdAt: serverTimestamp()
+                });
+              }
+            }
           }
         } catch (inviteErr) {
           console.warn('Silent invitation tracking failure verification:', inviteErr);
         }
       }
+
+      // If auto banned, log multiple accounts check
+      if (shouldAutoBan) {
+        const alertLogId = doc(collection(db, 'security_logs')).id;
+        await setDoc(doc(db, 'security_logs', alertLogId), {
+          id: alertLogId,
+          userId: cleanUserId,
+          username: cleanName,
+          type: 'multiple_accounts',
+          severity: 'critical',
+          description: `Auto banned user ${cleanUserId}: registered ${sameDeviceCount + 1} accounts on device fingerprint ${currentFingerprint}.`,
+          ipAddress: clientIp,
+          deviceFingerprint: currentFingerprint,
+          timestamp: new Date().toISOString(),
+          createdAt: serverTimestamp()
+        });
+
+        // Set previous profiles on this device to suspicious
+        for (const docSnap of snapDevice.docs) {
+          try {
+            const docRef = doc(db, 'users', docSnap.id);
+            await setDoc(docRef, {
+              isSuspicious: true,
+              updatedAt: serverTimestamp()
+            }, { merge: true });
+          } catch (e) {
+            console.warn("Silent failure updating duplicate device account profile to suspicious status:", e);
+          }
+        }
+      }
+
+      // Save registration time rate limit
+      localStorage.setItem('mms_last_reg_time', Date.now().toString());
 
       // 2. Store full profile database record in Firestore under the custom User ID
       await setDoc(userRef, {
@@ -143,21 +453,28 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         user_id: cleanUserId, // lowercase DB key
         name: cleanName,
         full_name: cleanName, // lowercase DB key
+        email: email.trim(),
+        emailVerified: isEmailVerified,
+        deviceFingerprint: currentFingerprint,
+        ipAddress: clientIp,
+        browserInfo: navigator.userAgent,
+        blocked: shouldAutoBan,
+        isSuspicious: shouldMarkSuspicious,
         avatar: selectedAvatar,
         signupBonus: signupBonusAmount,
         referredBy: isReferralValid ? referredBy : null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         password: password, // lowercase DB key
-        security_pin: recoveryCode.trim(), // lowercase DB key
+        security_pin: "0000", // lowercase DB key
       });
 
       // 3. Store authentication credentials securely in the private secrets subcollection doc
       const secretsRef = doc(db, 'users', cleanUserId, 'secrets', 'auth');
       await setDoc(secretsRef, {
         password: password,
-        recoveryCode: recoveryCode.trim(),
-        security_pin: recoveryCode.trim(),
+        recoveryCode: "0000",
+        security_pin: "0000",
       });
 
       // 4. Handle conversion ledger event if user joined via valid referrer invite link
@@ -446,20 +763,11 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
     setResetSuccess('');
 
     const cleanUid = resetUserId.trim().toLowerCase();
-    const pin = resetPin.trim();
     const newPass = resetNewPassword;
     const confirmPass = resetConfirmPassword;
 
     if (!cleanUid) {
       setResetError('Please enter your User ID.');
-      return;
-    }
-    if (!pin) {
-      setResetError('Please enter your 4-Digit Security PIN.');
-      return;
-    }
-    if (pin.length !== 4) {
-      setResetError('Security PIN must be exactly a 4-Digit code.');
       return;
     }
     if (!newPass) {
@@ -486,34 +794,21 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         return;
       }
 
-      // Check current pin. First check main user document 'security_pin' or fallback to secrets 'recoveryCode'
       const userData = userSnap.data();
-      let storedPin = userData.security_pin || null;
-
       const secretRef = doc(db, 'users', cleanUid, 'secrets', 'auth');
-      const secretSnap = await getDocWithRetry(secretRef);
-      if (secretSnap.exists() && !storedPin) {
-        storedPin = secretSnap.data().recoveryCode || secretSnap.data().security_pin || null;
-      }
 
-      if (!storedPin || storedPin !== pin) {
-        setResetError('❌ Verification failed. Invalid Security PIN.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Pin matched! Let's update password and security_pin in both places for high availability
+      // Update password and set security_pin to "0000" in both places for high availability
       await setDoc(userRef, {
         ...userData,
          password: newPass,
-         security_pin: pin,
+         security_pin: "0000",
          updatedAt: serverTimestamp(),
       });
 
       await setDoc(secretRef, {
         password: newPass,
-        recoveryCode: pin,
-        security_pin: pin,
+        recoveryCode: "0000",
+        security_pin: "0000",
       });
 
       setResetSuccess('✅ Password Reset Successfully!');
@@ -752,9 +1047,9 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           </div>
         )}
 
-        {/* Security PIN / Recovery Code (Signup & Forgot PIN checks) */}
+        {/* Security PIN / Recovery Code (Forgot PIN checks) */}
         <AnimatePresence mode="popLayout">
-          {(mode === 'signup' || (mode === 'forgot' && forgotSubTab !== 'manual')) && (
+          {(mode === 'forgot' && forgotSubTab !== 'manual') && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -881,6 +1176,138 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               </a>
             </div>
           </motion.div>
+        )}
+
+        {/* Anti-Fraud Email and CAPTCHA registration modules */}
+        {mode === 'signup' && (
+          <div className="space-y-4 border-t border-white/5 pt-4">
+            {/* Email Verification Section */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">📧</span>
+                <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
+                  Verify Email Address (Required)
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  disabled={isEmailVerified}
+                  placeholder="e.g. member@domain.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (e.target.value) setError('');
+                  }}
+                  className="flex-1 bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-[#D4AF37]/60 transition-all shadow-inner disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  disabled={isEmailVerified || isSendingCode || !email.includes('@')}
+                  onClick={handleSendVerificationCode}
+                  className="px-3 py-1 bg-[#D4AF37] hover:bg-[#c39e2e] disabled:bg-white/5 disabled:text-white/20 text-black text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md shadow-[#D4AF37]/10"
+                >
+                  {isSendingCode ? 'Sending...' : isEmailVerified ? 'Verified ✔' : 'Get Code'}
+                </button>
+              </div>
+
+              {sentCode && !isEmailVerified && (
+                <div className="space-y-2 p-3.5 bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 rounded-xl text-left animate-fade-in mt-1.5">
+                  <p className="text-[10px] text-amber-400 font-medium leading-relaxed font-mono">
+                    {sentCode}
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="Enter 6-Digit Code"
+                      value={enteredCode}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setEnteredCode(val);
+                        if (val) setError('');
+                      }}
+                      className="flex-1 text-center bg-black border border-white/10 rounded-xl p-2 font-mono text-xs tracking-widest text-[#D4AF37] focus:border-[#D4AF37]/50 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyEmailCode}
+                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-black text-[10px] font-black rounded-xl transition-all uppercase cursor-pointer"
+                    >
+                      Verify
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isEmailVerified && (
+                <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-1">
+                  <span>✔</span>
+                  <span>Email address verified successfully.</span>
+                </p>
+              )}
+            </div>
+
+            {/* Google reCAPTCHA Verification Module */}
+            <div className="bg-[#0A0A0A]/90 border border-white/10 rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCaptchaCheckboxClick}
+                    disabled={isCaptchaVerified || isCaptchaLoading}
+                    className="w-6 h-6 rounded border border-white/20 bg-black/80 flex items-center justify-center transition-all cursor-pointer hover:border-[#D4AF37]/50 active:scale-95 disabled:hover:border-white/20 select-none animate-none"
+                  >
+                    {isCaptchaVerified ? (
+                      <span className="text-xs text-[#D4AF37] font-bold">✔</span>
+                    ) : isCaptchaLoading ? (
+                      <div className="w-3.5 h-3.5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+                    ) : null}
+                  </button>
+                  <span className="text-[11px] font-bold text-white/80 font-sans tracking-wide">
+                    I'm not a robot
+                  </span>
+                </div>
+                <div className="flex flex-col items-end leading-none">
+                  <div className="w-6 h-6 bg-[linear-gradient(135deg,#4285F4,#34A853,#FBBC05,#EA4335)] rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow">
+                    G
+                  </div>
+                  <span className="text-[6.5px] text-white/35 uppercase tracking-widest mt-1.5 font-sans font-black">reCAPTCHA</span>
+                </div>
+              </div>
+
+              {/* Captcha Interactive Math Block */}
+              {showCaptchaPuzzle && !isCaptchaVerified && (
+                <div className="p-3 bg-black border border-red-500/15 rounded-xl space-y-2 animate-fade-in text-left">
+                  <p className="text-[10px] font-bold text-red-400 flex items-center gap-1.5">
+                     <span>🛡️ Secure Verification:</span>
+                     <span>Solve sum to prove humanity</span>
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#D4AF37] font-black text-xs font-mono">{captchaNum1} + {captchaNum2} =</span>
+                    <input
+                      type="text"
+                      maxLength={3}
+                      placeholder="?"
+                      value={userCaptchaVal}
+                      onChange={(e) => {
+                        setUserCaptchaVal(e.target.value.replace(/\D/g, ''));
+                        setError('');
+                      }}
+                      className="w-16 text-center bg-black border border-white/10 rounded-lg p-1.5 font-mono text-xs text-white focus:border-[#D4AF37]/50 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyCaptcha}
+                      className="px-3 py-1.5 bg-[#D4AF37] hover:bg-[#c39e2e] text-black text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+                    >
+                      Solve
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Feedback Messages */}
@@ -1114,21 +1541,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                 />
               </div>
 
-              {/* 4-Digit PIN */}
-              <div className="space-y-1.5">
-                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
-                  4-Digit Security PIN
-                </label>
-                <input
-                  type="text"
-                  required
-                  maxLength={4}
-                  placeholder="Enter 4-Digit PIN"
-                  value={resetPin}
-                  onChange={(e) => setResetPin(e.target.value.replace(/\D/g, ''))}
-                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/60 font-mono tracking-widest text-center"
-                />
-              </div>
+
 
               {/* New Password */}
               <div className="space-y-1.5">

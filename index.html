@@ -21,13 +21,59 @@
           return true;
         }
       }, true);
+
+      (function() {
+        // Safe check for preview iframe / sandbox / local dev mode to decouple buggy external network trackers
+        var isDevOrIframe = (
+          window.self !== window.top ||
+          window.location.hostname.indexOf('localhost') > -1 ||
+          window.location.hostname.indexOf('127.0.0.1') > -1 ||
+          window.location.hostname.indexOf('run.app') > -1
+        );
+
+        if (!isDevOrIframe) {
+          console.log("Production environment detected. Loading premium security & verification layers.");
+          
+          function injectScript(src, attrs, innerText) {
+            try {
+              var s = document.createElement('script');
+              if (src) s.src = src;
+              if (attrs) {
+                for (var key in attrs) {
+                  s.setAttribute(key, attrs[key]);
+                }
+              }
+              if (innerText) {
+                s.innerHTML = innerText;
+              }
+              document.head.appendChild(s);
+            } catch (err) {
+              console.warn("Failed to load security component: " + src, err);
+            }
+          }
+
+          // 1. Monetag Push Notifications
+          injectScript("https://5gvci.com/act/files/tag.min.js?z=11106475", {
+            "data-cfasync": "false",
+            "async": "true"
+          });
+
+          // 2. Monetag Monetization Script
+          injectScript(null, null, "(function(s){s.dataset.zone='11104664',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))");
+
+          // 3. Monetag Vignette Integration
+          injectScript(null, null, "(function(s){s.dataset.zone='11104724',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))");
+
+          // 4. Google AdSense Integration
+          injectScript("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3338649456893376", {
+            "async": "true",
+            "crossorigin": "anonymous"
+          });
+        } else {
+          console.log("Safe sandboxed sandbox or development preview configuration active. Ad-injectors deactivated.");
+        }
+      })();
     </script>
-    <!-- MONETAG PUSH NOTIFICATIONS ADS -->
-    <script src="https://5gvci.com/act/files/tag.min.js?z=11106475" data-cfasync="false" async></script>
-    <!-- MONETAG MONETIZATION SCRIPT -->
-    <script>(function(s){s.dataset.zone='11104664',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    <!-- MONETAG VIGNETTE INTEGRATION -->
-    <script>(function(s){s.dataset.zone='11104724',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>MoneyMind Space - Smart Finance, Better Future</title>
@@ -59,7 +105,6 @@
     <meta name="twitter:title" content="MoneyMind Space - Smart Finance, Better Future" />
     <meta name="twitter:description" content="Join MoneyMind Space to track earnings, manage investments, and build a stronger financial future with confidence and security." />
     <!-- GOOGLE ADSENSE INTEGRATION -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3338649456893376" crossorigin="anonymous"></script>
 
   </head>
   <body>

@@ -14,7 +14,7 @@ service cloud.firestore {
     // Helper to validate User schema (requires userId and name, others optional to prevent legacy data lockouts)
     function isValidUser(user, userId) {
       return user.keys().hasAll(['userId', 'name'])
-        && user.keys().size() <= 22
+        && user.keys().size() <= 30
         && user.userId is string
         && user.userId == userId
         && user.name is string
@@ -130,6 +130,13 @@ service cloud.firestore {
 
     // ----------------- AUDIT LOGS ROOT COLLECTION -----------------
     match /audit_logs/{logId} {
+      allow get: if isValidId(logId);
+      allow list: if true;
+      allow create, update, delete: if isValidId(logId);
+    }
+
+    // ----------------- SECURITY LOGS ROOT COLLECTION -----------------
+    match /security_logs/{logId} {
       allow get: if isValidId(logId);
       allow list: if true;
       allow create, update, delete: if isValidId(logId);

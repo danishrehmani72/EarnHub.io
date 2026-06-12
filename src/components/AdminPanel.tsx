@@ -25,8 +25,10 @@ import {
   Zap, 
   HelpCircle,
   Clock,
-  ExternalLink
+  ExternalLink,
+  ShieldAlert
 } from 'lucide-react';
+import SecurityAudit from './SecurityAudit';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ResponsiveContainer, 
@@ -68,6 +70,11 @@ interface AdminUser {
   email?: string;
   avatar?: string;
   blocked?: boolean;
+  isSuspicious?: boolean;
+  ipAddress?: string;
+  deviceFingerprint?: string;
+  browserInfo?: string;
+  emailVerified?: boolean;
   signupBonus?: number;
   createdAt?: any;
   deposits: any[];
@@ -103,6 +110,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   // Database-wide state
   const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [securityLogs, setSecurityLogs] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filterWStatus, setFilterWStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
@@ -124,6 +132,54 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const [processingTxId, setProcessingTxId] = useState<string | null>(null);
   const [blockchainHash, setBlockchainHash] = useState<string | null>(null);
   const [telegramLogs, setTelegramLogs] = useState<{ msg: string; time: string }[]>([]);
+
+  // Manual override states
+  const [overrideTarget, setOverrideTarget] = useState('');
+  const [overrideLoading, setOverrideLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'security'>('dashboard');
+
+  const handleManualOverrideUnban = async (target: string) => {
+    if (!target.trim()) {
+      onAddToast("Please provide a valid User ID, IP, or Fingerprint.", "error");
+      return;
+    }
+    setOverrideLoading(true);
+    let matchedCount = 0;
+    try {
+      const cleanTarget = target.trim();
+      const usersToUnban = allUsers.filter(u => 
+        u.userId.toLowerCase() === cleanTarget.toLowerCase() ||
+        (u.ipAddress && u.ipAddress.trim() === cleanTarget) ||
+        (u.deviceFingerprint && u.deviceFingerprint.trim() === cleanTarget)
+      );
+
+      if (usersToUnban.length === 0) {
+        onAddToast("❌ No accounts matched this ID, IP or Fingerprint.", "error");
+        setOverrideLoading(false);
+        return;
+      }
+
+      for (const u of usersToUnban) {
+        const uRef = doc(db, 'users', u.userId);
+        await updateDoc(uRef, {
+          blocked: false,
+          isSuspicious: false
+        });
+        matchedCount++;
+      }
+
+      onAddToast(`✔ Manually restored ${matchedCount} account(s) successfully!`, "success");
+      logAuditAction(`Administrative manual override list unbanned target: ${cleanTarget}`, 'security');
+      logTelegramNotify(`🔓 Anti-Fraud Override: Daneish manually unbanned matches for ${cleanTarget}`);
+      setOverrideTarget('');
+      fetchAllData();
+    } catch (e) {
+      console.error(e);
+      onAddToast("Overriding ban failed.", "error");
+    } finally {
+      setOverrideLoading(false);
+    }
+  };
 
   // Supported administrators
   const ADMIN_EMAILS = ["admin@gmail.com", "danishrehmani72@gmail.com", "superadmin@moneymindspace.com", "superadmin@earnhub.com"];
@@ -260,6 +316,11 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
           email: userData.email || 'no-email@wealthhub.com',
           avatar: userData.avatar,
           blocked: userData.blocked || false,
+          isSuspicious: userData.isSuspicious || false,
+          ipAddress: userData.ipAddress || '',
+          deviceFingerprint: userData.deviceFingerprint || '',
+          browserInfo: userData.browserInfo || '',
+          emailVerified: userData.emailVerified || false,
           signupBonus: userData.signupBonus !== undefined ? userData.signupBonus : 0.10,
           createdAt: userData.createdAt,
           deposits: userDeps,
@@ -268,6 +329,22 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
           referrals: userRefs,
           dailyBonusEarnings: userData.dailyBonusEarnings || 0
         });
+      }
+
+      // Fetch dynamic security logs
+      try {
+        const secLogsSnap = await getDocs(collection(db, 'security_logs'));
+        const fetchedSecLogs = secLogsSnap.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        })).sort((a: any, b: any) => {
+          const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return timeB - timeA;
+        });
+        setSecurityLogs(fetchedSecLogs);
+      } catch (secError) {
+        console.warn("Silent failure loading database security logs collection:", secError);
       }
 
       setAllUsers(fetchedUsers);
@@ -425,6 +502,22 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
       const txRef = doc(db, 'users', userUid, type === 'deposit' ? 'deposits' : 'withdrawals', txId);
       await setDoc(txRef, { status: action }, { merge: true });
+
+      // Send email notification
+      const user = allUsers.find(u => u.userId === userUid);
+      if (user && user.email) {
+        await fetch('/api/send-tx-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user.email,
+            userName: user.name,
+            type,
+            status: action,
+            amount
+          })
+        }).catch(err => console.error("Failed to send notification email", err));
+      }
 
       onAddToast(`${type === 'deposit' ? 'Deposit' : 'Withdrawal'} status successfully updated to ${action}!`, 'success', type === 'deposit' ? 'deposit_submitted' : 'withdrawal_approved');
       logAuditAction(`Approved ${type} ID ${txId} for user ${userUid} with status: ${action}`, 'financial');
@@ -650,19 +743,17 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
   return (
     <div className="space-y-6 w-full text-left">
-      
-      {/* GLOBAL STATS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 animate-fade-in">
         <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 space-y-1 relative overflow-hidden">
-          <div className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/[0.02] flex items-center justify-center text-white/30">
-            <Users className="w-4 h-4" />
-          </div>
-          <p className="text-[9px] font-semibold text-white/40 uppercase tracking-widest font-sans">Total Users</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono text-white">{globalAggregates.totalUsersCount}</span>
-          </div>
-          <p className="text-[9px] text-white/25">Global premium user accounts</p>
-        </div>
+              <div className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/[0.02] flex items-center justify-center text-white/30">
+                <Users className="w-4 h-4" />
+              </div>
+              <p className="text-[9px] font-semibold text-white/40 uppercase tracking-widest font-sans">Total Users</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black font-mono text-white">{globalAggregates.totalUsersCount}</span>
+              </div>
+              <p className="text-[9px] text-white/25">Global premium user accounts</p>
+            </div>
 
         <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 space-y-1 relative overflow-hidden">
           <div className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/[0.02] flex items-center justify-center text-emerald-400/20">
@@ -1140,6 +1231,255 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         )}
       </div>
 
+      {/* ADVANCED ANTI-FRAUD & MULTIPLE ACCOUNT DETECTION SYSTEM */}
+      <div className="bg-[#111111]/90 border border-white/5 rounded-2xl p-6 space-y-6 relative overflow-hidden">
+        {/* Visual background ambient color glow */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="space-y-1">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 animate-pulse" />
+              Advanced Anti-Fraud & Account Integrity Officer
+            </h4>
+            <p className="text-[9.5px] text-white/50">
+              Heuristic validation of duplicate device registrations, referral loops, and blacklisted IPs.
+            </p>
+          </div>
+          <div className="px-2.5 py-1 bg-rose-500/10 border border-rose-500/25 rounded-md text-[8.5px] font-black uppercase tracking-wider text-rose-400">
+             Shield Active
+          </div>
+        </div>
+
+        {/* Override unban actions panel */}
+        <div className="p-4 bg-black/65 border border-white/5 rounded-xl space-y-3">
+          <div className="space-y-0.5">
+            <h5 className="text-[10px] font-black uppercase tracking-wide text-white">
+              Command Center: Manual Unban Override (انتظامیہ کے لیے شناختی بحالی)
+            </h5>
+            <p className="text-[9px] text-white/40">
+              Enter any User ID, IP Address, or Device Fingerprint to lift bans immediately across the network.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g. USER102, 192.168.1.1, or hash fingerprint..."
+              value={overrideTarget}
+              onChange={(e) => setOverrideTarget(e.target.value)}
+              className="flex-1 bg-black/95 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 font-mono tracking-wide outline-none focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all shadow-inner"
+            />
+            <button
+              onClick={() => handleManualOverrideUnban(overrideTarget)}
+              disabled={overrideLoading}
+              className="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 active:scale-95 disabled:opacity-40 text-black text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md shadow-emerald-500/10"
+            >
+              {overrideLoading ? 'Unbanning...' : 'Manual Unban ✔'}
+            </button>
+          </div>
+        </div>
+
+        {/* Heurestic Category Widgets - 3 Column Bento layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          
+          {/* List Suspicious accounts & Banned */}
+          <div className="bg-[#090909] border border-white/5 rounded-xl p-4 space-y-3">
+            <h5 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] border-b border-white/5 pb-1.5 flex items-center justify-between">
+              <span>Suspicious / Flagged User ID</span>
+              <span className="bg-amber-500/10 px-1.5 py-0.5 rounded text-[8px] font-mono text-amber-400 font-bold">
+                {allUsers.filter(u => u.isSuspicious).length} cases
+              </span>
+            </h5>
+            <div className="h-[180px] overflow-y-auto space-y-2.5 scrollbar-thin">
+              {allUsers.filter(u => u.isSuspicious).length === 0 ? (
+                <div className="h-full flex items-center justify-center text-[9px] text-white/30 uppercase tracking-widest font-mono text-center p-6">
+                  No flagged accounts currently
+                </div>
+              ) : (
+                allUsers.filter(u => u.isSuspicious).map(u => (
+                  <div key={u.userId} className="p-2.5 bg-white/[0.02] border border-white/5 rounded-lg flex flex-col gap-1 text-[9.5px]">
+                    <div className="flex justify-between items-center bg-white/5 px-2 py-1 rounded">
+                      <span className="font-bold text-white tracking-wide">{u.name} ({u.userId})</span>
+                      <span className="text-[7.5px] font-bold bg-[#D4AF37]/15 text-[#D4AF37] rounded px-1 uppercase tracking-wide">Suspicious</span>
+                    </div>
+                    <div className="text-white/50 text-[8.5px] font-mono space-y-0.5 px-1 pt-1">
+                      <div>IP: {u.ipAddress || 'None'}</div>
+                      <div className="truncate">Fingerprint: {u.deviceFingerprint || 'None'}</div>
+                    </div>
+                    <div className="flex justify-between items-center pt-1.5 border-t border-white/5 mt-1">
+                      <span className="text-[8px] font-mono text-red-400 uppercase font-black">
+                         {u.blocked ? 'Auto Banned' : 'Needs Review'}
+                      </span>
+                      <button
+                        onClick={() => handleToggleBlock(u.userId, u.blocked || false)}
+                        className={`px-2 py-1 text-[7.5px] font-black uppercase rounded ${
+                          u.blocked ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'
+                        }`}
+                      >
+                        {u.blocked ? 'Unban Match' : 'Ban User'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Duplicate Devices groups */}
+          <div className="bg-[#090909] border border-white/5 rounded-xl p-4 space-y-3">
+            <h5 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] border-b border-white/5 pb-1.5 flex items-center justify-between">
+              <span>Duplicate Device Fingerprints</span>
+              <span className="bg-amber-500/10 px-1.5 py-0.5 rounded text-[8px] font-mono text-amber-400 font-bold">
+                Linked Phones
+              </span>
+            </h5>
+            <div className="h-[180px] overflow-y-auto space-y-2.5 scrollbar-thin">
+              {(() => {
+                const groups: Record<string, typeof allUsers> = {};
+                allUsers.forEach(u => {
+                  if (u.deviceFingerprint && u.deviceFingerprint !== 'Not Fingerprinted' && u.deviceFingerprint.trim() !== '') {
+                    if (!groups[u.deviceFingerprint]) groups[u.deviceFingerprint] = [];
+                    groups[u.deviceFingerprint].push(u);
+                  }
+                });
+                const duplicates = Object.entries(groups).filter(([fp, list]) => list.length > 1);
+
+                if (duplicates.length === 0) {
+                  return (
+                    <div className="h-full flex items-center justify-center text-[9px] text-white/30 uppercase tracking-widest font-mono text-center p-6 bg-transparent">
+                      Pure Integrity: Zero duplicate devices detected
+                    </div>
+                  );
+                }
+
+                return duplicates.map(([fp, list]) => (
+                  <div key={fp} className="p-2.5 bg-rose-500/[0.02] border border-rose-500/10 rounded-lg flex flex-col gap-1.5 text-[9px] text-left">
+                    <div className="font-mono text-[8px] text-rose-400 bg-rose-950/20 p-1 rounded truncate">FP: {fp}</div>
+                    <div className="space-y-1">
+                      <p className="text-white/30 text-[8px] uppercase tracking-wider font-bold">Associated Accounts ({list.length}):</p>
+                      {list.map(u => (
+                        <div key={u.userId} className="flex justify-between items-center text-white/70 font-mono">
+                          <span>{u.name} ({u.userId})</span>
+                          <span className={u.blocked ? 'text-red-400 text-[8px]' : 'text-emerald-400 text-[8px]'}>
+                            {u.blocked ? 'Banned' : 'Active'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => handleManualOverrideUnban(fp)}
+                      className="w-full mt-1.5 py-1 text-center font-bold font-sans text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded border border-emerald-500/25 text-[8.5px] uppercase active:scale-95 transition-all"
+                    >
+                      Restore All On Device
+                    </button>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+
+          {/* Duplicate IP address trackers */}
+          <div className="bg-[#090909] border border-white/5 rounded-xl p-4 space-y-3">
+            <h5 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] border-b border-white/5 pb-1.5 flex items-center justify-between">
+              <span>Duplicate Registers / IP Address</span>
+              <span className="bg-amber-500/10 px-1.5 py-0.5 rounded text-[8px] font-mono text-amber-400 font-bold">
+                IP Collisions
+              </span>
+            </h5>
+            <div className="h-[180px] overflow-y-auto space-y-2.5 scrollbar-thin">
+              {(() => {
+                const groups: Record<string, typeof allUsers> = {};
+                allUsers.forEach(u => {
+                  if (u.ipAddress && u.ipAddress !== '192.168.1.100' && u.ipAddress.trim() !== '') {
+                    if (!groups[u.ipAddress]) groups[u.ipAddress] = [];
+                    groups[u.ipAddress].push(u);
+                  }
+                });
+                const duplicates = Object.entries(groups).filter(([ip, list]) => list.length > 2); // Flag clusters of 3+ IP registrations as duplicate groups
+
+                if (duplicates.length === 0) {
+                  return (
+                    <div className="h-full flex items-center justify-center text-[9px] text-white/30 uppercase tracking-widest font-mono text-center p-6 bg-transparent">
+                      Secure IP clusters: No IP registration blocks flag required
+                    </div>
+                  );
+                }
+
+                return duplicates.map(([ip, list]) => (
+                  <div key={ip} className="p-2.5 bg-rose-500/[0.02] border border-rose-500/10 rounded-lg flex flex-col gap-1.5 text-[9px] text-left">
+                    <div className="font-mono text-[8.5px] text-zinc-300 bg-white/5 px-2 py-1 rounded">IP Address: {ip}</div>
+                    <div className="space-y-1">
+                      <p className="text-white/30 text-[8px] uppercase tracking-wider font-bold">Associated Accounts ({list.length}):</p>
+                      {list.map(u => (
+                        <div key={u.userId} className="flex justify-between items-center text-white/70">
+                          <span>{u.name} ({u.userId})</span>
+                          <span 
+                            className={`${u.blocked ? 'text-rose-400 cursor-pointer hover:underline' : 'text-emerald-400'} text-[8px]`} 
+                            onClick={() => handleToggleBlock(u.userId, u.blocked || false)}
+                          >
+                            {u.blocked ? 'Banned' : 'Active'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => handleManualOverrideUnban(ip)}
+                      className="w-full mt-1.5 py-1 text-center font-bold font-sans text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded border border-emerald-500/25 text-[8.5px] uppercase active:scale-95 transition-all"
+                    >
+                      Unban All IP Matches
+                    </button>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Security Logs list */}
+        <div className="space-y-2.5 text-left">
+          <div className="space-y-0.5 border-t border-white/5 pt-4">
+            <h5 className="text-[10px] font-black uppercase text-white tracking-widest">
+              Live Real-Time Security Logs Feed
+            </h5>
+            <p className="text-[9px] text-white/40">
+              Live telemetry of anti-fraud violations, referral abuse blocks, and system security triggers.
+            </p>
+          </div>
+
+          <div className="bg-[#070707] border border-white/5 rounded-xl max-h-[220px] overflow-y-auto divide-y divide-white/[0.02] select-all">
+            {securityLogs.length === 0 ? (
+              <div className="p-12 text-center text-[9px] font-mono text-white/20 uppercase tracking-widest leading-relaxed">
+                No anti-fraud triggers or security logging events captured yet.
+              </div>
+            ) : (
+              securityLogs.map((log, index) => (
+                <div key={log.id || index} className="p-3 text-[9.5px] font-mono leading-relaxed text-left flex flex-col gap-1">
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+                      <span className="text-rose-400 font-bold bg-rose-500/10 px-1.5 py-0.5 rounded text-[8.5px] uppercase tracking-wider shrink-0">
+                        {log.type}
+                      </span>
+                      <span className="text-white/80 font-bold">{log.description}</span>
+                    </div>
+                    <span className="text-white/20 text-[8.5px]">
+                      {log.timestamp ? new Date(log.timestamp).toLocaleString() : 'Just now'}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 text-white/40 text-[8.5px] shrink-0 font-mono px-3">
+                    <span>IP Address: <span className="text-zinc-300">{log.ipAddress || 'Not Captured'}</span></span>
+                    <span>Device FP: <span className="text-zinc-300">{log.deviceFingerprint ? log.deviceFingerprint.slice(0, 20) + '...' : 'Not Captured'}</span></span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+      </div>
+
       {/* AUDIT LOG PERSISTENT LEDGER */}
       <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
         <div className="space-y-0.5">
@@ -1168,14 +1508,12 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                   <span className="text-white/50 bg-white/5 px-1.5 py-0.5 rounded leading-none text-[8.5px] font-bold uppercase">{log.type}</span>
                   <span className="text-white/80">{log.action}</span>
                 </div>
-                <div className="text-right shrink-0 text-white/30 hidden sm:block">
-                  <span>host: {log.ip || 'simulated IP'}</span>
-                </div>
               </div>
             ))
           )}
-        </div>
       </div>
     </div>
+  </div>
   );
 }
+
