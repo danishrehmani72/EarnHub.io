@@ -962,8 +962,8 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
     <div className="space-y-6 w-full text-left font-sans">
       
       {/* GOVERNANCE CONTROL ROOM HEADER PANEL */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-[#111111]/90 border border-white/5 rounded-3xl p-6 relative overflow-hidden backdrop-blur-xl">
-        <div className="absolute inset-0 bg-radial-gradient(circle at 100% 0%, rgba(212, 175, 55, 0.04) 0%, transparent 60%)" />
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-[#111111]/90 border border-white/5 rounded-3xl p-6 relative backdrop-blur-xl">
+        <div className="absolute inset-0 bg-radial-gradient(circle at 100% 0%, rgba(212, 175, 55, 0.04) 0%, transparent 60%) rounded-3xl overflow-hidden pointer-events-none" />
         
         <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2">
