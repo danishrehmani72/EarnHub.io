@@ -3,6 +3,77 @@ import { motion, AnimatePresence } from "motion/react";
 import { MessageSquare, X, Send, Sparkles, Bot, ArrowRight, CornerDownLeft } from "lucide-react";
 import { playSound } from "../lib/sounds";
 
+const getClientFallbackReply = (msg: string): string => {
+  const norm = msg.toLowerCase().trim();
+  
+  if (norm.includes("withdraw") || norm.includes("nikal") || norm.includes("payout") || norm.includes("danish") || norm.includes("review")) {
+    return `**Withdrawal & Danish Review Info:** 💰
+
+1. **How to Withdraw**: Dashboard par **Withdraw Panel** par jayen, apna target account select karen (Easypaisa, JazzCash, SadaPay ya Pakistani Bank Account) aur request submit karen.
+2. **Danish Review Time**: Chief Administrator **Danish** (Operator ID: DANISH125) security audit ke baad **10 se 30 minutes** (maximum 1 se 2 ghante) me withdrawals approve kar deta hai, jo direct aapke account me transfer ho jata hai.
+3. **Minimum Limit**: Minimum withdrawal limit PKR 100 ya $1 hai. 
+
+🛡️ MoneyMind Governance Core live review ensures absolute financial security! Let us know if you need any other help.`;
+  }
+  
+  if (norm.includes("deposit") || norm.includes("paisa") || norm.includes("jazz") || norm.includes("sada") || norm.includes("naya") || norm.includes("bank") || norm.includes("add money") || norm.includes("pese kese") || norm.includes("pese kaise") || norm.includes("invest") || norm.includes("payment")) {
+    return `**Deposit aur Investment Steps:** 💸
+
+1. Dashboard me **Deposit Panel** button click karen.
+2. Select your channel: **Easypaisa, JazzCash, SadaPay, NayaPay, Bank Transfer, or USDT (TRC-20)**.
+3. Diye gaye Account Number / details par payment transfer karen.
+4. Us ke baad, Sender Name, Sender Account, aur **TxID / Receipt Reference** form me likhain aur submit karen.
+5. MoneyMind automatic ledger verification system check karke balances direct update kar deta hai!
+
+Daily staking profits is ke baad automatically collect hote rehte hain! 🚀`;
+  }
+
+  if (norm.includes("ia feature") || norm.includes("ai feature") || norm.includes("ai help") || norm.includes("artificial") || norm.includes("kon kon") || norm.includes("features")) {
+    return `**MoneyMind Space Premium AI & Ledger Features:** 🤖
+
+1. **MindBuddy AI Assistant** (This Chatbot!): Instant Roman Urdu, English, aur Urdu me queries answers karke support provide karta hai.
+2. **Intelligent Security Ledger**: Automatic fraud detection, IP matching, aur fast unbanning checks handle karta hai.
+3. **Telegram Live Webhook Bot**: Technical logs aur important updates Telegram servers par real-time broadcast karta hai taake admins instant and safe review kar saken.
+4. **Dynamic Governance Pulsing Charts**: Dashboard par real-time revenue, registration flow charts aur secure ledger feed show karta hai.
+
+Security audits are active 24/7! 🛡️`;
+  }
+
+  if (norm.includes("earn") || norm.includes("paise") || norm.includes("pese") || norm.includes("kamaen") || norm.includes("kese") || norm.includes("plan") || norm.includes("packages") || norm.includes("invest") || norm.includes("refer") || norm.includes("invite") || norm.includes("dost") || norm.includes("commission")) {
+    return `**Earning & Referrals Commission Rules:** 📈
+
+1. **Staking Plans**: Alag alag investment plans hain jinse aap **daily passive income** earn kar sakte hain status level ke mutabiq.
+2. **Referral Program (3 Levels Tier)**:
+   - **Level 1 (Direct)**: Aap ko direct referral par percentage commission milta hai.
+   - **Level 2**: Aap ke referral ka referral join karega tou mazeed commission milega.
+   - **Level 3**: Multi-generational tier reward of passive returns.
+3. **Daily Login Bonus**: Har 24 ghante baad daily bonus reward claim karna mat bhulen!
+
+🔥 Apne refer code ko copy karke friends ke sath share karen aur dynamic returns hasil karen.`;
+  }
+
+  if (norm.includes("hello") || norm.includes("hi") || norm.includes("asalam") || norm.includes("hey") || norm.includes("kia hal") || norm.includes("kese ho") || norm.includes("hola") || norm.includes("greetings")) {
+    return `Asalam-o-Alaikum! Hello! 👋 Main aapka **MindBuddy AI Companion** hoon.
+
+Main premium financial assistant hoon jo Urdu, Roman Urdu aur English me perfect help kar sakta hai. 
+Aap mujh se ye pooch sakte hain:
+- *Withdrawal review ka kitna time hai?*
+- *AI features kon konsey hain?*
+- *Deposit kese karen?*
+- *Paise kamaane ka tarika?*
+
+Hum humesha aapko 24/7 live guide karne ke liye hazir hain! Custom plan choose karen aur stakings start karen! 💰`;
+  }
+
+  return `Shukriya hum se rabta karne ka! 🌟 MoneyMind Space high-yield staking aur referral networks me sab se secure aur fast service provide karta hai.
+
+- Agar aap **deposit/pese add** karna chahte hain, dashboard me 'Deposit Panel' click karen.
+- Agar aap **withdrawal/payout** poochna chahte hain, 'Withdraw Panel' click karen (Admin Danish verifies this under 10-30 mins).
+- Agar aap koi **plan choose** karna chahte hain, 'Buy Plan' matrix check karen.
+
+Aapka koi makhsoos sawal hai tou be-jhijhak likhein, main Roman Urdu aur English dono me active hoon! 🛡️`;
+};
+
 interface Message {
   id: string;
   sender: "user" | "bot";
@@ -68,11 +139,15 @@ export default function LiveChatBot() {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error("Server response not ok: " + response.status);
+      }
+
       const data = await response.json();
       
       setIsTyping(false);
 
-      if (data.reply) {
+      if (data && data.reply) {
         const botMsg: Message = {
           id: `bot-${Date.now()}`,
           sender: "bot",
@@ -89,18 +164,30 @@ export default function LiveChatBot() {
         } catch (e) {
           console.warn("Sound play failed", e);
         }
+      } else {
+        throw new Error("Invalid reply format payload from endpoint");
       }
     } catch (err) {
-      console.error("Chat error:", err);
+      console.warn("Server chatbot backend trace failed, triggering instant client intelligent fallback: ", err);
       setIsTyping(false);
       
-      const errorMsg: Message = {
-        id: `err-${Date.now()}`,
+      const fallbackReply = getClientFallbackReply(textToSend);
+      
+      const botMsg: Message = {
+        id: `bot-fallback-${Date.now()}`,
         sender: "bot",
-        text: "System connection trace completed. Plz check network connection or try again, standard proxy buffers active.",
+        text: fallbackReply,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
-      setMessages((prev) => [...prev, errorMsg]);
+
+      setMessages((prev) => [...prev, botMsg]);
+      setChatHistory((prev) => [...prev, { role: "assistant", text: fallbackReply }]);
+
+      try {
+        playSound("new_referral");
+      } catch (e) {
+        console.warn("Sound play failed", e);
+      }
     }
   };
 
