@@ -15,7 +15,8 @@ import {
   deleteDoc,
   serverTimestamp,
   getDocFromServer,
-  getDocs
+  getDocs,
+  getDocsFromServer
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './lib/firebase';
 import { UserProfile, ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog } from './types';
@@ -482,6 +483,127 @@ export default function App() {
 
 
 
+
+  // Manual re-fetch of all user data from Firestore using server documents directly (bypassing client caches)
+  const handleRefreshAllData = async () => {
+    if (!currentUid) return;
+    try {
+      // 1. Fetch user profile from server
+      const userRef = doc(db, 'users', currentUid);
+      const userSnap = await getDocFromServer(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        setUserProfile({
+          userId: data.userId,
+          name: data.name,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          avatar: data.avatar,
+          signupBonus: data.signupBonus,
+          lastClaimedAt: data.lastClaimedAt,
+          claimStreak: data.claimStreak,
+          dailyBonusEarnings: data.dailyBonusEarnings,
+        });
+      }
+
+      // 2. Fetch referrals from server
+      const referralsRef = collection(db, 'users', currentUid, 'referrals');
+      const referralsQuery = query(referralsRef, orderBy('createdAt', 'desc'));
+      const referralsSnap = await getDocsFromServer(referralsQuery);
+      const referralList: ReferralLog[] = [];
+      referralsSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        referralList.push({
+          id: data.id,
+          timestamp: data.timestamp,
+          amount: data.amount,
+          referrerName: data.referrerName,
+          refereeId: data.refereeId,
+          createdAt: data.createdAt,
+          refereeAvatar: data.refereeAvatar,
+          ...data,
+        });
+      });
+      setLogs(referralList);
+
+      // 3. Fetch deposits from server
+      const depositsRef = collection(db, 'users', currentUid, 'deposits');
+      const depositsQuery = query(depositsRef, orderBy('createdAt', 'desc'));
+      const depositsSnap = await getDocsFromServer(depositsQuery);
+      const depositList: DepositLog[] = [];
+      depositsSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        depositList.push({
+          id: data.id,
+          amount: Number(data.amount) || 0,
+          network: data.network || 'BNB',
+          txHash: data.txHash || '',
+          status: data.status || 'pending',
+          createdAt: data.createdAt,
+          timestamp: data.timestamp || '',
+        });
+      });
+      setDeposits(depositList);
+
+      // 4. Fetch withdrawals from server
+      const withdrawalsRef = collection(db, 'users', currentUid, 'withdrawals');
+      const withdrawalsQuery = query(withdrawalsRef, orderBy('createdAt', 'desc'));
+      const withdrawalsSnap = await getDocsFromServer(withdrawalsQuery);
+      const withdrawalList: WithdrawalLog[] = [];
+      withdrawalsSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        withdrawalList.push({
+          id: data.id,
+          amount: Number(data.amount) || 0,
+          wallet: data.wallet || '',
+          network: data.network || 'BNB',
+          status: data.status || 'pending',
+          createdAt: data.createdAt,
+          timestamp: data.timestamp || '',
+        });
+      });
+      setWithdrawals(withdrawalList);
+
+      // 5. Fetch investments from server
+      const investmentsRef = collection(db, 'users', currentUid, 'investments');
+      const investmentsQuery = query(investmentsRef, orderBy('createdAt', 'desc'));
+      const investmentsSnap = await getDocsFromServer(investmentsQuery);
+      const investmentList: UserPlan[] = [];
+      investmentsSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        investmentList.push({
+          id: data.id,
+          planId: data.planId,
+          amount: Number(data.amount) || 0,
+          status: data.status || 'active',
+          createdAt: data.createdAt,
+          timestamp: data.timestamp || '',
+          cancelledAt: data.cancelledAt,
+        });
+      });
+      setInvestments(investmentList);
+
+      // 6. Fetch daily rewards from server
+      const dailyRewardsRef = collection(db, 'users', currentUid, 'daily_rewards');
+      const dailyRewardsQuery = query(dailyRewardsRef, orderBy('createdAt', 'desc'));
+      const dailyRewardsSnap = await getDocsFromServer(dailyRewardsQuery);
+      const rewardList: DailyRewardLog[] = [];
+      dailyRewardsSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        rewardList.push({
+          id: data.id,
+          amount: Number(data.amount) || 0,
+          streak: Number(data.streak) || 0,
+          timestamp: data.timestamp || '',
+          createdAt: data.createdAt,
+        });
+      });
+      setDailyRewardLogs(rewardList);
+    } catch (error) {
+      console.error("Force sync failed:", error);
+      addToast("Failed to refresh data. Cloud database connection busy.", "error");
+    }
+  };
 
   // Submit a deposit record
   const handleCreateDeposit = async (amount: number, network: string, txHash: string) => {
@@ -1246,6 +1368,7 @@ export default function App() {
                 virtualDays={virtualDays}
                 activeTab={dashboardTab}
                 onActiveTabChange={setDashboardTab}
+                onRefresh={handleRefreshAllData}
               />
               <ReferralHistory logs={logs} userId={currentUid || ''} walletBalance={balance} />
             </div>

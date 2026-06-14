@@ -37,7 +37,8 @@ import {
   XAxis, 
   YAxis, 
   Tooltip, 
-  CartesianGrid 
+  CartesianGrid,
+  Legend
 } from 'recharts';
 import { FaqSection } from './FaqSection';
 import { ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog } from '../types';
@@ -69,6 +70,7 @@ interface DashboardCardProps {
   activeTab?: 'overview' | 'funding' | 'faq';
   onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq') => void;
   dailyRewardLogs?: DailyRewardLog[];
+  onRefresh?: () => Promise<void>;
 }
 
 export default function DashboardCard({
@@ -95,6 +97,7 @@ export default function DashboardCard({
   activeTab: activeTabProp,
   onActiveTabChange,
   dailyRewardLogs = [],
+  onRefresh,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
   const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq'>('overview');
@@ -107,6 +110,80 @@ export default function DashboardCard({
   const activeTab = activeTabProp !== undefined ? activeTabProp : activeTabLocal;
   const setActiveTab = onActiveTabChange !== undefined ? onActiveTabChange : setActiveTabLocal;
   const [adminModeType, setAdminModeType] = useState<'sandbox' | 'platform_global'>('platform_global');
+
+  // Manual Refresh & Pull-to-Refresh States and Handlers
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [pullStatus, setPullStatus] = useState<'idle' | 'pulling' | 'ready' | 'refreshing'>('idle');
+  const touchStartRef = useRef(0);
+  const pullingRef = useRef(false);
+
+  const handleManualRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      if (onRefresh) {
+        await onRefresh();
+      }
+      onAddToast('Database stats and records updated successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      onAddToast('Failed to force refresh from database.', 'error');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY === 0 && !isRefreshing && pullStatus === 'idle') {
+      touchStartRef.current = e.touches[0].clientY;
+      pullingRef.current = true;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!pullingRef.current) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStartRef.current;
+    if (diff > 0) {
+      const distance = Math.min(80, Math.pow(diff, 0.85));
+      setPullDistance(distance);
+      if (distance >= 50) {
+        setPullStatus('ready');
+      } else {
+        setPullStatus('pulling');
+      }
+    } else {
+      setPullDistance(0);
+      setPullStatus('idle');
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (!pullingRef.current) return;
+    pullingRef.current = false;
+    if (pullStatus === 'ready') {
+      setPullStatus('refreshing');
+      setIsRefreshing(true);
+      setPullDistance(55);
+      try {
+        if (onRefresh) {
+          await onRefresh();
+        }
+        onAddToast('Pull-to-refresh: Data updated successfully!', 'success');
+      } catch (err) {
+        console.error(err);
+        onAddToast('Failed to refresh data.', 'error');
+      } finally {
+        setPullStatus('idle');
+        setIsRefreshing(false);
+        setPullDistance(0);
+      }
+    } else {
+      setPullStatus('idle');
+      setPullDistance(0);
+    }
+  };
 
   // Cooldown calculation for daily check-in claims
   const [claimCooldown, setClaimCooldown] = useState('');
@@ -672,6 +749,126 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     return points;
   }, [logs, deposits, withdrawals, virtualDays]);
 
+  // Compute chronological progression of Daily Bonus and Investment Profits over the last 10 days
+  const bonusAndProfitChartData = useMemo(() => {
+    const dataPoints: {
+      date: string;
+      bonus: number;
+      profit: number;
+      cumulativeBonus: number;
+      cumulativeProfit: number;
+    }[] = [];
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Generate last 10 days
+    for (let i = 9; i >= 0; i--) {
+      const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+      dataPoints.push({
+        date: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        bonus: 0,
+        profit: 0,
+        cumulativeBonus: 0,
+        cumulativeProfit: 0,
+      });
+    }
+
+    // Populate Daily Rewards (Bonus check-ins)
+    if (dailyRewardLogs && dailyRewardLogs.length > 0) {
+      dailyRewardLogs.forEach((log) => {
+        const amt = Number(log.amount) || 0;
+        const ts = log.createdAt?.seconds 
+          ? log.createdAt.seconds * 1000 
+          : new Date(log.timestamp).getTime() || 0;
+        
+        if (!ts) return;
+        const logDate = new Date(ts);
+        const dayLabel = logDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        
+        const pt = dataPoints.find(p => p.date === dayLabel);
+        if (pt) {
+          pt.bonus += amt;
+        }
+      });
+    }
+
+    // Populate Investment Profits (Staking returns)
+    // We scan both active plans (investments) and approved deposits (which act as staking nodes)
+    const activeAssets: { amount: number; time: number }[] = [];
+
+    // 1. From approved deposits
+    if (deposits && deposits.length > 0) {
+      deposits
+        .filter((d) => d.status === 'approved')
+        .forEach((dep) => {
+          const depTime = dep.createdAt?.seconds 
+            ? dep.createdAt.seconds * 1000 
+            : new Date(dep.timestamp).getTime() || 0;
+          if (depTime) {
+            activeAssets.push({ amount: dep.amount, time: depTime });
+          }
+        });
+    }
+
+    // 2. From investments (purchased plans)
+    if (investments && investments.length > 0) {
+      investments
+        .filter((inv) => inv.status === 'active')
+        .forEach((inv) => {
+          const invTime = inv.createdAt?.seconds 
+            ? inv.createdAt.seconds * 1000 
+            : new Date(inv.timestamp).getTime() || 0;
+          if (invTime) {
+            activeAssets.push({ amount: inv.amount, time: invTime });
+          }
+        });
+    }
+
+    // For each calendar day in our chart, calculate the total active investment profit generated on that day
+    dataPoints.forEach((pt, dayIdx) => {
+      // Find the start date timestamp of this calendar day
+      const targetDay = new Date(today.getTime() - (9 - dayIdx) * 24 * 60 * 60 * 1000);
+      const targetTime = targetDay.getTime();
+
+      let dailyProfitSum = 0;
+      activeAssets.forEach((asset) => {
+        // An asset generates profit starting the day after its creation
+        if (targetTime > asset.time) {
+          let percent = 0;
+          if (asset.amount >= 100) percent = 7;
+          else if (asset.amount >= 50) percent = 5;
+          else if (asset.amount >= 15) percent = 4;
+          else if (asset.amount >= 5) percent = 3;
+
+          dailyProfitSum += asset.amount * (percent / 100);
+        }
+      });
+      pt.profit = dailyProfitSum;
+    });
+
+    // Compute cumulative trends over this 10-day period
+    let runBonus = userProfile?.signupBonus || 0.10; // Start with the signup bonus as initial seed base
+    let runProfit = 0;
+
+    dataPoints.forEach((pt) => {
+      runBonus += pt.bonus;
+      runProfit += pt.profit;
+      pt.cumulativeBonus = runBonus;
+      pt.cumulativeProfit = runProfit;
+    });
+
+    return dataPoints;
+  }, [dailyRewardLogs, deposits, investments, userProfile?.signupBonus]);
+
+  // Determine if there has been high yield / high growth detected (e.g. peak combined daily yield exceeds 0.08 USD)
+  const hasHighGrowth = useMemo(() => {
+    if (!bonusAndProfitChartData || bonusAndProfitChartData.length === 0) return false;
+    const maxDayYield = Math.max(...bonusAndProfitChartData.map(pt => pt.bonus + pt.profit));
+    // High Growth threshold: active staking/rewards exceeding 0.08 equivalent base units
+    return maxDayYield >= 0.08;
+  }, [bonusAndProfitChartData]);
+
   // Compute Referrals Data for the last 7 days for the new bar chart
   const referralChartData = useMemo(() => {
     const data: { day: string; earnings: number; fullDate: string }[] = [];
@@ -713,8 +910,26 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.4 }}
-      className="w-full max-w-2xl bg-[#111111] rounded-3xl border border-white/5 shadow-2xl shadow-[#020202]/80 overflow-hidden text-[#E5E7EB]"
+      className="w-full max-w-2xl bg-[#111111] rounded-3xl border border-white/5 shadow-2xl shadow-[#020202]/80 overflow-hidden text-[#E5E7EB] relative"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
+      {/* Pull down refresh indicator */}
+      <div 
+        className="overflow-hidden transition-all duration-200 flex items-center justify-center bg-[#070707] border-b border-white/5 relative z-50 text-[#D4AF37]"
+        style={{ height: pullDistance > 0 || pullStatus === 'refreshing' ? `${Math.max(pullDistance, pullStatus === 'refreshing' ? 50 : 0)}px` : '0px' }}
+      >
+        <div className="flex items-center gap-2.5 py-2.5">
+          <RefreshCw className={`w-3.5 h-3.5 ${pullStatus === 'refreshing' ? 'animate-spin' : ''}`} style={{ transform: pullStatus !== 'refreshing' ? `rotate(${pullDistance * 6}deg)` : undefined }} />
+          <span className="text-[9px] uppercase tracking-[0.18em] font-sans font-bold">
+            {pullStatus === 'pulling' && 'Pull down to refresh'}
+            {pullStatus === 'ready' && 'Release to refresh'}
+            {pullStatus === 'refreshing' && 'Refreshing user secure state...'}
+          </span>
+        </div>
+      </div>
+
       {/* Header with User summary */}
       <div 
         className="bg-[#0C0C0C] border-b border-white/5 p-6 md:p-8 relative overflow-hidden"
@@ -761,6 +976,18 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               </select>
               <span className="text-white/30 text-[7px] pointer-events-none absolute right-2">▼</span>
             </div>
+
+            {onRefresh && (
+              <button
+                onClick={handleManualRefresh}
+                disabled={isRefreshing}
+                className="px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/10 hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/5 text-white/60 hover:text-[#D4AF37] transition-all cursor-pointer flex items-center gap-1.5 bg-black/40 h-8 disabled:opacity-50"
+                title="Force sync stats from database"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Refreshing' : 'Refresh'}
+              </button>
+            )}
 
             {onSignOut && (
               <button
@@ -894,20 +1121,27 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   }`}>
                     {currencySymbol}<motion.span key={currency}>{animatedBalanceDisplay}</motion.span>
                   </div>
-                  <div className={`text-[8.5px] font-medium flex items-center gap-1 z-10 leading-normal transition-all duration-300 ${
+                  <div className={`text-[8.5px] font-medium flex items-center justify-between gap-1 z-10 leading-normal transition-all duration-300 ${
                     flashType === 'up'
                       ? 'text-emerald-300 animate-pulse'
                       : flashType === 'down'
                       ? 'text-rose-300 animate-pulse'
                       : 'text-emerald-400'
                   }`}>
-                    <TrendingUp className="w-2.5 h-2.5 shrink-0" /> {
-                      flashType === 'up'
-                        ? 'Yield auto-ledger updated'
-                        : flashType === 'down'
-                        ? 'Funds debited successfully'
-                        : 'Real-time active ledger'
-                    }
+                    <span className="flex items-center gap-1">
+                      <TrendingUp className="w-2.5 h-2.5 shrink-0" /> {
+                        flashType === 'up'
+                          ? 'Yield auto-ledger updated'
+                          : flashType === 'down'
+                          ? 'Funds debited successfully'
+                          : 'Real-time active ledger'
+                      }
+                    </span>
+                    {hasHighGrowth && (
+                      <span className="px-1.5 py-0.5 rounded text-[7.5px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 animate-pulse shrink-0">
+                        High Growth
+                      </span>
+                    )}
                   </div>
                 </motion.div>
 
@@ -1025,6 +1259,132 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         strokeWidth={2}
                         dot={{ r: 3, stroke: '#111111', strokeWidth: 1, fill: '#D4AF37' }}
                         activeDot={{ r: 5, stroke: '#111111', strokeWidth: 1.5, fill: '#D4AF37' }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Yield & Reward Analytics: Daily Check-In Bonus vs Staking Dividends Trend */}
+              <div className="bg-white/[0.02] rounded-2xl border border-white/5 p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="space-y-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-[11px] uppercase tracking-wider font-sans font-semibold text-white/40">Yield & Reward Analytics</h4>
+                      {hasHighGrowth && (
+                        <span 
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.15)] animate-pulse"
+                          title={`Peak daily yield has exceeded ${currencySymbol}${(0.08 * conversionRate).toFixed(2)}`}
+                        >
+                          <TrendingUp className="w-2.5 h-2.5 animate-bounce" /> High Growth Detected
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-white/30 leading-none">Daily check-in bonuses vs. active staking dividends over time</p>
+                  </div>
+                  <div className="flex items-center gap-3 self-start sm:self-center">
+                    <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-[#D4AF37]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+                      Bonus Trend
+                    </span>
+                    <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-emerald-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Staking Yield
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="h-44 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={bonusAndProfitChartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke="rgba(255,255,255,0.2)" 
+                        fontSize={9} 
+                        tickLine={false} 
+                        axisLine={false}
+                        dy={8}
+                      />
+                      <YAxis 
+                        stroke="rgba(255,255,255,0.2)" 
+                        fontSize={9} 
+                        tickLine={false} 
+                        axisLine={false}
+                        tickFormatter={(val) => `${currencySymbol.trim()}${(val * conversionRate).toFixed(1)}`}
+                      />
+                      <Tooltip 
+                        cursor={{ stroke: 'rgba(215, 175, 52, 0.1)', strokeWidth: 1 }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const bonusAccum = Number(payload[0]?.value) || 0;
+                            const profitAccum = Number(payload[1]?.value) || 0;
+                            const d = payload[0]?.payload || {};
+                            return (
+                              <div className="bg-[#121212] border border-white/10 p-3 rounded-xl shadow-2xl font-sans text-xs space-y-1.5 min-w-[170px]">
+                                <p className="text-white/40 font-bold uppercase tracking-widest text-[8px] mb-1">
+                                  {d.date} Performance
+                                </p>
+                                <div className="flex items-center justify-between gap-4">
+                                  <span className="text-white/60 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" /> Daily Bonus:
+                                  </span>
+                                  <span className="text-[#D4AF37] font-mono font-bold">
+                                    {currencySymbol}{(d.bonus * conversionRate).toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                  <span className="text-white/60 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Staking Yield:
+                                  </span>
+                                  <span className="text-emerald-400 font-mono font-bold">
+                                    {currencySymbol}{(d.profit * conversionRate).toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="border-t border-white/5 pt-1.5 space-y-1">
+                                  <div className="flex items-center justify-between gap-4 text-[10px]">
+                                    <span className="text-white/40 font-semibold">Bonus Total:</span>
+                                    <span className="text-[#D4AF37] font-bold font-mono">
+                                      {currencySymbol}{(bonusAccum * conversionRate).toFixed(2)}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-4 text-[10px]">
+                                    <span className="text-white/40 font-semibold">Staking Total:</span>
+                                    <span className="text-emerald-400 font-bold font-mono">
+                                      {currencySymbol}{(profitAccum * conversionRate).toFixed(2)}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-4 text-[10px] border-t border-white/5 pt-1">
+                                    <span className="text-white/60 font-semibold">Aggregate Profit:</span>
+                                    <span className="text-white font-bold font-mono">
+                                      {currencySymbol}{((bonusAccum + profitAccum) * conversionRate).toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                        wrapperStyle={{ outline: 'none' }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="cumulativeBonus" 
+                        name="Bonus Rewards"
+                        stroke="#D4AF37" 
+                        strokeWidth={2}
+                        dot={{ r: 2.5, stroke: '#111111', strokeWidth: 1, fill: '#D4AF37' }}
+                        activeDot={{ r: 4.5, stroke: '#111111', strokeWidth: 1.5, fill: '#D4AF37' }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="cumulativeProfit" 
+                        name="Staking Profits"
+                        stroke="#10b981" 
+                        strokeWidth={2}
+                        dot={{ r: 2.5, stroke: '#111111', strokeWidth: 1, fill: '#10b981' }}
+                        activeDot={{ r: 4.5, stroke: '#111111', strokeWidth: 1.5, fill: '#10b981' }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
