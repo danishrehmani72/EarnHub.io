@@ -68,6 +68,8 @@ interface AdminPanelProps {
   onAddToast: (message: string, type: 'success' | 'error', sound?: any) => void;
   currentUserId: string;
   isBypassed?: boolean;
+  onLockBypass?: () => void;
+  virtualDays?: number;
 }
 
 interface AdminUser {
@@ -99,7 +101,7 @@ interface AuditLog {
   ip?: string;
 }
 
-export default function AdminPanel({ onAddToast, currentUserId, isBypassed = false }: AdminPanelProps) {
+export default function AdminPanel({ onAddToast, currentUserId, isBypassed = false, onLockBypass, virtualDays = 0 }: AdminPanelProps) {
   // Authentication states
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(isBypassed);
   const [adminUserId, setAdminUserId] = useState('');
@@ -1044,6 +1046,22 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             <span>Force Sync</span>
           </button>
 
+          {/* Secure Administrative Lock Bypass Revocation */}
+          {onLockBypass && (
+            <button 
+              type="button"
+              onClick={() => {
+                onLockBypass();
+                onAddToast("Power Lock: Secure governance session locked.", "success", "withdrawal_approved");
+              }}
+              className="p-2 py-1.5 rounded-xl border border-rose-500/10 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-all cursor-pointer flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-extrabold shadow-md shadow-black/45"
+              title="Lock Console and clear bypass cookie"
+            >
+              <Lock className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+              <span>Lock Console</span>
+            </button>
+          )}
+
           {/* URGENT NOTIFICATIONS ACTION HUB */}
           <div className="relative">
             <button
@@ -1639,6 +1657,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                   
                 const elapsedMs = Math.max(0, endTime - startTime);
                 const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
+                const totalDays = elapsedDaysReal + (processPlan.status === 'active' ? virtualDays : 0);
                 
                 let percent = 0;
                 if (processPlan.amount >= 100) percent = 7;
@@ -1647,7 +1666,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                 else if (processPlan.amount >= 5) percent = 3;
                 
                 const dailyRate = processPlan.amount * (percent / 100);
-                const profit = elapsedDaysReal * dailyRate;
+                const profit = totalDays * dailyRate;
                 return sum + (profit > 0 ? profit : 0);
               }, 0);
 

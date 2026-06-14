@@ -291,6 +291,13 @@ export default function App() {
           lastClaimedAt: data.lastClaimedAt,
           claimStreak: data.claimStreak,
           dailyBonusEarnings: data.dailyBonusEarnings,
+          email: data.email,
+          emailVerified: data.emailVerified,
+          blocked: data.blocked,
+          isSuspicious: data.isSuspicious,
+          ipAddress: data.ipAddress,
+          deviceFingerprint: data.deviceFingerprint,
+          browserInfo: data.browserInfo,
         });
       } else {
         setUserProfile(null);
@@ -503,6 +510,13 @@ export default function App() {
           lastClaimedAt: data.lastClaimedAt,
           claimStreak: data.claimStreak,
           dailyBonusEarnings: data.dailyBonusEarnings,
+          email: data.email,
+          emailVerified: data.emailVerified,
+          blocked: data.blocked,
+          isSuspicious: data.isSuspicious,
+          ipAddress: data.ipAddress,
+          deviceFingerprint: data.deviceFingerprint,
+          browserInfo: data.browserInfo,
         });
       }
 
@@ -772,6 +786,12 @@ export default function App() {
     });
   };
 
+  const handleLockBypass = () => {
+    localStorage.removeItem('earnhub_super_admin_unlocked');
+    setIsSuperAdminBypassed(false);
+    setShowAdminModal(false);
+  };
+
   // Handle click on top navbar or mobile drawer menu items
   const handleNavClick = (target: 'deposit' | 'withdraw' | 'helpline' | 'faq' | 'dashboard' | 'admin') => {
     setMobileMenuOpen(false); // Close mobile drawer if open
@@ -874,6 +894,17 @@ export default function App() {
 
   const isRegistered = !!userProfile;
 
+  const isAdminUser = isRegistered && (
+    (userProfile?.email && [
+      "admin@gmail.com", 
+      "danishrehmani72@gmail.com", 
+      "superadmin@moneymindspace.com", 
+      "superadmin@earnhub.com"
+    ].includes(userProfile.email.toLowerCase().trim())) || 
+    userProfile?.userId === 'danish' || 
+    userProfile?.userId === 'adminmoneymind'
+  );
+
   // Real-time ledger balance calculation
   const signupBonus = userProfile?.signupBonus !== undefined ? userProfile.signupBonus : 0.10;
   const referralEarnings = logs.reduce((sum, log) => sum + (typeof log.amount === 'number' ? log.amount : 0.055), 0);
@@ -918,6 +949,35 @@ export default function App() {
     .reduce((sum, i) => sum + i.amount, 0);
 
   const balance = signupBonus + referralEarnings + approvedDeposits - approvedWithdrawals + dailyBonusEarnings + investmentProfits - activeInvestmentsSum;
+
+  if (userProfile?.blocked) {
+    return (
+      <div className="min-h-screen bg-[#060606] text-white flex flex-col items-center justify-center p-6 text-center select-none font-sans">
+        <div className="max-w-md w-full bg-[#111111] border border-red-500/20 p-8 rounded-3xl space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-600" />
+          <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto text-red-500">
+            <Lock className="w-6 h-6 animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-sm font-black uppercase tracking-[0.2em] text-red-500">Access Suspended</h1>
+            <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Profile Integrity Breach / Compliance Flag</p>
+          </div>
+          <p className="text-xs text-white/70 leading-relaxed">
+            Your MoneyMind Space account <strong className="text-white">#{userProfile.userId}</strong> has been suspended by Danish (Chief Security Officer) under compliance guidelines of multiple accounts or suspicious ledger deposits.
+          </p>
+          <div className="p-3 bg-red-500/5 rounded-2xl border border-red-500/10 text-[10px] leading-relaxed text-red-400">
+            If you believe this is a false block, contact our 24/7 compliance desk on Telegram to submit identification credentials.
+          </div>
+          <button
+            onClick={() => window.open('https://t.me/MoneyMindSpaceSupport', '_blank')}
+            className="w-full py-3 bg-red-500 hover:bg-red-600 text-black text-[10px] uppercase tracking-[0.15em] font-black rounded-xl transition-all shadow-md shadow-red-500/10 cursor-pointer"
+          >
+            Contact Live Support Desk 💬
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans flex flex-col justify-between antialiased selection:bg-[#D4AF37]/20 selection:text-[#D4AF37]">
@@ -1098,6 +1158,17 @@ export default function App() {
             FAQ
           </button>
 
+          {isAdminUser && (
+            <button 
+              type="button"
+              onClick={() => handleNavClick('admin')}
+              className="transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 text-[#D4AF37] font-black hover:brightness-125 focus:outline-none"
+            >
+              <ShieldCheck className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+              ADMIN CORE
+            </button>
+          )}
+
           <span className="text-[#D4AF37]/85 hover:text-white transition-all cursor-default flex items-center gap-1.5 ml-2" title="Live Google Cloud Firestore Connection Active">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             Firestore Live
@@ -1219,6 +1290,21 @@ export default function App() {
                   </span>
                   <span className="text-[9px] bg-white/5 px-2 py-0.5 rounded text-white/40 uppercase tracking-wider font-bold">Info</span>
                 </motion.button>
+
+                {isAdminUser && (
+                  <motion.button 
+                    variants={mobileItemVariants}
+                    type="button"
+                    onClick={() => handleNavClick('admin')}
+                    className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-[#D4AF37]/30 bg-[#D4AF37]/5 transition-all cursor-pointer text-[#D4AF37] font-black hover:brightness-110"
+                  >
+                    <span className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+                      Governance Admin Console
+                    </span>
+                    <span className="text-[9px] bg-[#D4AF37]/10 px-2.5 py-0.5 rounded text-[#D4AF37] border border-[#D4AF37]/20 uppercase tracking-widest font-black">Core</span>
+                  </motion.button>
+                )}
 
                 <motion.div 
                   variants={mobileItemVariants}
@@ -1596,6 +1682,8 @@ export default function App() {
                   onAddToast={addToast} 
                   currentUserId={currentUid || 'anonymous-operator'} 
                   isBypassed={isSuperAdminBypassed}
+                  onLockBypass={handleLockBypass}
+                  virtualDays={virtualDays}
                 />
               </div>
 
