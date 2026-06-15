@@ -71,6 +71,11 @@ interface DashboardCardProps {
   onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq') => void;
   dailyRewardLogs?: DailyRewardLog[];
   onRefresh?: () => Promise<void>;
+  globalSettings?: {
+    yieldMultiplier: number;
+    systemAnnouncement: string;
+    isAnnouncementActive: boolean;
+  };
 }
 
 export default function DashboardCard({
@@ -98,9 +103,27 @@ export default function DashboardCard({
   onActiveTabChange,
   dailyRewardLogs = [],
   onRefresh,
+  globalSettings,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
   const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq'>('overview');
+
+  // Interactive Simulator States
+  const [calcAmount, setCalcAmount] = useState(25);
+  const [calcDays, setCalcDays] = useState(30);
+
+  // Real-time projected yield calculation
+  const calculatedProjProfit = useMemo(() => {
+    let percent = 0;
+    if (calcAmount >= 100) percent = 7;
+    else if (calcAmount >= 50) percent = 5;
+    else if (calcAmount >= 15) percent = 4;
+    else if (calcAmount >= 5) percent = 3;
+
+    const baseDailyRate = calcAmount * (percent / 100);
+    const activeMultiplier = globalSettings?.yieldMultiplier || 1.0;
+    return baseDailyRate * calcDays * activeMultiplier;
+  }, [calcAmount, calcDays, globalSettings?.yieldMultiplier]);
   
   // High fidelity successful withdraw animation states (TikTok/YouTube friendly)
   const [recentSuccessWithdraw, setRecentSuccessWithdraw] = useState<{amount: number, network: string, wallet: string} | null>(null);
@@ -685,7 +708,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           else if (dep.amount >= 15) percent = 4;
           else if (dep.amount >= 5) percent = 3;
 
-          const dailyRate = dep.amount * (percent / 100);
+          const dailyRate = dep.amount * (percent / 100) * (globalSettings?.yieldMultiplier || 1.0);
 
           if (dailyRate > 0) {
             for (let i = 1; i <= totalDays; i++) {
@@ -929,6 +952,22 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           </span>
         </div>
       </div>
+
+      {/* SECURITY / SYSTEM LIVE BROADCAST ANNOUNCEMENT LEVEL 1 MARQUEE */}
+      {globalSettings?.isAnnouncementActive && globalSettings?.systemAnnouncement && (
+        <div className="bg-[#1a140b] border-b border-amber-500/10 px-4 py-2.5 flex items-center gap-3 relative overflow-hidden z-20 shrink-0 font-sans">
+          <div className="absolute top-0 left-0 w-1 md:w-1.5 h-full bg-[#D4AF37]" />
+          <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0 animate-pulse" />
+          <div className="flex-1 overflow-hidden relative">
+            <div className="animate-marquee whitespace-nowrap text-[10px] font-bold text-amber-200 tracking-wider">
+              {globalSettings.systemAnnouncement}
+            </div>
+          </div>
+          <span className="text-[7.5px] font-mono font-black text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/25 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 select-none">
+            Live Promo {globalSettings.yieldMultiplier > 1.0 ? `x${globalSettings.yieldMultiplier}` : "Broadcast"}
+          </span>
+        </div>
+      )}
 
       {/* Header with User summary */}
       <div 
@@ -1204,6 +1243,98 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 currencySymbol={currencySymbol}
                 conversionRate={conversionRate}
               />
+
+              {/* LIVE STAKING PROJECTOR & INTEREST ESTIMATOR */}
+              <div className="bg-[#121212]/50 border border-white/5 rounded-3xl p-5 md:p-6 space-y-4 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                  <div className="space-y-0.5 text-left">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] animate-pulse" />
+                      Dynamic Staking Yield Estimator
+                    </h4>
+                    <p className="text-[8.5px] text-white/40 font-sans">Simulate and project your future earnings in real-time</p>
+                  </div>
+                  {globalSettings && globalSettings.yieldMultiplier > 1.0 && (
+                    <span className="text-[7px] font-mono font-black text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider animate-bounce select-none">
+                      Promo Active: {globalSettings.yieldMultiplier}x Boost!
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-5">
+                  {/* Slider 1: Amount */}
+                  <div className="space-y-1.5 text-left">
+                    <div className="flex items-center justify-between text-[9px] font-bold text-white/50 uppercase tracking-wider font-sans">
+                      <span>Staking Capital Amount</span>
+                      <span className="text-[#D4AF37] font-mono text-[11px] font-black">
+                        {currencySymbol}{(calcAmount * conversionRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <input 
+                      type="range"
+                      min="5"
+                      max="1000"
+                      step="5"
+                      value={calcAmount}
+                      onChange={(e) => setCalcAmount(Number(e.target.value))}
+                      className="w-full accent-[#D4AF37] bg-black/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[7px] font-mono text-white/30">
+                      <span>Min: {currencySymbol}{(5 * conversionRate).toFixed(2)}</span>
+                      <span>Mid: {currencySymbol}{(500 * conversionRate).toFixed(2)}</span>
+                      <span>Max: {currencySymbol}{(1000 * conversionRate).toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Slider 2: Duration */}
+                  <div className="space-y-1.5 text-left">
+                    <div className="flex items-center justify-between text-[9px] font-bold text-white/50 uppercase tracking-wider font-sans">
+                      <span>Lock-in Duration (Days)</span>
+                      <span className="text-[#D4AF37] font-mono text-[11px] font-black">
+                        {calcDays} Days
+                      </span>
+                    </div>
+                    <input 
+                      type="range"
+                      min="1"
+                      max="365"
+                      step="1"
+                      value={calcDays}
+                      onChange={(e) => setCalcDays(Number(e.target.value))}
+                      className="w-full accent-[#D4AF37] bg-black/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[7px] font-mono text-white/30">
+                      <span>1 Day</span>
+                      <span>180 Days</span>
+                      <span>365 Days</span>
+                    </div>
+                  </div>
+
+                  {/* Summary output table cards */}
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <div className="bg-black/40 border border-white/5 rounded-2xl p-3 text-left space-y-1">
+                      <span className="text-[7.5px] uppercase tracking-widest font-black text-white/40 font-sans block">Dynamic Daily Yield</span>
+                      <p className="text-[12px] font-serif font-bold text-white leading-tight">
+                        {currencySymbol}{(( (calcAmount >= 100 ? 0.07 : calcAmount >= 50 ? 0.05 : calcAmount >= 15 ? 0.04 : 0.03) * calcAmount * (globalSettings?.yieldMultiplier || 1.0) ) * conversionRate).toFixed(2)}
+                      </p>
+                      <span className="text-[6.5px] font-mono text-[#D4AF37]/85 block">
+                        Based on {calcAmount >= 100 ? "7%" : calcAmount >= 50 ? "5%" : calcAmount >= 15 ? "4%" : "3%"} Plan tier rate
+                      </span>
+                    </div>
+
+                    <div className="bg-[#1c160c]/35 border border-amber-500/10 rounded-2xl p-3 text-left space-y-1">
+                      <span className="text-[7.5px] uppercase tracking-widest font-black text-[#D4AF37]/65 font-sans block">Total Est. Staking Gains</span>
+                      <p className="text-[13px] font-serif font-black text-amber-400 leading-tight">
+                        {currencySymbol}{(calculatedProjProfit * conversionRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      <span className="text-[6.5px] font-mono text-white/30 block">
+                        Capital return after {calcDays}d
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Dynamic Earnings Growth Over Time Chart */}
               <div className="bg-white/[0.02] rounded-2xl border border-white/5 p-5 space-y-4">

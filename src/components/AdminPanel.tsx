@@ -70,6 +70,11 @@ interface AdminPanelProps {
   isBypassed?: boolean;
   onLockBypass?: () => void;
   virtualDays?: number;
+  globalSettings?: {
+    yieldMultiplier: number;
+    systemAnnouncement: string;
+    isAnnouncementActive: boolean;
+  };
 }
 
 interface AdminUser {
@@ -101,7 +106,7 @@ interface AuditLog {
   ip?: string;
 }
 
-export default function AdminPanel({ onAddToast, currentUserId, isBypassed = false, onLockBypass, virtualDays = 0 }: AdminPanelProps) {
+export default function AdminPanel({ onAddToast, currentUserId, isBypassed = false, onLockBypass, virtualDays = 0, globalSettings }: AdminPanelProps) {
   // Authentication states
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(isBypassed);
   const [adminUserId, setAdminUserId] = useState('');
@@ -145,6 +150,21 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const [overrideTarget, setOverrideTarget] = useState('');
   const [overrideLoading, setOverrideLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'security'>('dashboard');
+
+  // Dynamic Global Governance & Promo settings hook values
+  const [formYieldMultiplier, setFormYieldMultiplier] = useState(1.0);
+  const [formAnnouncementText, setFormAnnouncementText] = useState('');
+  const [formIsBannerActive, setFormIsBannerActive] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Sync state with incoming database updates from prop
+  useEffect(() => {
+    if (globalSettings) {
+      setFormYieldMultiplier(globalSettings.yieldMultiplier || 1.0);
+      setFormAnnouncementText(globalSettings.systemAnnouncement || '');
+      setFormIsBannerActive(globalSettings.isAnnouncementActive || false);
+    }
+  }, [globalSettings]);
 
   // Modernized dashboard state additions
   const [activeChartTab, setActiveChartTab] = useState<'revenue' | 'registrations' | 'netflow'>('revenue');
@@ -202,6 +222,30 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const logTelegramNotify = (message: string) => {
     const timeStr = new Date().toLocaleTimeString();
     setTelegramLogs(prev => [{ msg: message, time: timeStr }, ...prev.slice(0, 50)]);
+  };
+
+  // Persistent Save Global settings to firestore
+  const handleSaveGlobalSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      const settingsRef = doc(db, 'users', 'global_settings');
+      await setDoc(settingsRef, {
+        userId: 'global_settings',
+        name: 'Global Governance System Policy',
+        yieldMultiplier: Number(formYieldMultiplier),
+        systemAnnouncement: String(formAnnouncementText),
+        isAnnouncementActive: Boolean(formIsBannerActive)
+      }, { merge: true });
+      onAddToast("🚀 Governance policy & broadcast alert applied successfully!", "success");
+      await logAuditAction(`Administrative action: updated global yield multiplier to ${formYieldMultiplier}x, announcement active: ${formIsBannerActive}`, "system");
+      logTelegramNotify(`⚙️ Admin System Update: Adjusted Yield Multiplier to ${formYieldMultiplier}x, banner message set to "${formAnnouncementText}"`);
+    } catch (err: any) {
+      console.error(err);
+      onAddToast("Failed to write global settings to database.", "error");
+    } finally {
+      setIsSavingSettings(false);
+    }
   };
 
   // Log persistent action inside Firestore
@@ -1427,6 +1471,85 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         </div>
       )}
 
+      {/* GLOBAL GOVERNANCE & LIVE BROADCAST HUB */}
+      <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 space-y-6 relative overflow-hidden shadow-2xl">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div className="space-y-1">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+              Global Governance & Promo Broadcast Hub
+            </h4>
+            <p className="text-[9px] text-white/45 leading-relaxed">
+              Dynamically manipulate staking system yield percentages and broadcast live banner notifications to all client terminals.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[7.5px] font-mono font-black text-[#D4AF37] bg-[#D4AF37]/5 border border-[#D4AF37]/20 px-2.5 py-1 rounded-lg uppercase tracking-widest animate-pulse">
+              Sync Active (x{globalSettings?.yieldMultiplier || "1.0"})
+            </span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSaveGlobalSettings} className="grid grid-cols-1 md:grid-cols-12 gap-5 text-left">
+          {/* Yield Booster rate */}
+          <div className="md:col-span-4 space-y-2">
+            <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block font-sans">Staking Yield Multiplier</label>
+            <div className="relative">
+              <select
+                value={formYieldMultiplier}
+                onChange={(e) => setFormYieldMultiplier(Number(e.target.value))}
+                className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white uppercase outline-none focus:border-[#D4AF37]/35 cursor-pointer font-extrabold tracking-widest"
+              >
+                <option value="1.0">1.0x (Standard Earnings)</option>
+                <option value="1.25">1.25x (Starter Promo Boost)</option>
+                <option value="1.5">1.5x (Super Staking Yield)</option>
+                <option value="2.0">2.0x (Double Yield Weekend)</option>
+                <option value="3.0">3.0x (Triple Profit Flash Boost)</option>
+              </select>
+            </div>
+            <p className="text-[7.5px] text-[#D4AF37]/75 font-mono italic mt-1 leading-relaxed">
+              Mutates daily interest accruals of active plans instantly across all users.
+            </p>
+          </div>
+
+          {/* Broadcast news */}
+          <div className="md:col-span-8 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block font-sans">Live Broadcast Notification Message</label>
+              <label className="flex items-center gap-1.5 cursor-pointer select-none text-[8.5px] text-white/80 font-bold uppercase tracking-wider font-sans">
+                <input
+                  type="checkbox"
+                  checked={formIsBannerActive}
+                  onChange={(e) => setFormIsBannerActive(e.target.checked)}
+                  className="rounded bg-black border-white/10 text-[#D4AF37] focus:ring-0 w-3.5 h-3.5 cursor-pointer"
+                />
+                Enable Marquee Alert
+              </label>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={formAnnouncementText}
+                onChange={(e) => setFormAnnouncementText(e.target.value)}
+                placeholder="Enter alert message to broadcast to all dashboards..."
+                className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-1 text-[7.5px] text-white/35 font-mono">
+              <span>Supports live broadcast notifications instantly on client screens.</span>
+              <button
+                type="submit"
+                disabled={isSavingSettings}
+                className="px-4 py-2 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-xl uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 text-[8px] self-end md:self-auto shadow-md shadow-amber-500/10"
+              >
+                {isSavingSettings ? "Saving Settings..." : "Apply Broadcast changes 🚀"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
       {/* INCOMING MATRIX TRANSACTIONS ACTION DESK */}
       <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
@@ -1665,7 +1788,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                 else if (processPlan.amount >= 15) percent = 4;
                 else if (processPlan.amount >= 5) percent = 3;
                 
-                const dailyRate = processPlan.amount * (percent / 100);
+                const dailyRate = processPlan.amount * (percent / 100) * (globalSettings?.yieldMultiplier || 1.0);
                 const profit = totalDays * dailyRate;
                 return sum + (profit > 0 ? profit : 0);
               }, 0);

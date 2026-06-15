@@ -122,6 +122,17 @@ export default function App() {
   const [referredSource, setReferredSource] = useState<string | null>(null);
   const [inviterName, setInviterName] = useState<string | null>(null);
 
+  // Global Corporate Settings loaded from firestore (users/global_settings)
+  const [globalSettings, setGlobalSettings] = useState<{
+    yieldMultiplier: number;
+    systemAnnouncement: string;
+    isAnnouncementActive: boolean;
+  }>({
+    yieldMultiplier: 1.0,
+    systemAnnouncement: "",
+    isAnnouncementActive: false,
+  });
+
   // Load and manage simulated days offset
   const [virtualDays, setVirtualDays] = useState<number>(0);
   const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'faq'>('overview');
@@ -156,6 +167,27 @@ export default function App() {
       }
     }
     testConnection();
+  }, []);
+
+  // Real-time global settings subscription (unauthenticated users can see active announcement promo blocks too!)
+  useEffect(() => {
+    const globalSettingsRef = doc(db, 'users', 'global_settings');
+    const unsubGlobalSettings = onSnapshot(globalSettingsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setGlobalSettings({
+          yieldMultiplier: Number(data.yieldMultiplier) || 1.0,
+          systemAnnouncement: String(data.systemAnnouncement || ""),
+          isAnnouncementActive: Boolean(data.isAnnouncementActive || false),
+        });
+      }
+    }, (error) => {
+      console.warn("Global settings load failed:", error);
+    });
+
+    return () => {
+      unsubGlobalSettings();
+    };
   }, []);
 
   // Auto show introduction video modal on initial visit for non-registered users
@@ -938,7 +970,7 @@ export default function App() {
     else if (processPlan.amount >= 15) percent = 4;
     else if (processPlan.amount >= 5) percent = 3;
     
-    const dailyRate = processPlan.amount * (percent / 100);
+    const dailyRate = processPlan.amount * (percent / 100) * (globalSettings?.yieldMultiplier || 1.0);
     const profit = totalDays * dailyRate;
     return sum + (profit > 0 ? profit : 0);
   }, 0);
@@ -1455,6 +1487,7 @@ export default function App() {
                 activeTab={dashboardTab}
                 onActiveTabChange={setDashboardTab}
                 onRefresh={handleRefreshAllData}
+                globalSettings={globalSettings}
               />
               <ReferralHistory logs={logs} userId={currentUid || ''} walletBalance={balance} />
             </div>
@@ -1684,6 +1717,7 @@ export default function App() {
                   isBypassed={isSuperAdminBypassed}
                   onLockBypass={handleLockBypass}
                   virtualDays={virtualDays}
+                  globalSettings={globalSettings}
                 />
               </div>
 
