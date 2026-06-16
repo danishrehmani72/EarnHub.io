@@ -25,7 +25,9 @@ import {
   Sparkles,
   RefreshCw,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { 
@@ -45,6 +47,7 @@ import { ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog } from
 import { AvatarIcon, getAvatarConfig } from '../lib/avatars';
 
 import { PlanMatrix } from './PlanMatrix';
+import { playSound } from '../lib/sounds';
 
 interface DashboardCardProps {
   name: string;
@@ -107,6 +110,29 @@ export default function DashboardCard({
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
   const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq'>('overview');
+
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sound_muted') === 'true';
+    }
+    return false;
+  });
+
+  const toggleMuted = () => {
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sound_muted', String(nextMuted));
+    }
+    if (!nextMuted) {
+      setTimeout(() => {
+        playSound('new_referral');
+      }, 50);
+      onAddToast?.("🔊 Audio feedback enabled!", "success");
+    } else {
+      onAddToast?.("🔇 Audio feedback muted", "error");
+    }
+  };
 
   // Interactive Simulator States
   const [calcAmount, setCalcAmount] = useState(25);
@@ -1016,6 +1042,29 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               <span className="text-white/30 text-[7px] pointer-events-none absolute right-2">▼</span>
             </div>
 
+            {/* Global Audio Sound Feedback Toggle */}
+            <button
+              onClick={toggleMuted}
+              className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all cursor-pointer flex items-center gap-1.5 h-8 ${
+                isMuted
+                  ? 'border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:border-rose-500/40'
+                  : 'border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:border-emerald-500/40'
+              }`}
+              title={isMuted ? "Unmute system sounds" : "Mute system sounds"}
+            >
+              {isMuted ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">Muted</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 animate-pulse" />
+                  <span className="hidden xs:inline">Active</span>
+                </>
+              )}
+            </button>
+
             {onRefresh && (
               <button
                 onClick={handleManualRefresh}
@@ -1091,24 +1140,37 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
-
-
               {/* Dynamic Cards: Balance, Investment, Timer, Referrals */}
               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
                 
                 {/* 1. Live Wallet Balance */}
                 <motion.div 
                   id="live-wallet-balance-card" 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className={`p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden shadow-inner border transition-all duration-500 rounded-2xl ${
-                    flashType === 'up'
-                      ? 'border-emerald-500/30 bg-emerald-950/20 shadow-[0_0_25px_rgba(16,185,129,0.15)] scale-[1.01]'
-                      : flashType === 'down'
-                      ? 'border-rose-500/30 bg-rose-950/20 shadow-[0_0_25px_rgba(244,63,94,0.15)] scale-[0.99]'
-                      : 'bg-[#161616] border-white/5'
-                  }`}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                    scale: flashType === 'up' ? 1.03 : flashType === 'down' ? 0.97 : 1.0,
+                    borderColor: flashType === 'up' ? 'rgba(16,185,129,0.4)' : flashType === 'down' ? 'rgba(244,63,94,0.4)' : 'rgba(255,255,255,0.05)',
+                    backgroundColor: flashType === 'up' ? 'rgba(16,185,129,0.1)' : flashType === 'down' ? 'rgba(244,63,94,0.1)' : 'rgba(22,22,22,1)',
+                    boxShadow: flashType === 'up' 
+                      ? '0 0 25px rgba(16,185,129,0.15), inset 0 0 10px rgba(16,185,129,0.1)' 
+                      : flashType === 'down' 
+                      ? '0 0 25px rgba(244,63,94,0.15), inset 0 0 10px rgba(244,63,94,0.1)' 
+                      : '0 0 0px rgba(0,0,0,0)'
+                  }}
+                  exit={{ opacity: 0, scale: 0.92, y: -15 }}
+                  whileHover={{ y: -3, scale: 1.015, transition: { duration: 0.2 } }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 260, 
+                    damping: 20,
+                    delay: 0.04,
+                    layout: { type: "spring", stiffness: 350, damping: 25 }
+                  }}
+                  className="p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden shadow-inner border rounded-2xl cursor-pointer"
                 >
                   <div className={`absolute -top-4 -right-4 pointer-events-none transition-colors duration-500 ${
                     flashType === 'up'
@@ -1131,15 +1193,50 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       <DollarSign className="w-3 h-3" />
                     </div>
                   </div>
-                  <div className={`my-1 text-2xl font-serif tracking-tight z-10 flex items-baseline transition-all duration-300 ${
-                    flashType === 'up'
-                      ? 'text-emerald-400 drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                      : flashType === 'down'
-                      ? 'text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-                      : 'text-[#D4AF37]'
-                  }`}>
-                    {currencySymbol}<motion.span key={currency}>{animatedBalanceDisplay}</motion.span>
-                  </div>
+                  <motion.div 
+                    layout="position"
+                    className={`my-1 text-2xl font-serif tracking-tight z-10 flex items-center gap-1.5 transition-all duration-300 ${
+                      flashType === 'up'
+                        ? 'text-emerald-400 drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                        : flashType === 'down'
+                        ? 'text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+                        : 'text-[#D4AF37]'
+                    }`}
+                  >
+                    <span>{currencySymbol}</span>
+                    <motion.span 
+                      key={`${currency}-${balance}`} 
+                      initial={{ scale: 0.95, filter: "brightness(1.2)" }}
+                      animate={{ scale: 1, filter: "brightness(1)" }}
+                      transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                      layout="position"
+                    >
+                      {animatedBalanceDisplay}
+                    </motion.span>
+
+                    <AnimatePresence>
+                      {flashType === 'up' && (
+                        <motion.span
+                          initial={{ opacity: 0, x: -5, scale: 0.8 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          exit={{ opacity: 0, x: 5, scale: 0.8 }}
+                          className="text-[8px] font-mono font-black text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-1 rounded select-none uppercase tracking-widest leading-none py-0.5 ml-1"
+                        >
+                          +IN
+                        </motion.span>
+                      )}
+                      {flashType === 'down' && (
+                        <motion.span
+                          initial={{ opacity: 0, x: -5, scale: 0.8 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          exit={{ opacity: 0, x: 5, scale: 0.8 }}
+                          className="text-[8px] font-mono font-black text-rose-400 bg-rose-500/15 border border-rose-500/30 px-1 rounded select-none uppercase tracking-widest leading-none py-0.5 ml-1"
+                        >
+                          -OUT
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
                   <div className={`text-[8.5px] font-medium flex items-center justify-between gap-1 z-10 leading-normal transition-all duration-300 ${
                     flashType === 'up'
                       ? 'text-emerald-300 animate-pulse'
@@ -1166,10 +1263,18 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                 {/* 2. Next Daily Payout Timer */}
                 <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
-                  className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: -15 }}
+                  whileHover={{ y: -3, scale: 1.015 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 260, 
+                    damping: 20, 
+                    delay: 0.12 
+                  }}
+                  className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden cursor-pointer hover:border-white/10 transition-colors"
                 >
                   <div className="absolute -top-4 -right-4 text-white/5 pointer-events-none font-black text-6xl select-none">
                     T
@@ -1191,10 +1296,18 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                 {/* 3. Total Referrals */}
                 <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.16, ease: "easeOut" }}
-                  className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: -15 }}
+                  whileHover={{ y: -3, scale: 1.015 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 260, 
+                    damping: 20, 
+                    delay: 0.20 
+                  }}
+                  className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden cursor-pointer hover:border-white/10 transition-colors"
                 >
                   <div className="absolute -top-4 -right-4 text-white/5 pointer-events-none">
                     <Users className="w-20 h-20" />

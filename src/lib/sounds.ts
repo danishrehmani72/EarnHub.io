@@ -30,6 +30,11 @@ function getAudioContext(): AudioContext | null {
  */
 export function playSound(type: 'deposit_submitted' | 'withdrawal_approved' | 'new_referral') {
   try {
+    // Intercept if sounds are muted globally
+    if (typeof window !== 'undefined' && localStorage.getItem('sound_muted') === 'true') {
+      return;
+    }
+
     const ctx = getAudioContext();
     if (!ctx) return;
 
