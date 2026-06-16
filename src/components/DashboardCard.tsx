@@ -1091,27 +1091,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
-              {/* Premium Corporate Financial Welcome Banner */}
-              <div className="bg-gradient-to-r from-[#D4AF37]/15 via-[#8A6D3B]/5 to-transparent border border-[#D4AF37]/15 rounded-2xl p-5 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-[#D4AF37]">
-                    <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <span className="text-[9px] uppercase font-bold tracking-[0.2em] font-sans">Secure Financial Dashboard</span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-white font-sans">
-                    Track your performance and manage your budget with MoneyMind Space.
-                  </h3>
-                  <p className="text-xs text-white/50 leading-relaxed max-w-xl">
-                    Your active accounts are secure in the tracking ledger. Monitor progress, customize your settings, and evaluate secure ledger balances on our smart dashboard safely 24/7.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 self-start md:self-center">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 font-mono">
-                    Staking Matrix Live
-                  </span>
-                </div>
-              </div>
+
 
               {/* Dynamic Cards: Balance, Investment, Timer, Referrals */}
               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
