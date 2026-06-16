@@ -25,6 +25,7 @@ import DashboardCard from './components/DashboardCard';
 import ReferralHistory from './components/ReferralHistory';
 import AdminPanel from './components/AdminPanel';
 import LiveChatBot from './components/LiveChatBot';
+import { AdsterraBanner } from './components/AdsterraBanner';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
 import earnhubLogo from './assets/images/earnhub_logo_1780161493423.png';
@@ -1434,13 +1435,16 @@ export default function App() {
               </div>
 
               {/* Secure Registration / Access Form Column */}
-              <div id="registration-container" className="lg:col-span-5 flex justify-center lg:justify-end w-full scroll-mt-24 transition-all duration-300 rounded-3xl">
+              <div id="registration-container" className="lg:col-span-5 flex flex-col items-center lg:items-end gap-6 w-full scroll-mt-24 transition-all duration-300 rounded-3xl">
                 <RegistrationCard 
                   referredBy={referredBy} 
                   referredSource={referredSource}
                   inviterName={inviterName} 
                   onLoginSuccess={(userId) => setCurrentUid(userId)} 
                 />
+                <div className="w-full max-w-sm">
+                  <AdsterraBanner />
+                </div>
               </div>
             </div>
           ) : (
