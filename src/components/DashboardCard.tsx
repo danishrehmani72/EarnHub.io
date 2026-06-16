@@ -51,6 +51,7 @@ import { AvatarIcon, getAvatarConfig } from '../lib/avatars';
 import { PlanMatrix } from './PlanMatrix';
 import { playSound } from '../lib/sounds';
 import { AdsterraBanner } from './AdsterraBanner';
+import { AdsterraNativeBanner } from './AdsterraNativeBanner';
 
 interface DashboardCardProps {
   name: string;
@@ -2079,6 +2080,11 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </a>
                   </div>
                 </div>
+              </div>
+
+              {/* Adsterra Native Recommendation Banner */}
+              <div className="mt-8">
+                <AdsterraNativeBanner />
               </div>
             </motion.div>
           )}
