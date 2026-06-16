@@ -1840,24 +1840,40 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               <div className="bg-[#121212] border border-emerald-500/15 rounded-2xl p-5 relative overflow-hidden space-y-4 shadow-[0_0_30px_rgba(16,185,129,0.03)] text-left">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
                 
-                <div className="flex flex-col md:flex-row items-start justify-between gap-4">
-                  <div className="space-y-1.5 flex-1">
-                    <div className="flex items-center gap-1.5 text-emerald-400">
-                      <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
-                      <span className="text-[9px] uppercase font-bold tracking-[0.2em] font-sans">Sponsored Network Node Booster</span>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-1.5 text-emerald-400">
+                    <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
+                    <span className="text-[9px] uppercase font-bold tracking-[0.2em] font-sans">📢 Sponsored Partner Bonus</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-white tracking-wide">
+                    Premium AD Earning Network
+                  </h3>
+                  <p className="text-xs text-white/50 leading-relaxed">
+                    We occasionally collaborate with advertising partners to provide extra earning opportunities for our members. Click below to complete the sponsored visit and claim supplementary yield.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono text-white/70 bg-black/40 border border-white/5 rounded-xl p-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                      <span>Reward: <strong className="text-emerald-400">{currencySymbol}{(0.05 * conversionRate).toFixed(2)} per task</strong></span>
                     </div>
-                    <h3 className="text-sm font-bold text-white tracking-wide">
-                      Instant Liquidity Speed & Ad-Revenue Micro-Dividends
-                    </h3>
-                    <p className="text-xs text-white/50 leading-relaxed">
-                      Visit our premium sponsored Global Core Node! Contributing to third-party traffic boosts our system's ad-revenue capacity which Danish uses to disburse rapid payouts. Clicking and verifying successful visit grants you a <strong>+{currencySymbol}{(0.05 * conversionRate).toFixed(2)} ad-bonus speed credential</strong> updated on your active ledger! (Cooldown: 12 Hours)
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                      <span>Availability: <strong>Once every 12 hours</strong></span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                      <span>Status: <strong>Automatic verification & crediting</strong></span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                      <span>Requirement: <strong>No purchase or deposit required</strong></span>
+                    </div>
                   </div>
-                  
-                  <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-xl py-1.5 px-3.5 text-right shrink-0">
-                    <span className="text-[8px] text-emerald-400/70 uppercase block font-semibold leading-none mb-1">Booster Tier</span>
-                    <span className="text-xs font-mono font-black text-emerald-400">⚡ +{currencySymbol}{(0.05 * conversionRate).toFixed(2)} / Task</span>
-                  </div>
+
+                  <p className="text-[10px] text-white/40 italic">
+                    Complete the sponsored visit and receive your bonus after successful verification. Next task will become available after the cooldown period ends.
+                  </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 justify-between pt-3 border-t border-white/[0.03]">
@@ -1867,7 +1883,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     <div>
                       <span className="text-[8px] uppercase tracking-wider text-white/30 block leading-none mb-1">Booster Link Status</span>
                       <span className="text-[11px] font-mono text-white/70">
-                        {adCooldown ? `Next check-in in: ${adCooldown}` : "Node Ready for claim"}
+                        {adCooldown ? `Next task available in: ${adCooldown}` : "Node Ready for claim"}
                       </span>
                     </div>
                   </div>
@@ -1885,7 +1901,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         const boostAmt = 0.05;
                         await onClaimDailyReward(boostAmt);
                         localStorage.setItem(`earnhub_ad_cooldown_${userId}`, Date.now().toString());
-                        onAddToast(`Sponsored network check-in successful! +${currencySymbol}${(boostAmt * conversionRate).toFixed(2)} credited! ⚡`, 'success');
+                        onAddToast(`Sponsored partner bonus of ${currencySymbol}${(boostAmt * conversionRate).toFixed(2)} credited! ⚡`, 'success');
                       }
                     }}
                     className={`px-5 py-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-200 outline-none cursor-pointer w-full sm:w-auto ${
@@ -1895,7 +1911,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     }`}
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>{adCooldown ? 'Booster Cooldown' : 'Explore Sponsored Node & Claim'}</span>
+                    <span>{adCooldown ? 'Booster Cooldown' : 'Complete Visit & Claim'}</span>
                   </button>
                 </div>
               </div>
