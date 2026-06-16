@@ -1782,14 +1782,19 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                 const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
                 const totalDays = elapsedDaysReal + (processPlan.status === 'active' ? virtualDays : 0);
                 
-                let percent = 0;
-                if (processPlan.amount >= 100) percent = 7;
-                else if (processPlan.amount >= 50) percent = 5;
-                else if (processPlan.amount >= 15) percent = 4;
-                else if (processPlan.amount >= 5) percent = 3;
-                
-                const dailyRate = processPlan.amount * (percent / 100) * (globalSettings?.yieldMultiplier || 1.0);
-                const profit = totalDays * dailyRate;
+                let profit = 0;
+                const planKey = processPlan.id || String(startTime);
+                for (let day = 1; day <= totalDays; day++) {
+                  let hash = 0;
+                  const str = planKey + "_" + day;
+                  for (let idx = 0; idx < str.length; idx++) {
+                    hash = str.charCodeAt(idx) + ((hash << 5) - hash);
+                  }
+                  const index = Math.abs(hash) % 4;
+                  const rates = [1.0, 2.0, 0.1, 0.5];
+                  const dailyPercent = rates[index];
+                  profit += processPlan.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
+                }
                 return sum + (profit > 0 ? profit : 0);
               }, 0);
 

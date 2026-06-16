@@ -140,15 +140,20 @@ export default function DashboardCard({
 
   // Real-time projected yield calculation
   const calculatedProjProfit = useMemo(() => {
-    let percent = 0;
-    if (calcAmount >= 100) percent = 7;
-    else if (calcAmount >= 50) percent = 5;
-    else if (calcAmount >= 15) percent = 4;
-    else if (calcAmount >= 5) percent = 3;
-
-    const baseDailyRate = calcAmount * (percent / 100);
+    let totalProfit = 0;
     const activeMultiplier = globalSettings?.yieldMultiplier || 1.0;
-    return baseDailyRate * calcDays * activeMultiplier;
+    for (let day = 1; day <= calcDays; day++) {
+      let hash = 0;
+      const str = "calculator_" + day;
+      for (let idx = 0; idx < str.length; idx++) {
+        hash = str.charCodeAt(idx) + ((hash << 5) - hash);
+      }
+      const index = Math.abs(hash) % 4;
+      const rates = [1.0, 2.0, 0.1, 0.5];
+      const dailyPercent = rates[index];
+      totalProfit += calcAmount * (dailyPercent / 100) * activeMultiplier;
+    }
+    return totalProfit;
   }, [calcAmount, calcDays, globalSettings?.yieldMultiplier]);
   
   // High fidelity successful withdraw animation states (TikTok/YouTube friendly)
@@ -632,14 +637,25 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
   // Calculate sum of daily performance percentages of all surviving active plan deposits
   const dailyProfitRate = useMemo(() => {
     return activeInvestments.reduce((sum, inv) => {
-      let percent = 0;
-      if (inv.amount >= 100) percent = 7;
-      else if (inv.amount >= 50) percent = 5;
-      else if (inv.amount >= 15) percent = 4;
-      else if (inv.amount >= 5) percent = 3;
-      return sum + (inv.amount * (percent / 100));
+      const startTime = inv.createdAt?.seconds 
+        ? inv.createdAt.seconds * 1000 
+        : new Date(inv.timestamp).getTime() || Date.now();
+      const elapsedMs = Math.max(0, Date.now() - startTime);
+      const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
+      const currentDay = Math.max(1, elapsedDaysReal + virtualDays);
+      
+      let hash = 0;
+      const str = (inv.id || String(startTime)) + "_" + currentDay;
+      for (let idx = 0; idx < str.length; idx++) {
+        hash = str.charCodeAt(idx) + ((hash << 5) - hash);
+      }
+      const index = Math.abs(hash) % 4;
+      const rates = [1.0, 2.0, 0.1, 0.5];
+      const dailyPercent = rates[index];
+      
+      return sum + (inv.amount * (dailyPercent / 100));
     }, 0);
-  }, [activeInvestments]);
+  }, [activeInvestments, virtualDays]);
 
   const earliestActiveInvestment = useMemo(() => {
     if (activeInvestments.length === 0) return null;
@@ -728,23 +744,25 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
           const totalDays = elapsedDaysReal + virtualDays;
 
-          let percent = 0;
-          if (dep.amount >= 100) percent = 7;
-          else if (dep.amount >= 50) percent = 5;
-          else if (dep.amount >= 15) percent = 4;
-          else if (dep.amount >= 5) percent = 3;
+          for (let i = 1; i <= totalDays; i++) {
+            let hash = 0;
+            const str = (dep.id || String(depTime)) + "_" + i;
+            for (let idx = 0; idx < str.length; idx++) {
+              hash = str.charCodeAt(idx) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % 4;
+            const rates = [1.0, 2.0, 0.1, 0.5];
+            const dailyPercent = rates[index];
+            const dynamicDailyRate = dep.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
 
-          const dailyRate = dep.amount * (percent / 100) * (globalSettings?.yieldMultiplier || 1.0);
-
-          if (dailyRate > 0) {
-            for (let i = 1; i <= totalDays; i++) {
+            if (dynamicDailyRate > 0) {
               const payoutTime = depTime + i * 24 * 60 * 60 * 1000;
               const payoutDate = new Date(payoutTime);
               events.push({
                 timestamp: payoutTime,
                 dateStr: payoutDate.toLocaleDateString(),
-                amount: dailyRate,
-                label: `Daily Return (+${dailyRate.toFixed(2)})`
+                amount: dynamicDailyRate,
+                label: `Daily Return (+${dynamicDailyRate.toFixed(2)})`
               });
             }
           }
@@ -844,7 +862,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
     // Populate Investment Profits (Staking returns)
     // We scan both active plans (investments) and approved deposits (which act as staking nodes)
-    const activeAssets: { amount: number; time: number }[] = [];
+    const activeAssets: { id?: string; amount: number; time: number }[] = [];
 
     // 1. From approved deposits
     if (deposits && deposits.length > 0) {
@@ -855,7 +873,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
             ? dep.createdAt.seconds * 1000 
             : new Date(dep.timestamp).getTime() || 0;
           if (depTime) {
-            activeAssets.push({ amount: dep.amount, time: depTime });
+            activeAssets.push({ id: dep.id, amount: dep.amount, time: depTime });
           }
         });
     }
@@ -869,7 +887,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
             ? inv.createdAt.seconds * 1000 
             : new Date(inv.timestamp).getTime() || 0;
           if (invTime) {
-            activeAssets.push({ amount: inv.amount, time: invTime });
+            activeAssets.push({ id: inv.id, amount: inv.amount, time: invTime });
           }
         });
     }
@@ -884,13 +902,19 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       activeAssets.forEach((asset) => {
         // An asset generates profit starting the day after its creation
         if (targetTime > asset.time) {
-          let percent = 0;
-          if (asset.amount >= 100) percent = 7;
-          else if (asset.amount >= 50) percent = 5;
-          else if (asset.amount >= 15) percent = 4;
-          else if (asset.amount >= 5) percent = 3;
+          const elapsedMs = targetTime - asset.time;
+          const dayNumOnTargetDay = Math.floor(elapsedMs / (24 * 60 * 60 * 1000)) + 1;
 
-          dailyProfitSum += asset.amount * (percent / 100);
+          let hash = 0;
+          const str = (asset.id || String(asset.time)) + "_" + dayNumOnTargetDay;
+          for (let idx = 0; idx < str.length; idx++) {
+            hash = str.charCodeAt(idx) + ((hash << 5) - hash);
+          }
+          const index = Math.abs(hash) % 4;
+          const rates = [1.0, 2.0, 0.1, 0.5];
+          const dailyPercent = rates[index];
+
+          dailyProfitSum += asset.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
         }
       });
       pt.profit = dailyProfitSum;
