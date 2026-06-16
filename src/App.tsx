@@ -139,7 +139,6 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [openedFooterDoc, setOpenedFooterDoc] = useState<'about' | 'contact' | 'privacy' | 'terms' | null>(null);
-  const [showIntroVideo, setShowIntroVideo] = useState(false);
 
   // Hidden Super Admin access states
   const [logoClicks, setLogoClicks] = useState(0);
@@ -190,20 +189,7 @@ export default function App() {
     };
   }, []);
 
-  // Auto show introduction video modal on initial visit for non-registered users
-  useEffect(() => {
-    const loggedIn = localStorage.getItem('earnhub_logged_in_uid');
-    if (!loggedIn) {
-      const hasSeen = sessionStorage.getItem('earnhub_intro_video_viewed');
-      if (!hasSeen) {
-        const timer = setTimeout(() => {
-          setShowIntroVideo(true);
-          sessionStorage.setItem('earnhub_intro_video_viewed', 'true');
-        }, 1500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, []);
+
 
   // Toast Notification System
   const [toasts, setToasts] = useState<{id: string; message: string; type: 'success' | 'error'}[]>([]);
@@ -1409,14 +1395,6 @@ export default function App() {
                     >
                       Start Earning
                     </button>
-                    
-                    <button 
-                      onClick={() => setShowIntroVideo(true)}
-                      className="px-6 py-4 rounded-xl border border-white/10 bg-white/5 text-white font-extrabold text-xs uppercase tracking-wider hover:bg-white/10 active:scale-95 transition-all cursor-pointer flex items-center gap-2.5"
-                    >
-                      <Play className="w-4 h-4 fill-white" />
-                      Intro Video
-                    </button>
                   </div>
                 </div>
 
@@ -1803,77 +1781,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Introduction Video Modal Overlay */}
-      <AnimatePresence>
-        {showIntroVideo && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="relative w-full max-w-4xl bg-[#0C0C0C] border border-[#D4AF37]/20 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.15)] flex flex-col max-h-[85vh]"
-            >
-              {/* Modal Top header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0F0F0F]">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center justify-center text-[#D4AF37]">
-                    <Play className="w-4 h-4 fill-current animate-pulse" />
-                  </div>
-                  <div>
-                    <h2 className="text-xs uppercase font-extrabold tracking-[0.2em] text-[#D4AF37] font-sans">
-                      MoneyMind Space Overview
-                    </h2>
-                    <p className="text-[8px] text-white/30 uppercase tracking-widest leading-none mt-1">Official platform video walkthrough</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowIntroVideo(false)}
-                  className="p-2 rounded-xl border border-white/5 bg-transparent hover:bg-white/5 text-white/50 hover:text-white transition-all cursor-pointer flex items-center justify-center"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
 
-              {/* YouTube Video Embed Responsive Container */}
-              <div className="relative aspect-video w-full bg-black flex-1 flex items-center justify-center overflow-hidden">
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/Itjprahot5U?autoplay=1&rel=0"
-                  title="MoneyMind Space Introduction Video"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                ></iframe>
-              </div>
-
-              {/* Modal Footer actions */}
-              <div className="px-6 py-4 border-t border-white/5 bg-[#080808] flex items-center justify-between">
-                <p className="text-[10px] text-white/40 uppercase tracking-widest font-medium hidden sm:block">
-                  Watch to understand and maximize your financial growth
-                </p>
-                <div className="flex gap-3 w-full sm:w-auto text-[10px] font-bold tracking-widest uppercase">
-                  <button
-                    onClick={() => {
-                      setShowIntroVideo(false);
-                      document.getElementById('registration-container')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="flex-1 sm:flex-none px-5 py-2.5 bg-[#D4AF37] hover:bg-[#bfa032] text-black font-extrabold text-[10px] uppercase tracking-wider rounded-lg active:scale-95 transition-all cursor-pointer border-0"
-                  >
-                    Get Started Now
-                  </button>
-                  <button
-                    onClick={() => setShowIntroVideo(false)}
-                    className="flex-1 sm:flex-none px-4 py-2.5 border border-white/10 hover:bg-white/5 transition-all text-[10px] uppercase font-bold tracking-widest rounded-lg cursor-pointer text-white bg-transparent"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       <LiveChatBot />
 
