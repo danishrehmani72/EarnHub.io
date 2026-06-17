@@ -1784,6 +1784,8 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                 
                 let profit = 0;
                 const planKey = processPlan.id || String(startTime);
+                const maxProfitLimit = processPlan.amount * 0.20; // 20% growth cap
+
                 for (let day = 1; day <= totalDays; day++) {
                   let hash = 0;
                   const str = planKey + "_" + day;
@@ -1793,7 +1795,13 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                   const index = Math.abs(hash) % 4;
                   const rates = [1.0, 2.0, 0.1, 0.5];
                   const dailyPercent = rates[index];
-                  profit += processPlan.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
+                  const dayProfit = processPlan.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
+                  
+                  if (profit + dayProfit >= maxProfitLimit) {
+                    profit = maxProfitLimit;
+                    break;
+                  }
+                  profit += dayProfit;
                 }
                 return sum + (profit > 0 ? profit : 0);
               }, 0);

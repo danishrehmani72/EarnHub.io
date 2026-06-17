@@ -507,8 +507,64 @@ export default function App() {
     }
   }, []);
 
+  // Automated background cancellation for completed (20% growth) active plans
+  useEffect(() => {
+    if (!currentUid || !investments.length) return;
 
+    const autoCancelCompletedPlans = async () => {
+      const nowTime = Date.now();
+      for (const processPlan of investments) {
+        if (processPlan.status !== 'active') continue;
 
+        const startTime = processPlan.createdAt?.seconds 
+          ? processPlan.createdAt.seconds * 1000 
+          : new Date(processPlan.timestamp).getTime() || nowTime;
+          
+        const elapsedMs = Math.max(0, nowTime - startTime);
+        const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
+        const totalDays = elapsedDaysReal + virtualDays;
+        
+        let profit = 0;
+        const planKey = processPlan.id || String(startTime);
+        const limitProfit = processPlan.amount * 0.20;
+
+        for (let day = 1; day <= totalDays; day++) {
+          let hash = 0;
+          const str = planKey + "_" + day;
+          for (let idx = 0; idx < str.length; idx++) {
+            hash = str.charCodeAt(idx) + ((hash << 5) - hash);
+          }
+          const index = Math.abs(hash) % 4;
+          const rates = [1.0, 2.0, 0.1, 0.5];
+          const dailyPercent = rates[index];
+          const dayProfit = processPlan.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
+          
+          if (profit + dayProfit >= limitProfit) {
+            profit = limitProfit;
+            break;
+          }
+          profit += dayProfit;
+        }
+
+        // If profit reached exactly the 20% limit, cancel the plan automatically and return the principal
+        if (profit >= limitProfit) {
+          try {
+            const invRef = doc(db, 'users', currentUid, 'investments', processPlan.id);
+            await setDoc(invRef, {
+              status: 'cancelled',
+              cancelledAt: serverTimestamp()
+            }, { merge: true });
+            
+            addToast(`Investment plan reached 20% growth limit! Principal $${processPlan.amount.toFixed(2)} has been returned to your wallet. ⚡`, 'success');
+          } catch (e) {
+            console.error("Auto cancel error:", e);
+          }
+        }
+      }
+    };
+
+    autoCancelCompletedPlans();
+  }, [currentUid, investments, virtualDays, globalSettings]);
 
   // Manual re-fetch of all user data from Firestore using server documents directly (bypassing client caches)
   const handleRefreshAllData = async () => {
@@ -966,6 +1022,8 @@ export default function App() {
     
     let profit = 0;
     const planKey = processPlan.id || String(startTime);
+    const maxProfitLimit = processPlan.amount * 0.20; // 20% growth cap
+
     for (let day = 1; day <= totalDays; day++) {
       let hash = 0;
       const str = planKey + "_" + day;
@@ -975,7 +1033,13 @@ export default function App() {
       const index = Math.abs(hash) % 4;
       const rates = [1.0, 2.0, 0.1, 0.5];
       const dailyPercent = rates[index];
-      profit += processPlan.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
+      const dayProfit = processPlan.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
+      
+      if (profit + dayProfit >= maxProfitLimit) {
+        profit = maxProfitLimit;
+        break;
+      }
+      profit += dayProfit;
     }
     return sum + (profit > 0 ? profit : 0);
   }, 0);
