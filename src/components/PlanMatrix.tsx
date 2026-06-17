@@ -13,7 +13,7 @@ interface PlanMatrixProps {
 }
 
 const PLANS = [
-  { id: 'bronze', name: 'Bronze', min: 5, max: 14.99, targetPercent: 120, color: 'text-amber-600', border: 'border-amber-600/30' },
+  { id: 'bronze', name: 'Bronze', min: 5, max: 14.99, targetPercent: 200, color: 'text-amber-600', border: 'border-amber-600/30' },
   { id: 'silver', name: 'Silver', min: 15, max: 49.99, targetPercent: 125, color: 'text-slate-400', border: 'border-slate-400/30' },
   { id: 'gold', name: 'Gold', min: 50, max: 99.99, targetPercent: 130, color: 'text-yellow-400', border: 'border-yellow-400/50' },
   { id: 'diamond', name: 'Diamond', min: 100, max: Infinity, targetPercent: 140, color: 'text-[#D4AF37]', border: 'border-[#D4AF37]/50' },

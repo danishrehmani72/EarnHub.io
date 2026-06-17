@@ -53,6 +53,31 @@ import { playSound } from '../lib/sounds';
 import { AdsterraBanner } from './AdsterraBanner';
 import { AdsterraNativeBanner } from './AdsterraNativeBanner';
 
+export function getPlanCapPercent(planId: string, amount: number): number {
+  const normId = (planId || '').toLowerCase().trim();
+  if (normId === 'bronze') {
+    if (amount <= 7.5) return 1.00; // $5 -> $10 (+100%, $5 profit)
+    if (amount <= 12.5) return 0.70; // $10 -> $17 (+70%, $7 profit)
+    return 0.666667; // $15 -> $25 (+66.67%, $10 profit)
+  }
+  if (normId === 'silver') {
+    if (amount <= 25) return 0.60; // $20 -> $32 (+60%, $12 profit)
+    if (amount <= 40) return 0.633333; // $30 -> $49 (+63.33%, $19 profit)
+    return 0.66; // $50 -> $83 (+66%, $33 profit)
+  }
+  if (normId === 'gold') {
+    if (amount <= 62.5) return 0.50; // $50 -> $75 (+50%, $25 profit)
+    if (amount <= 87.5) return 0.533333; // $75 -> $115 (+53.33%, $40 profit)
+    return 0.40; // $100 -> $140 (+40%, $40 profit)
+  }
+  if (normId === 'diamond') {
+    if (amount <= 175) return 0.40; // $100 -> $140 (+40%, $40 profit)
+    if (amount <= 375) return 0.40; // $250 -> $350 (+40%, $100 profit)
+    return 0.50; // $500 -> $750 (+50%, $250 profit)
+  }
+  return 0.20; // fallback
+}
+
 interface DashboardCardProps {
   name: string;
   userId: string;
@@ -145,9 +170,23 @@ export default function DashboardCard({
   const [calcDays, setCalcDays] = useState(30);
 
   // Real-time projected yield calculation
+  const planInfoForAmount = useMemo(() => {
+    let planId = 'bronze';
+    if (calcAmount >= 100) planId = 'diamond';
+    else if (calcAmount >= 50) planId = 'gold';
+    else if (calcAmount >= 20) planId = 'silver';
+    
+    const cap = getPlanCapPercent(planId, calcAmount);
+    return { id: planId, cap };
+  }, [calcAmount]);
+
   const calculatedProjProfit = useMemo(() => {
     let totalProfit = 0;
     const activeMultiplier = globalSettings?.yieldMultiplier || 1.0;
+    const maxProfitLimit = calcAmount * planInfoForAmount.cap;
+    const planId = planInfoForAmount.id;
+    const planCap = planInfoForAmount.cap;
+    
     for (let day = 1; day <= calcDays; day++) {
       let hash = 0;
       const str = "calculator_" + day;
@@ -155,12 +194,19 @@ export default function DashboardCard({
         hash = str.charCodeAt(idx) + ((hash << 5) - hash);
       }
       const index = Math.abs(hash) % 4;
-      const rates = [1.0, 2.0, 0.1, 0.5];
-      const dailyPercent = rates[index];
-      totalProfit += calcAmount * (dailyPercent / 100) * activeMultiplier;
+      const baseDailyRatePercent = (planCap * 100) / 30;
+      const multiplier = [0.98, 1.02, 0.95, 1.05][index];
+      const dailyPercent = baseDailyRatePercent * multiplier;
+      const dayProfit = calcAmount * (dailyPercent / 100) * activeMultiplier;
+      
+      if (totalProfit + dayProfit >= maxProfitLimit) {
+        totalProfit = maxProfitLimit;
+        break;
+      }
+      totalProfit += dayProfit;
     }
     return totalProfit;
-  }, [calcAmount, calcDays, globalSettings?.yieldMultiplier]);
+  }, [calcAmount, calcDays, globalSettings?.yieldMultiplier, planInfoForAmount]);
   
   // High fidelity successful withdraw animation states (TikTok/YouTube friendly)
   const [recentSuccessWithdraw, setRecentSuccessWithdraw] = useState<{amount: number, network: string, wallet: string} | null>(null);
@@ -685,8 +731,11 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
         hash = str.charCodeAt(idx) + ((hash << 5) - hash);
       }
       const index = Math.abs(hash) % 4;
-      const rates = [1.0, 2.0, 0.1, 0.5];
-      const dailyPercent = rates[index];
+      const normalizedPlanId = (inv.planId || '').toLowerCase().trim();
+      const planCap = getPlanCapPercent(normalizedPlanId, inv.amount);
+      const baseDailyRatePercent = (planCap * 100) / 30;
+      const multiplier = [0.98, 1.02, 0.95, 1.05][index];
+      const dailyPercent = baseDailyRatePercent * multiplier;
       
       return sum + (inv.amount * (dailyPercent / 100));
     }, 0);
@@ -897,7 +946,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
     // Populate Investment Profits (Staking returns)
     // We scan both active plans (investments) and approved deposits (which act as staking nodes)
-    const activeAssets: { id?: string; amount: number; time: number }[] = [];
+    const activeAssets: { id?: string; amount: number; time: number; planId?: string }[] = [];
 
     // 1. From approved deposits
     if (deposits && deposits.length > 0) {
@@ -922,7 +971,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
             ? inv.createdAt.seconds * 1000 
             : new Date(inv.timestamp).getTime() || 0;
           if (invTime) {
-            activeAssets.push({ id: inv.id, amount: inv.amount, time: invTime });
+            activeAssets.push({ id: inv.id, amount: inv.amount, time: invTime, planId: inv.planId });
           }
         });
     }
@@ -946,8 +995,11 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
             hash = str.charCodeAt(idx) + ((hash << 5) - hash);
           }
           const index = Math.abs(hash) % 4;
-          const rates = [1.0, 2.0, 0.1, 0.5];
-          const dailyPercent = rates[index];
+          const normalizedPlanId = (asset.planId || '').toLowerCase().trim();
+          const planCap = getPlanCapPercent(normalizedPlanId, asset.amount);
+          const baseDailyRatePercent = (planCap * 100) / 30;
+          const multiplier = [0.98, 1.02, 0.95, 1.05][index];
+          const dailyPercent = baseDailyRatePercent * multiplier;
 
           dailyProfitSum += asset.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
         }
