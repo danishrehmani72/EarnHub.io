@@ -156,5 +156,12 @@ service cloud.firestore {
       allow list: if true;
       allow create, update, delete: if isValidId(logId);
     }
+
+    // ----------------- EMAIL LOGS ROOT COLLECTION -----------------
+    match /email_logs/{logId} {
+      allow get: if isValidId(logId);
+      allow list: if true;
+      allow create, update, delete: if isValidId(logId);
+    }
   }
 }

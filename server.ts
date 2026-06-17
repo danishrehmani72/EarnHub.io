@@ -65,43 +65,315 @@ app.post("/api/send-otp", async (req, res) => {
   }
 });
 
-// API route to notify users about transaction status changes
+// Fetch dynamic SMTP settings from Firestore document 'users/global_settings'
+async function fetchGlobalSettings() {
+  const url = "https://firestore.googleapis.com/v1/projects/cogent-woodland-x9z5m/databases/ai-studio-a807d10e-b26a-4c76-90b4-c26febef321c/documents/users/global_settings";
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.warn(`[Firestore REST] Failed to fetch settings: status ${res.status}`);
+      return null;
+    }
+    const data = await res.json();
+    const fields = data.fields || {};
+    
+    // Helper to decode values out of Firestore REST format
+    const getVal = (field: any) => {
+      if (!field) return undefined;
+      if (field.integerValue !== undefined) return parseInt(field.integerValue);
+      if (field.doubleValue !== undefined) return parseFloat(field.doubleValue);
+      if (field.stringValue !== undefined) return field.stringValue;
+      if (field.booleanValue !== undefined) return field.booleanValue;
+      return undefined;
+    };
+
+    return {
+      smtpHost: getVal(fields.smtpHost),
+      smtpPort: getVal(fields.smtpPort),
+      smtpUser: getVal(fields.smtpUser),
+      smtpPass: getVal(fields.smtpPass),
+      senderName: getVal(fields.senderName),
+      adminEmail: getVal(fields.adminEmail)
+    };
+  } catch (err) {
+    console.error("[Firestore REST] Error retrieving global_settings:", err);
+    return null;
+  }
+}
+
+// Log email delivery status to firestore 'email_logs' root collection
+async function logEmailDelivery(to: string, subject: string, status: "success" | "failed", errorMsg?: string) {
+  const url = "https://firestore.googleapis.com/v1/projects/cogent-woodland-x9z5m/databases/ai-studio-a807d10e-b26a-4c76-90b4-c26febef321c/documents/email_logs";
+  const body = {
+    fields: {
+      to: { stringValue: to },
+      subject: { stringValue: subject },
+      status: { stringValue: status },
+      timestamp: { stringValue: new Date().toISOString() },
+      error: { stringValue: errorMsg || "" }
+    }
+  };
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      console.warn(`[Firestore REST] Failed to write email log: status ${res.status}`);
+    } else {
+      console.log(`[Firestore REST] Email log created successfully.`);
+    }
+  } catch (err) {
+    console.error("[Firestore REST] Error writing email log:", err);
+  }
+}
+
+// Unified email sending utility supporting Dynamic and Fallback SMTP delivery
+async function sendGeneralEmail({
+  to,
+  subject,
+  html,
+  text
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+}) {
+  console.log(`[Email System] Initiating message dispatch to: ${to}, Subject: "${subject}"`);
+
+  // Load dynamic settings from database or fall back on process.env
+  const dynamicSettings = await fetchGlobalSettings();
+  
+  const smtpHost = dynamicSettings?.smtpHost || (process.env.EMAIL_SMTP_HOST || "smtp.gmail.com").trim();
+  const rawPort = dynamicSettings?.smtpPort || process.env.EMAIL_SMTP_PORT || "465";
+  const smtpPort = typeof rawPort === 'number' ? rawPort : parseInt(String(rawPort));
+  const smtpUser = dynamicSettings?.smtpUser || (process.env.EMAIL_SMTP_USER || "").trim();
+  const smtpPass = dynamicSettings?.smtpPass || (process.env.EMAIL_SMTP_PASS || "").trim();
+  const senderName = dynamicSettings?.senderName || "MoneyMind Space";
+
+  const host = smtpHost.split(" ")[0] || "smtp.gmail.com";
+  const secure = smtpPort === 465 || process.env.EMAIL_SMTP_SECURE !== "false";
+
+  if (smtpUser && smtpPass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host,
+        port: smtpPort,
+        secure,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+
+      await transporter.sendMail({
+        from: `"${senderName}" <${smtpUser}>`,
+        to,
+        subject,
+        text,
+        html
+      });
+
+      console.log(`[Email Success] Delivered successfully via SMTP (${host}:${smtpPort}) to: ${to}`);
+      await logEmailDelivery(to, subject, "success");
+      return { success: true, provider: "smtp" };
+    } catch (err: any) {
+      console.error(`[Email Fail] SMTP delivery to ${to} failed:`, err);
+      const errMsg = err.message || "SMTP transmission error";
+      await logEmailDelivery(to, subject, "failed", errMsg);
+      return { success: false, provider: "smtp", error: errMsg };
+    }
+  } else {
+    console.log(`[Email System] SMTP parameters are unconfigured. Preserving message in simulated demo logs.`);
+    await logEmailDelivery(to, `${subject} (Simulated Demo)`, "success", "Simulated delivery (parameters unconfigured)");
+    return { success: true, provider: "demo", note: "Simulated mail logs created" };
+  }
+}
+
+// API route to notify users about transaction status changes (approvals/rejections)
 app.post("/api/send-tx-notification", async (req, res) => {
   const { email, userName, type, status, amount } = req.body;
   if (!email || !type || !status) {
     return res.status(400).json({ error: "Required fields missing." });
   }
 
-  let hostStr = (process.env.EMAIL_SMTP_HOST || "smtp.gmail.com").trim();
-  const host = hostStr.split(" ")[0] || "smtp.gmail.com";
-  const port = parseInt(process.env.EMAIL_SMTP_PORT || "465");
-  const secure = process.env.EMAIL_SMTP_SECURE !== "false";
-  const user = process.env.EMAIL_SMTP_USER?.trim();
-  const pass = process.env.EMAIL_SMTP_PASS?.trim();
+  let subject = "";
+  let messageContent = "";
 
-  if (!user || !pass) {
-    return res.json({ success: true, message: "Demo mode: No SMTP credentials." });
+  const normType = String(type).toLowerCase().trim();
+  const normStatus = String(status).toLowerCase().trim();
+
+  // Map to precisely the requested subject and messages
+  if (normType === "deposit") {
+    if (normStatus === "approved" || normStatus === "approved_success") {
+      subject = "Deposit Approved";
+      messageContent = "Your deposit has been successfully approved and credited to your account.";
+    } else {
+      subject = "Deposit Rejected";
+      messageContent = "Your deposit request was rejected. Please contact support if you need assistance.";
+    }
+  } else if (normType === "withdrawal") {
+    if (normStatus === "approved" || normStatus === "approved_success") {
+      subject = "Withdrawal Approved";
+      messageContent = "Your withdrawal request has been approved and processed successfully.";
+    } else {
+      subject = "Withdrawal Rejected";
+      messageContent = "Your withdrawal request was rejected. Please review your details or contact support.";
+    }
+  } else {
+    subject = `Transaction Update: ${type} ${status}`;
+    messageContent = `Your ${type} has been ${status}.`;
+  }
+
+  const text = `Hello ${userName || "User"},\n\n${messageContent}\n\nBest regards,\nMoneyMind Space Administration`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+      <h3 style="color: #D4AF37; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">MoneyMind Space Platform Ledger Notification</h3>
+      <p>Hello <strong>${userName || "User"}</strong>,</p>
+      <p style="font-size: 15px; color: #334155; line-height: 1.6;">${messageContent}</p>
+      ${amount ? `<p style="font-size: 13px; color: #64748b;">Amount: $${Number(amount).toFixed(2)}</p>` : ""}
+      <p style="font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 20px;">
+        This is an automated notification. Please contact our 24/7 support if you have any questions.
+      </p>
+    </div>
+  `;
+
+  try {
+    const result = await sendGeneralEmail({ to: email, subject, text, html });
+    return res.json({ success: true, ...result });
+  } catch (err: any) {
+    console.error("send-tx-notification failed:", err);
+    return res.status(500).json({ error: err.message || "Unknown error" });
+  }
+});
+
+// New generic API route to dispatch various custom email notifications
+app.post("/api/send-email", async (req, res) => {
+  const { type, to, payload } = req.body;
+  if (!type || !to) {
+    return res.status(400).json({ error: "Email type and recipient (to) address are required." });
+  }
+
+  let subject = "";
+  let html = "";
+  let text = "";
+
+  const normType = String(type).trim();
+
+  if (normType === "welcome") {
+    subject = "Welcome to MoneyMind Space";
+    text = `Hello ${payload.userName || "User"},\n\nWelcome to MoneyMind Space! Your account (ID: ${payload.userId || "N/A"}) has been successfully registered. Choose your stakings plan and start earning today!\n\nBest regards,\nMoneyMind Space Administration`;
+    html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #D4AF37; text-align: center;">Welcome to MoneyMind Space!</h2>
+        <p>Dear <strong>${payload.userName || "User"}</strong>,</p>
+        <p>Thank you for registering on MoneyMind Space. We are excited to have you with us on this secure and high-yield financial journey.</p>
+        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #D4AF37;">
+          <h3 style="margin-top: 0; color: #1e293b; font-size: 15px;">Account Details:</h3>
+          <p style="margin: 5px 0; font-size: 13px;"><strong>User ID:</strong> ${payload.userId || "N/A"}</p>
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Registered Email:</strong> ${to}</p>
+        </div>
+        <p>You can now explore stakings plans and begin earning instant daily commissions.</p>
+        <p style="font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 25px;">
+          This is an automated platform alert. Please do not reply directly to this mail.
+        </p>
+      </div>
+    `;
+  }
+  else if (normType === "deposit_admin") {
+    subject = `New Deposit Request Submitted - $${payload.amount}`;
+    text = `A user has submitted a new deposit request.\n\nUsername: ${payload.userName || "User"}\nEmail: ${payload.email || "N/A"}\nAmount: $${payload.amount}\nPayment Method: ${payload.paymentMethod || "N/A"}\nTransaction ID: ${payload.txHash || "N/A"}\nDate: ${payload.date || "N/A"}`;
+    html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px; font-size: 18px; margin-top: 0;">New Deposit Request Submitted</h2>
+        <p style="color: #334155; font-size: 14px;">An administrative notification has been dispatched. A user has logged a new deposit on the ledger:</p>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+          <tr style="background-color: #f8fafc;">
+            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Detail</th>
+            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Value</th>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>Username</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">${payload.userName || "N/A"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>User Email</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">${payload.email || "N/A"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>Amount</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; color: #059669; font-weight: bold;">$${payload.amount}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>Payment Method/Network</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">${payload.paymentMethod || "N/A"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>Transaction ID/Hash</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-family: monospace;">${payload.txHash || "N/A"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>Date Submitted</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">${payload.date || "N/A"}</td>
+          </tr>
+        </table>
+        <p style="margin-top: 20px; font-size: 14px; color: #334155;">Please log in to your Admin Panel to review and action this deposit.</p>
+      </div>
+    `;
+  }
+  else if (normType === "withdrawal_admin") {
+    subject = `New Withdrawal Request Submitted - $${payload.amount}`;
+    text = `A user has submitted a new withdrawal request.\n\nUsername: ${payload.userName || "User"}\nEmail: ${payload.email || "N/A"}\nAmount: $${payload.amount}\nPayment Method: ${payload.paymentMethod || "N/A"}\nDate: ${payload.date || "N/A"}`;
+    html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #dc2626; border-bottom: 2px solid #dc2626; padding-bottom: 10px; font-size: 18px; margin-top: 0;">New Withdrawal Request Submitted</h2>
+        <p style="color: #334155; font-size: 14px;">An administrative notification has been dispatched. A user has logged a new withdrawal on the ledger:</p>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+          <tr style="background-color: #f8fafc;">
+            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Detail</th>
+            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Value</th>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>Username</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">${payload.userName || "N/A"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>User Email</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">${payload.email || "N/A"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>Amount</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; color: #dc2626; font-weight: bold;">$${payload.amount}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>Channel/Wallet Details</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">${payload.paymentMethod || "N/A"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;"><strong>Date Submitted</strong></td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0;">${payload.date || "N/A"}</td>
+          </tr>
+        </table>
+        <p style="margin-top: 20px; font-size: 14px; color: #334155;">Please log in to your Admin Panel to review and action this withdrawal request.</p>
+      </div>
+    `;
+  } else {
+    return res.status(400).json({ error: "Invalid email notification type." });
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host, port, secure,
-      auth: { user, pass },
-      tls: { rejectUnauthorized: false }
-    });
-
-    const mailOptions = {
-      from: `"MoneyMind Space" <${user}>`,
-      to: email,
-      subject: `[MoneyMind Space] Your ${type.charAt(0).toUpperCase() + type.slice(1)} has been ${status.toUpperCase()}`,
-      text: `Hello ${userName || 'User'},\n\nYour ${type} of $${amount?.toFixed(2) || 'N/A'} has been ${status}.\n\nBest regards,\nMoneyMind Space Administration`,
-      html: `<p>Hello ${userName || 'User'},</p><p>Your ${type} of $${amount?.toFixed(2) || 'N/A'} has been ${status}.</p>`
-    };
-
-    await transporter.sendMail(mailOptions);
-    return res.json({ success: true });
+    const result = await sendGeneralEmail({ to, subject, html, text });
+    return res.json({ success: true, ...result });
   } catch (err: any) {
-    return res.status(500).json({ error: `SMTP Error: ${err.message || 'Unknown'}` });
+    console.error("Endpoint send-email failure:", err);
+    return res.status(500).json({ error: err.message || "Failed to dispatch email notification." });
   }
 });
 

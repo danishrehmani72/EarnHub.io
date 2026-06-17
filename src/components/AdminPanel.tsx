@@ -31,7 +31,8 @@ import {
   Coins,
   Flame,
   Shield,
-  Check
+  Check,
+  Mail
 } from 'lucide-react';
 import SecurityAudit from './SecurityAudit';
 import { motion, AnimatePresence } from 'motion/react';
@@ -99,6 +100,12 @@ interface AdminPanelProps {
     yieldMultiplier: number;
     systemAnnouncement: string;
     isAnnouncementActive: boolean;
+    adminEmail?: string;
+    smtpHost?: string;
+    smtpPort?: number;
+    smtpUser?: string;
+    smtpPass?: string;
+    senderName?: string;
   };
 }
 
@@ -180,7 +187,17 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const [formYieldMultiplier, setFormYieldMultiplier] = useState(1.0);
   const [formAnnouncementText, setFormAnnouncementText] = useState('');
   const [formIsBannerActive, setFormIsBannerActive] = useState(false);
+  const [formAdminEmail, setFormAdminEmail] = useState('danishrehmani72@gmail.com');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Dynamic SMTP Config states
+  const [formSmtpHost, setFormSmtpHost] = useState('smtp.gmail.com');
+  const [formSmtpPort, setFormSmtpPort] = useState(465);
+  const [formSmtpUser, setFormSmtpUser] = useState('');
+  const [formSmtpPass, setFormSmtpPass] = useState('');
+  const [formSenderName, setFormSenderName] = useState('MoneyMind Space');
+  const [showSmtpPass, setShowSmtpPass] = useState(false);
+  const [isSavingSmtpSettings, setIsSavingSmtpSettings] = useState(false);
 
   // Sync state with incoming database updates from prop
   useEffect(() => {
@@ -188,6 +205,12 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       setFormYieldMultiplier(globalSettings.yieldMultiplier || 1.0);
       setFormAnnouncementText(globalSettings.systemAnnouncement || '');
       setFormIsBannerActive(globalSettings.isAnnouncementActive || false);
+      setFormAdminEmail(globalSettings.adminEmail || 'danishrehmani72@gmail.com');
+      setFormSmtpHost(globalSettings.smtpHost || 'smtp.gmail.com');
+      setFormSmtpPort(globalSettings.smtpPort || 465);
+      setFormSmtpUser(globalSettings.smtpUser || '');
+      setFormSmtpPass(globalSettings.smtpPass || '');
+      setFormSenderName(globalSettings.senderName || 'MoneyMind Space');
     }
   }, [globalSettings]);
 
@@ -260,16 +283,41 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         name: 'Global Governance System Policy',
         yieldMultiplier: Number(formYieldMultiplier),
         systemAnnouncement: String(formAnnouncementText),
-        isAnnouncementActive: Boolean(formIsBannerActive)
+        isAnnouncementActive: Boolean(formIsBannerActive),
+        adminEmail: String(formAdminEmail).trim()
       }, { merge: true });
       onAddToast("🚀 Governance policy & broadcast alert applied successfully!", "success");
-      await logAuditAction(`Administrative action: updated global yield multiplier to ${formYieldMultiplier}x, announcement active: ${formIsBannerActive}`, "system");
-      logTelegramNotify(`⚙️ Admin System Update: Adjusted Yield Multiplier to ${formYieldMultiplier}x, banner message set to "${formAnnouncementText}"`);
+      await logAuditAction(`Administrative action: updated global settings (Yield: ${formYieldMultiplier}x, Admin Email: ${formAdminEmail})`, "system");
+      logTelegramNotify(`⚙️ Admin System Update: Adjusted Yield to ${formYieldMultiplier}x, Admin Notify Mail to ${formAdminEmail}, Banner to "${formAnnouncementText}"`);
     } catch (err: any) {
       console.error(err);
       onAddToast("Failed to write global settings to database.", "error");
     } finally {
       setIsSavingSettings(false);
+    }
+  };
+
+  // Save custom Dynamic SMTP Mailer Server settings to firestore
+  const handleSaveSmtpSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSmtpSettings(true);
+    try {
+      const settingsRef = doc(db, 'users', 'global_settings');
+      await setDoc(settingsRef, {
+        smtpHost: String(formSmtpHost).trim(),
+        smtpPort: Number(formSmtpPort),
+        smtpUser: String(formSmtpUser).trim(),
+        smtpPass: String(formSmtpPass).trim(),
+        senderName: String(formSenderName).trim()
+      }, { merge: true });
+      onAddToast("📧 SMTP Mail Server configuration saved successfully!", "success");
+      await logAuditAction(`Administrative action: updated dynamic SMTP server settings (${formSmtpHost}:${formSmtpPort})`, "system");
+      logTelegramNotify(`⚙️ SMTP Update: Server changed to ${formSmtpHost}:${formSmtpPort} with sender "${formSenderName}"`);
+    } catch (err: any) {
+      console.error(err);
+      onAddToast("Failed to write SMTP settings to database.", "error");
+    } finally {
+      setIsSavingSmtpSettings(false);
     }
   };
 
@@ -1517,6 +1565,26 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         </div>
 
         <form onSubmit={handleSaveGlobalSettings} className="grid grid-cols-1 md:grid-cols-12 gap-5 text-left">
+          {/* Admin Email Configuration */}
+          <div className="md:col-span-12 border-b border-white/5 pb-5 space-y-2">
+            <label className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-widest block font-sans">
+              System Admin Notifications Email
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                required
+                value={formAdminEmail}
+                onChange={(e) => setFormAdminEmail(e.target.value)}
+                placeholder="Enter administrator email address to receive live notifications..."
+                className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+              />
+            </div>
+            <p className="text-[7.5px] text-white/35 font-mono leading-relaxed">
+              All administrative ledger alerts (signup alerts, active deposit reviews, and payout dispatches) will be forwarded securely to this address.
+            </p>
+          </div>
+
           {/* Yield Booster rate */}
           <div className="md:col-span-4 space-y-2">
             <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block font-sans">Staking Yield Multiplier</label>
@@ -1571,6 +1639,119 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                 {isSavingSettings ? "Saving Settings..." : "Apply Broadcast changes 🚀"}
               </button>
             </div>
+          </div>
+        </form>
+      </div>
+
+      {/* Dynamic SMTP Configuration Form */}
+      <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 space-y-6 relative overflow-hidden shadow-2xl">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div className="space-y-1 text-left">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2">
+              <Mail className="w-4 h-4 text-[#D4AF37]" />
+              Secure SMTP Mailer Server Settings
+            </h4>
+            <p className="text-[9px] text-white/45 leading-relaxed">
+              Configure your customized direct SMTP mailer parameters dynamically to bypass any demo delivery state and deploy custom notification dispatches.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSaveSmtpSettings} className="grid grid-cols-1 md:grid-cols-12 gap-5 text-left">
+          {/* SMTP Host */}
+          <div className="md:col-span-4 space-y-2">
+            <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block font-sans">
+              SMTP Host
+            </label>
+            <input
+              type="text"
+              required
+              value={formSmtpHost}
+              onChange={(e) => setFormSmtpHost(e.target.value)}
+              placeholder="e.g. smtp.gmail.com"
+              className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+            />
+          </div>
+
+          {/* SMTP Port */}
+          <div className="md:col-span-2 space-y-2">
+            <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block font-sans">
+              SMTP Port
+            </label>
+            <input
+              type="number"
+              required
+              value={formSmtpPort}
+              onChange={(e) => setFormSmtpPort(Number(e.target.value))}
+              placeholder="e.g. 465"
+              className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-mono placeholder-white/20"
+            />
+          </div>
+
+          {/* Sender Name */}
+          <div className="md:col-span-6 space-y-2">
+            <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block font-sans">
+              Sender Display Name
+            </label>
+            <input
+              type="text"
+              required
+              value={formSenderName}
+              onChange={(e) => setFormSenderName(e.target.value)}
+              placeholder="e.g. MoneyMind Space"
+              className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+            />
+          </div>
+
+          {/* SMTP Username */}
+          <div className="md:col-span-6 space-y-2">
+            <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block font-sans">
+              SMTP Username
+            </label>
+            <input
+              type="text"
+              required
+              value={formSmtpUser}
+              onChange={(e) => setFormSmtpUser(e.target.value)}
+              placeholder="Enter server mailing username..."
+              className="w-full bg-[#080808] border border-[#D4AF37]/15 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+            />
+          </div>
+
+          {/* SMTP Password */}
+          <div className="md:col-span-6 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block font-sans">
+                SMTP Secret Password / App Key
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowSmtpPass(!showSmtpPass)}
+                className="text-[8px] uppercase tracking-wider text-[#D4AF37] font-bold hover:underline"
+              >
+                {showSmtpPass ? "Hide Code" : "Show Code"}
+              </button>
+            </div>
+            <input
+              type={showSmtpPass ? "text" : "password"}
+              required
+              value={formSmtpPass}
+              onChange={(e) => setFormSmtpPass(e.target.value)}
+              placeholder="••••••••••••••••"
+              className="w-full bg-[#080808] border border-[#D4AF37]/15 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+            />
+          </div>
+
+          <div className="md:col-span-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2 text-[7.5px] text-white/35 font-mono border-t border-white/5">
+            <span>Direct SMTP server dispatch parameters are secured with Firestore endpoint validation rules.</span>
+            <button
+              type="submit"
+              disabled={isSavingSmtpSettings}
+              className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-xl uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 text-[8px] self-end md:self-auto shadow-md shadow-amber-500/10"
+            >
+              {isSavingSmtpSettings ? "Storing Credentials..." : "Apply Dynamic SMTP settings ✉️"}
+            </button>
           </div>
         </form>
       </div>

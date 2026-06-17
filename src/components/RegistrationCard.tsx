@@ -581,6 +581,20 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       // 5. Highlight beautiful feedback and transition to login box
       setSuccessMsg('✅ Successfully Registered!');
       
+      // Dispatch welcome email via background process
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'welcome',
+          to: email.trim(),
+          payload: {
+            userName: cleanName,
+            userId: cleanUserId
+          }
+        })
+      }).catch(err => console.error("Welcome email silent failover handler:", err));
+      
       setTimeout(() => {
         setMode('login');
         setSuccessMsg('');

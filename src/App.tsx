@@ -153,10 +153,22 @@ export default function App() {
     yieldMultiplier: number;
     systemAnnouncement: string;
     isAnnouncementActive: boolean;
+    adminEmail: string;
+    smtpHost?: string;
+    smtpPort?: number;
+    smtpUser?: string;
+    smtpPass?: string;
+    senderName?: string;
   }>({
     yieldMultiplier: 1.0,
     systemAnnouncement: "",
     isAnnouncementActive: false,
+    adminEmail: "danishrehmani72@gmail.com",
+    smtpHost: "smtp.gmail.com",
+    smtpPort: 465,
+    smtpUser: "",
+    smtpPass: "",
+    senderName: "MoneyMind Space"
   });
 
   // Load and manage simulated days offset
@@ -204,6 +216,12 @@ export default function App() {
           yieldMultiplier: Number(data.yieldMultiplier) || 1.0,
           systemAnnouncement: String(data.systemAnnouncement || ""),
           isAnnouncementActive: Boolean(data.isAnnouncementActive || false),
+          adminEmail: String(data.adminEmail || "danishrehmani72@gmail.com"),
+          smtpHost: data.smtpHost ? String(data.smtpHost) : "smtp.gmail.com",
+          smtpPort: data.smtpPort ? Number(data.smtpPort) : 465,
+          smtpUser: data.smtpUser ? String(data.smtpUser) : "",
+          smtpPass: data.smtpPass ? String(data.smtpPass) : "",
+          senderName: data.senderName ? String(data.senderName) : "MoneyMind Space"
         });
       }
     }, (error) => {
@@ -758,6 +776,26 @@ export default function App() {
         createdAt: serverTimestamp(),
         timestamp: timestampStr
       });
+      
+      // Dispatch administration email alert
+      const targetAdminEmail = globalSettings?.adminEmail || "danishrehmani72@gmail.com";
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'deposit_admin',
+          to: targetAdminEmail,
+          payload: {
+            userName: userProfile?.name || currentUid,
+            email: userProfile?.email || "N/A",
+            amount,
+            paymentMethod: network,
+            txHash,
+            date: timestampStr
+          }
+        })
+      }).catch(err => console.error("Admin deposit notification failover:", err));
+
       addToast(`Deposit of $${amount} submitted successfully! Auditing ledger verification started.`, 'success', 'deposit_submitted');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${currentUid}/deposits`);
@@ -796,6 +834,25 @@ export default function App() {
         createdAt: serverTimestamp(),
         timestamp: timestampStr
       });
+
+      // Dispatch administration email alert
+      const targetAdminEmail = globalSettings?.adminEmail || "danishrehmani72@gmail.com";
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'withdrawal_admin',
+          to: targetAdminEmail,
+          payload: {
+            userName: userProfile?.name || currentUid,
+            email: userProfile?.email || "N/A",
+            amount,
+            paymentMethod: `${network} - Account Wallet: ${wallet}`,
+            date: timestampStr
+          }
+        })
+      }).catch(err => console.error("Admin withdrawal notification failover:", err));
+
       addToast(`Withdrawal of $${amount} requested successfully! Admin routing queue initiated.`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${currentUid}/withdrawals`);
