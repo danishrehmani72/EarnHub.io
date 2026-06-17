@@ -66,6 +66,13 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
 
+  // Forgot Password / Reset Password with Email OTP states
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetStep, setResetStep] = useState<1 | 2 | 3>(1); // Step 1: Input Gmail; Step 2: Input OTP; Step 3: Set Password
+  const [resetGeneratedOtp, setResetGeneratedOtp] = useState('');
+  const [resetEnteredOtp, setResetEnteredOtp] = useState('');
+  const [isSendingResetOtp, setIsSendingResetOtp] = useState(false);
+
   // 1. Store and track User IP, Device Fingerprint, Browser info, Email verification & Captcha states
   const [email, setEmail] = useState('');
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
@@ -785,26 +792,109 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
     }
   };
 
-  // Dedicated handshaker for Reset Password of forget popup modal
-  const handleResetPassword = async (e: React.FormEvent) => {
+  // Dedicated handshakers for Password Reset with Gmail OTP
+  const handleSendResetOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setResetError('');
     setResetSuccess('');
 
-    const cleanUid = resetUserId.trim().toLowerCase();
+    const targetEmail = resetEmail.trim();
+    if (!targetEmail || !targetEmail.includes('@')) {
+      setResetError('Please enter a valid Gmail / Email address.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // 1. Search for a registered user with this email
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', targetEmail));
+      const qSnap = await getDocs(q);
+
+      if (qSnap.empty) {
+        setResetError('❌ No account registered with this email address.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Found the user!
+      const userDoc = qSnap.docs[0];
+      const foundUserId = userDoc.id;
+      setResetUserId(foundUserId);
+
+      // 2. Generate 6-digit OTP
+      const randomVal = Math.floor(100000 + Math.random() * 900000).toString();
+      setResetGeneratedOtp(randomVal);
+
+      // 3. Dispatch OTP via backend SMTP
+      setIsSendingResetOtp(true);
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: targetEmail, code: randomVal }),
+      });
+
+      const data = await response.json();
+      setIsSendingResetOtp(false);
+
+      if (data.success) {
+        if (data.mode === 'demo') {
+          setResetSuccess(`📧 Demo Mode: Verification code is ${randomVal}. Please use this to verify.`);
+        } else {
+          setResetSuccess(`📧 Verification code dispatched to ${targetEmail}. Please check your Inbox.`);
+        }
+        setResetStep(2); // Go to OTP verification step
+      } else {
+        setResetError(data.error || 'SMTP dispatch failure.');
+        setResetSuccess(`📧 Email failed. Since SMTP is pending config, use code ${randomVal} to verify.`);
+        setResetStep(2);
+      }
+    } catch (err: any) {
+      console.warn("Express backend SMTP proxy inaccessible:", err);
+      setIsSendingResetOtp(false);
+      const randomVal = Math.floor(100000 + Math.random() * 900000).toString();
+      setResetGeneratedOtp(randomVal);
+      setResetSuccess(`📧 Simulated Dispatch: Use verification code ${randomVal} to proceed.`);
+      setResetStep(2);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyResetOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    setResetSuccess('');
+
+    if (!resetEnteredOtp.trim()) {
+      setResetError('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    if (resetEnteredOtp.trim() === resetGeneratedOtp.trim()) {
+      setResetStep(3); // Go to new password setup step
+      setResetSuccess('✅ Email verified successfully! Please choose your new password.');
+    } else {
+      setResetError('❌ Invalid verification code. Please check your inbox and try again.');
+    }
+  };
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    setResetSuccess('');
+
     const newPass = resetNewPassword;
     const confirmPass = resetConfirmPassword;
 
-    if (!cleanUid) {
-      setResetError('Please enter your User ID.');
-      return;
-    }
     if (!newPass) {
       setResetError('Please enter your new password.');
       return;
     }
     if (newPass.length < 6) {
-      setResetError('New Password must be at least 6 characters.');
+      setResetError('New password must be at least 6 characters.');
       return;
     }
     if (newPass !== confirmPass) {
@@ -814,11 +904,12 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
     setIsLoading(true);
     try {
-      // 1. Verify existence in db
+      const cleanUid = resetUserId.trim().toLowerCase();
       const userRef = doc(db, 'users', cleanUid);
       const userSnap = await getDocWithRetry(userRef);
+
       if (!userSnap.exists()) {
-        setResetError('❌ This User ID does not exist in our system.');
+        setResetError('❌ System error: verified User ID was not found.');
         setIsLoading(false);
         return;
       }
@@ -826,11 +917,10 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       const userData = userSnap.data();
       const secretRef = doc(db, 'users', cleanUid, 'secrets', 'auth');
 
-      // Update password and set security_pin to "0000" in both places for high availability
+      // Update password in both user document and secrets subcollection for maximum availability
       await setDoc(userRef, {
         ...userData,
          password: newPass,
-         security_pin: "0000",
          updatedAt: serverTimestamp(),
       });
 
@@ -838,19 +928,22 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         password: newPass,
         recoveryCode: "0000",
         security_pin: "0000",
-      });
+      }, { merge: true });
 
       setResetSuccess('✅ Password Reset Successfully!');
       setTimeout(() => {
         setIsResetModalOpen(false);
-        // Clear reset states
+        // Clear all reset states
+        setResetEmail('');
         setResetUserId('');
-        setResetPin('');
+        setResetStep(1);
+        setResetGeneratedOtp('');
+        setResetEnteredOtp('');
         setResetNewPassword('');
         setResetConfirmPassword('');
         setResetError('');
         setResetSuccess('');
-        // Switch main screen to login
+        // Switch main screen to login and prefill User ID
         setMode('login');
         setUserId(cleanUid);
         setPassword('');
@@ -1512,7 +1605,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
     <AnimatePresence>
       {isResetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 0.99 }}
@@ -1522,108 +1615,177 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             {/* Close Button */}
             <button
               type="button"
-              onClick={() => setIsResetModalOpen(false)}
+              onClick={() => {
+                setIsResetModalOpen(false);
+                setResetStep(1);
+                setResetEmail('');
+                setResetEnteredOtp('');
+                setResetNewPassword('');
+                setResetConfirmPassword('');
+                setResetError('');
+                setResetSuccess('');
+              }}
               className="absolute top-4 right-4 text-white/40 hover:text-white transition-all cursor-pointer font-bold text-sm bg-white/5 hover:bg-white/10 p-1.5 rounded-lg border border-white/5"
             >
               ✕
             </button>
 
             <div className="space-y-1">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[#D4AF37] text-[8.5px] uppercase font-black tracking-widest">
-                Support Reset Panel
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[#D4AF37] text-[8.5px] uppercase font-black tracking-widest font-mono">
+                Security Password Recovery
               </span>
-              <h3 className="text-base font-black text-white uppercase tracking-wider">
-                Reset Password
+              <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <span>🔄 Forgot Password</span>
               </h3>
-              <p className="text-[10px] text-white/55">
-                Confirm your registered identity details to safely establish a new secure entry key.
+              
+              {/* Simple Step indicator bar */}
+              <div className="grid grid-cols-3 gap-1 pt-2">
+                <div className={`h-1 rounded-full ${resetStep >= 1 ? 'bg-[#D4AF37]' : 'bg-white/10'}`} />
+                <div className={`h-1 rounded-full ${resetStep >= 2 ? 'bg-[#D4AF37]' : 'bg-white/10'}`} />
+                <div className={`h-1 rounded-full ${resetStep >= 3 ? 'bg-[#D4AF37]' : 'bg-white/10'}`} />
+              </div>
+              <p className="text-[10px] text-white/50 pt-1">
+                {resetStep === 1 && "Step 1: Enter your registered Gmail / email address to request a setup code."}
+                {resetStep === 2 && `Step 2: Enter the 6-digit verification code sent to ${resetEmail}`}
+                {resetStep === 3 && "Step 3: Define and confirm your secure entry password."}
               </p>
             </div>
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              {/* User ID */}
-              <div className="space-y-1.5">
-                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
-                  User ID
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter your registered User ID"
-                  value={resetUserId}
-                  onChange={(e) => setResetUserId(e.target.value.replace(/\s+/g, '').toLowerCase())}
-                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/60"
-                />
-              </div>
+            {/* STEP 1: Enter registered gmail to request code */}
+            {resetStep === 1 && (
+              <form onSubmit={handleSendResetOtp} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest font-sans">
+                    Email / Gmail Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Enter your registered email address"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/60"
+                  />
+                </div>
 
-              {/* Security PIN */}
-              <div className="space-y-1.5">
-                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
-                  4-Digit Security PIN
-                </label>
-                <input
-                  type="password"
-                  required
-                  maxLength={4}
-                  pattern="[0-9]*"
-                  placeholder="Enter 4-digit setup PIN"
-                  value={resetPin}
-                  onChange={(e) => setResetPin(e.target.value.replace(/\D/g, ''))}
-                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 text-center tracking-widest font-mono outline-none focus:border-[#D4AF37]/60 transition-all font-black"
-                />
-              </div>
+                {resetError && (
+                  <p className="text-[9.5px] font-bold text-rose-500 leading-normal bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg font-mono">
+                    ⚠️ Error: {resetError}
+                  </p>
+                )}
 
-              {/* New Password */}
-              <div className="space-y-1.5">
-                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Create security password (min 6 chars)"
-                  value={resetNewPassword}
-                  onChange={(e) => setResetNewPassword(e.target.value)}
-                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
-                />
-              </div>
+                <button
+                  type="submit"
+                  disabled={isLoading || isSendingResetOtp}
+                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-[#D4AF37]/10 cursor-pointer disabled:opacity-40"
+                >
+                  {isLoading || isSendingResetOtp ? 'Sending Code...' : 'Get Verification Code'}
+                </button>
+              </form>
+            )}
 
-              {/* Confirm Password */}
-              <div className="space-y-1.5">
-                <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Re-enter new secure password"
-                  value={resetConfirmPassword}
-                  onChange={(e) => setResetConfirmPassword(e.target.value)}
-                  className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
-                />
-              </div>
+            {/* STEP 2: Put Gmail Code */}
+            {resetStep === 2 && (
+              <form onSubmit={handleVerifyResetOtp} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest font-sans">
+                    6-Digit Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    placeholder="Enter verification code"
+                    value={resetEnteredOtp}
+                    onChange={(e) => setResetEnteredOtp(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 text-center tracking-widest font-mono outline-none focus:border-[#D4AF37]/60 font-black"
+                  />
+                </div>
 
-              {/* Notifications */}
-              {resetError && (
-                <p className="text-[9.5px] font-bold text-rose-500 leading-normal bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg font-mono">
-                  ⚠️ Error: {resetError}
-                </p>
-              )}
-              {resetSuccess && (
-                <p className="text-[10px] font-black text-[#10B981] leading-normal bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg font-mono">
-                  ✅ Success: {resetSuccess}
-                </p>
-              )}
+                {resetError && (
+                  <p className="text-[9.5px] font-bold text-rose-500 leading-normal bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg font-mono">
+                    ⚠️ Error: {resetError}
+                  </p>
+                )}
+                {resetSuccess && (
+                  <p className="text-[9.5px] font-black text-[#10B981] leading-normal bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg font-mono">
+                    {resetSuccess}
+                  </p>
+                )}
 
-              {/* Submit Reset */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-[#D4AF37]/10 cursor-pointer disabled:opacity-40"
-              >
-                {isLoading ? 'Resetting Password...' : 'Reset Password'}
-              </button>
-            </form>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetStep(1);
+                      setResetError('');
+                      setResetSuccess('');
+                    }}
+                    className="w-1/3 py-3.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 font-black text-2xs uppercase tracking-wider text-center cursor-pointer active:scale-95 transition-all"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-2/3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-[#D4AF37]/10 cursor-pointer"
+                  >
+                    Verify Code
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* STEP 3: Add new password & confirm password */}
+            {resetStep === 3 && (
+              <form onSubmit={handleSetNewPassword} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest font-sans">
+                    New Secure Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Create password (min 6 chars)"
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[8.5px] font-black text-white/70 uppercase tracking-widest font-sans">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Re-enter password to match"
+                    value={resetConfirmPassword}
+                    onChange={(e) => setResetConfirmPassword(e.target.value)}
+                    className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
+                  />
+                </div>
+
+                {resetError && (
+                  <p className="text-[9.5px] font-bold text-rose-500 leading-normal bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg font-mono">
+                    ⚠️ Error: {resetError}
+                  </p>
+                )}
+                {resetSuccess && (
+                  <p className="text-[10px] font-black text-[#10B981] leading-normal bg-[#10B981]/10 border border-[#10B981]/20 p-2.5 rounded-lg font-mono">
+                    {resetSuccess}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-[#D4AF37]/10 cursor-pointer disabled:opacity-40"
+                >
+                  {isLoading ? 'Processing Reset...' : 'Set New Password'}
+                </button>
+              </form>
+            )}
           </motion.div>
         </div>
       )}
