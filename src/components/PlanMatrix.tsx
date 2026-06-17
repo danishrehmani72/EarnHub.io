@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { UserPlan } from '../types';
-import { ShieldCheck, CheckCircle2, TrendingUp, XCircle, ArrowRight } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, TrendingUp, XCircle, ArrowRight, Lock } from 'lucide-react';
 
 interface PlanMatrixProps {
   balance: number;
@@ -70,7 +70,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                  <div className="flex flex-col gap-1.5 mt-2 text-white/80 text-sm">
                     <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Deposit:</span> <strong className="font-sans">{currencySymbol}{(plan.min * conversionRate).toFixed(0)} {plan.max === Infinity ? '+' : `- ${currencySymbol}${(plan.max * conversionRate).toFixed(0)}`}</strong></p>
                     <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Daily Profit:</span> <strong className="font-sans text-emerald-400">{plan.dailyProfit}%</strong></p>
-                    <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Duration:</span> <strong className="font-sans text-white/90">Lifetime / Cancel Anytime</strong></p>
+                    <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Duration:</span> <strong className="font-sans text-white/90">30-Day Lock / Cancel After</strong></p>
                  </div>
                </div>
                
@@ -94,6 +94,16 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
            <div className="space-y-3">
              {activePlans.map(inv => {
                const planInfo = PLANS.find(p => p.id === inv.planId);
+               const nowTime = Date.now();
+               const startTime = inv.createdAt?.seconds 
+                 ? inv.createdAt.seconds * 1000 
+                 : new Date(inv.timestamp).getTime() || nowTime;
+               
+               const elapsedMs = nowTime - startTime;
+               const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+               const isLocked = elapsedMs < thirtyDaysMs;
+               const remainingDays = isLocked ? Math.ceil((thirtyDaysMs - elapsedMs) / (24 * 60 * 60 * 1000)) : 0;
+
                return (
                  <div key={inv.id} className="flex flex-col sm:flex-row justify-between sm:items-center bg-black/40 border border-white/5 rounded-xl p-4 gap-4">
                    <div>
@@ -102,7 +112,14 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                    </div>
                    <div className="flex items-center gap-4">
                      <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] uppercase font-bold tracking-wider rounded border border-emerald-500/20">Earning {planInfo?.dailyProfit}%</span>
-                     <button onClick={() => onCancelPlan(inv.id)} className="px-3 py-1.5 text-[10px] uppercase font-bold text-rose-400 tracking-wider bg-rose-500/10 border border-rose-500/20 rounded hover:bg-rose-500/20 transition-all">Cancel Plan</button>
+                     {isLocked ? (
+                       <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded select-none cursor-default" title="This plan is locked for the first 30 days of active investment.">
+                         <Lock className="w-3 h-3 text-amber-500 animate-pulse" />
+                         <span>Locked ({remainingDays}d left)</span>
+                       </div>
+                     ) : (
+                       <button onClick={() => onCancelPlan(inv.id)} className="px-3 py-1.5 text-[10px] uppercase font-bold text-rose-400 tracking-wider bg-rose-500/10 border border-rose-500/20 rounded hover:bg-rose-500/20 transition-all">Cancel Plan</button>
+                     )}
                    </div>
                  </div>
                );
@@ -153,7 +170,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
 
                  <p className="text-[10px] text-white/30 leading-relaxed px-1">
                    Note: The investment principal will be locked to generate daily yields. 
-                   You can withdraw profits at any time. Cancelling the plan will return your principal to your wallet and stop future earnings.
+                   You can withdraw profits at any time. Cancelling the plan is available exactly 30 days after activation, which returns your principal to your wallet and stops future daily earnings.
                  </p>
 
                  <button 

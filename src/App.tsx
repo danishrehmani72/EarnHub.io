@@ -781,6 +781,19 @@ export default function App() {
   const handleCancelPlan = async (invId: string) => {
     if (!currentUid) return;
     try {
+      const planToCancel = investments.find(inv => inv.id === invId);
+      if (planToCancel) {
+        const startTime = planToCancel.createdAt?.seconds 
+          ? planToCancel.createdAt.seconds * 1000 
+          : new Date(planToCancel.timestamp).getTime() || Date.now();
+        const elapsedMs = Date.now() - startTime;
+        const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+        if (elapsedMs < thirtyDaysMs) {
+          const remainingDays = Math.ceil((thirtyDaysMs - elapsedMs) / (24 * 60 * 60 * 1000));
+          addToast(`Failed: This plan is locked for the first 30 days. Please wait ${remainingDays} more days to cancel.`, 'error');
+          return;
+        }
+      }
       const invRef = doc(db, 'users', currentUid, 'investments', invId);
       await setDoc(invRef, { 
         status: 'cancelled',
