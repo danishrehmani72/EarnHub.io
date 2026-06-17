@@ -145,6 +145,18 @@ async function sendGeneralEmail({
 }) {
   console.log(`[Email System] Initiating message dispatch to: ${to}, Subject: "${subject}"`);
 
+  const targetLower = to.toLowerCase().trim();
+  if (
+    targetLower.includes("no-email") || 
+    targetLower.endsWith("@wealthhub.com") || 
+    targetLower.endsWith("@moneymindspace.com") || 
+    !targetLower.includes("@")
+  ) {
+    console.log(`[Email System] Filtered placeholder test email ${to} to prevent delivery bounces. Simulating successful local logs.`);
+    await logEmailDelivery(to, `${subject} (Simulated Test Account)`, "success", "Filtered placeholder email to prevent delivery bounce");
+    return { success: true, provider: "demo", note: "Simulated placeholder email auto-filtered" };
+  }
+
   // Load dynamic settings from database or fall back on process.env
   const dynamicSettings = await fetchGlobalSettings();
   
