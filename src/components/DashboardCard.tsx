@@ -70,6 +70,7 @@ interface DashboardCardProps {
   onUpdateTxStatus?: (type: 'deposit' | 'withdrawal', txId: string, status: 'approved' | 'rejected') => Promise<void>;
   onSignOut?: () => Promise<void> | void;
   investmentProfits?: number;
+  maturedBalance?: number;
   onAddToast: (message: string, type: 'success' | 'error', sound?: any) => void;
   userProfile?: any;
   onClaimDailyReward?: (amount: number) => Promise<void>;
@@ -102,6 +103,7 @@ export default function DashboardCard({
   onUpdateTxStatus,
   onSignOut,
   investmentProfits = 0,
+  maturedBalance = 0,
   onAddToast,
   userProfile,
   onClaimDailyReward,
@@ -1198,7 +1200,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               className="space-y-6"
             >
               {/* Dynamic Cards: Balance, Investment, Timer, Referrals */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 
                 {/* 1. Live Wallet Balance */}
                 <motion.div 
@@ -1318,7 +1320,46 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   </div>
                 </motion.div>
 
-                {/* 2. Next Daily Payout Timer */}
+                {/* 2. Matured Balance (Principal + profit returned from completed plans) */}
+                <motion.div 
+                  id="matured-balance-card" 
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                  }}
+                  exit={{ opacity: 0, scale: 0.92, y: -15 }}
+                  whileHover={{ y: -3, scale: 1.015 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 260, 
+                    damping: 20, 
+                    delay: 0.08 
+                  }}
+                  className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden cursor-pointer hover:border-white/10 transition-colors"
+                >
+                  <div className="absolute -top-4 -right-4 text-[#D4AF37]/5 pointer-events-none">
+                    <TrendingUp className="w-20 h-20" />
+                  </div>
+                  <div className="flex items-center justify-between z-10">
+                    <span className="text-[10px] uppercase tracking-[0.12em] text-[#D4AF37] font-bold font-sans">Matured Balance</span>
+                    <div className="w-6 h-6 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] flex items-center justify-center">
+                      <CheckCircle className="w-3 h-3 text-[#D4AF37]" />
+                    </div>
+                  </div>
+                  <div className="my-1 font-serif text-emerald-400 text-2xl tracking-tight z-10 flex items-center gap-1">
+                    <span>{currencySymbol}</span>
+                    <span>{(maturedBalance * conversionRate).toFixed(2)}</span>
+                  </div>
+                  <div className="text-[8.5px] text-white/40 font-medium flex items-center gap-1 z-10 leading-normal">
+                    <Sparkles className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
+                    Ready to reinvest / withdraw
+                  </div>
+                </motion.div>
+
+                {/* 3. Next Daily Payout Timer */}
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}

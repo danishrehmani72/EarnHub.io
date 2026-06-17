@@ -13,10 +13,10 @@ interface PlanMatrixProps {
 }
 
 const PLANS = [
-  { id: 'bronze', name: 'Bronze', min: 5, max: 14.99, dailyProfit: 3, color: 'text-amber-600', border: 'border-amber-600/30' },
-  { id: 'silver', name: 'Silver', min: 15, max: 49.99, dailyProfit: 4, color: 'text-slate-400', border: 'border-slate-400/30' },
-  { id: 'gold', name: 'Gold', min: 50, max: 99.99, dailyProfit: 5, color: 'text-yellow-400', border: 'border-yellow-400/50' },
-  { id: 'diamond', name: 'Diamond', min: 100, max: Infinity, dailyProfit: 7, color: 'text-[#D4AF37]', border: 'border-[#D4AF37]/50' },
+  { id: 'bronze', name: 'Bronze', min: 5, max: 14.99, targetPercent: 120, color: 'text-amber-600', border: 'border-amber-600/30' },
+  { id: 'silver', name: 'Silver', min: 15, max: 49.99, targetPercent: 125, color: 'text-slate-400', border: 'border-slate-400/30' },
+  { id: 'gold', name: 'Gold', min: 50, max: 99.99, targetPercent: 130, color: 'text-yellow-400', border: 'border-yellow-400/50' },
+  { id: 'diamond', name: 'Diamond', min: 100, max: Infinity, targetPercent: 140, color: 'text-[#D4AF37]', border: 'border-[#D4AF37]/50' },
 ];
 
 export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, currencySymbol, conversionRate }: PlanMatrixProps) {
@@ -26,6 +26,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
   const [error, setError] = useState('');
 
   const activePlans = investments.filter(inv => inv.status === 'active');
+  const completedPlans = investments.filter(inv => inv.status === 'completed');
 
   const handleActivate = async () => {
     setError('');
@@ -69,8 +70,8 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                  <h4 className={`text-xl font-bold font-serif ${plan.color}`}>{plan.name} Plan</h4>
                  <div className="flex flex-col gap-1.5 mt-2 text-white/80 text-sm">
                     <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Deposit:</span> <strong className="font-sans">{currencySymbol}{(plan.min * conversionRate).toFixed(0)} {plan.max === Infinity ? '+' : `- ${currencySymbol}${(plan.max * conversionRate).toFixed(0)}`}</strong></p>
-                    <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Daily Profit:</span> <strong className="font-sans text-emerald-400">{plan.dailyProfit}%</strong></p>
-                    <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Duration:</span> <strong className="font-sans text-white/90">30-Day Lock / Cancel After</strong></p>
+                    <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Daily Profit:</span> <strong className="font-sans text-emerald-400">Dynamic (Varies)</strong></p>
+                    <p><span className="text-white/40 font-mono text-[10px] uppercase tracking-wider">Completion:</span> <strong className="font-sans text-white/90">{plan.targetPercent}% Return OR 30 Days</strong></p>
                  </div>
                </div>
                
@@ -90,7 +91,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
 
       {activePlans.length > 0 && (
         <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 mt-8">
-           <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-widest mb-4">Active Investment Portfolios</h3>
+           <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-widest mb-4">Active Locked Portfolios</h3>
            <div className="space-y-3">
              {activePlans.map(inv => {
                const planInfo = PLANS.find(p => p.id === inv.planId);
@@ -111,11 +112,11 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                      <p className="text-xs text-white/40 mt-0.5">Principal Locked: {currencySymbol}{(inv.amount * conversionRate).toFixed(2)}</p>
                    </div>
                    <div className="flex items-center gap-4">
-                     <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] uppercase font-bold tracking-wider rounded border border-emerald-500/20">Earning {planInfo?.dailyProfit}%</span>
-                     {isLocked ? (
-                       <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded select-none cursor-default" title="This plan is locked for the first 30 days of active investment.">
+                     <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] uppercase font-bold tracking-wider rounded border border-emerald-500/20">Dynamic Profit Accruing</span>
+                     {true ? (
+                       <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded select-none cursor-default" title="This plan is locked. Accrued profits automatically transfer upon completion.">
                          <Lock className="w-3 h-3 text-amber-500 animate-pulse" />
-                         <span>Locked ({remainingDays}d left)</span>
+                         <span>Locked ({remainingDays}d / Max 30d)</span>
                        </div>
                      ) : (
                        <button onClick={() => onCancelPlan(inv.id)} className="px-3 py-1.5 text-[10px] uppercase font-bold text-rose-400 tracking-wider bg-rose-500/10 border border-rose-500/20 rounded hover:bg-rose-500/20 transition-all">Cancel Plan</button>
@@ -125,6 +126,31 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                );
              })}
            </div>
+        </div>
+      )}
+
+      {completedPlans.length > 0 && (
+        <div className="bg-[#111111] border border-emerald-500/10 rounded-2xl p-5 mt-8">
+            <h3 className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest mb-4">Completed (Matured) Portfolios</h3>
+            <div className="space-y-3">
+              {completedPlans.map(inv => {
+                const planInfo = PLANS.find(p => p.id === inv.planId);
+                return (
+                  <div key={inv.id} className="flex flex-col sm:flex-row justify-between sm:items-center bg-black/40 border border-emerald-500/10 rounded-xl p-4 gap-4">
+                    <div>
+                      <p className={`text-sm font-bold capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
+                      <p className="text-xs text-white/40 mt-0.5">Matured Return: {currencySymbol}{(inv.amount * (planInfo ? planInfo.targetPercent / 100 : 1.20) * conversionRate).toFixed(2)} (Principal & Yield Credited)</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded select-none cursor-default">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Matured</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
         </div>
       )}
 
@@ -140,7 +166,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
               <div className="flex justify-between items-center mb-6">
                  <div>
                    <h2 className={`text-xl font-bold font-serif ${selectedPlan.color}`}>Activate {selectedPlan.name}</h2>
-                   <p className="text-xs text-white/40 mt-1 uppercase tracking-wider">Earn {selectedPlan.dailyProfit}% daily profit</p>
+                   <p className="text-xs text-white/40 mt-1 uppercase tracking-wider">Target Return: {selectedPlan.targetPercent}%</p>
                  </div>
                  <button onClick={() => { setSelectedPlan(null); setError(''); }} className="p-2 bg-white/5 rounded-full text-white/50 hover:text-white">
                    <XCircle className="w-5 h-5" />
@@ -169,8 +195,8 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                  )}
 
                  <p className="text-[10px] text-white/30 leading-relaxed px-1">
-                   Note: The investment principal will be locked to generate daily yields. 
-                   You can withdraw profits at any time. Cancelling the plan is available exactly 30 days after activation, which returns your principal to your wallet and stops future daily earnings.
+                   Note: The investment principal will be locked to generate yields. The portfolio automatically matures once the Target Return of {selectedPlan.targetPercent}% is reached, or after a maximum of 30 days. No manual cancellation or auto-renewal is permitted. 
+                   Once completed, your matured principal and profit will be credited to your Matured Balance, ready for reinvestment or withdrawal.
                  </p>
 
                  <button 

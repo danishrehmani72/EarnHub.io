@@ -428,6 +428,7 @@ export default function App() {
           createdAt: data.createdAt,
           timestamp: data.timestamp || '',
           cancelledAt: data.cancelledAt,
+          completedAt: data.completedAt,
         });
       });
       setInvestments(list);
@@ -507,11 +508,11 @@ export default function App() {
     }
   }, []);
 
-  // Automated background cancellation for completed (20% growth) active plans
+  // Automated background completion for active plans according to validation rules
   useEffect(() => {
     if (!currentUid || !investments.length) return;
 
-    const autoCancelCompletedPlans = async () => {
+    const autoProcessPlanCompletions = async () => {
       const nowTime = Date.now();
       for (const processPlan of investments) {
         if (processPlan.status !== 'active') continue;
@@ -526,9 +527,19 @@ export default function App() {
         
         let profit = 0;
         const planKey = processPlan.id || String(startTime);
-        const limitProfit = processPlan.amount * 0.20;
+        
+        const normalizedPlanId = (processPlan.planId || '').toLowerCase().trim();
+        const planCap = normalizedPlanId === 'silver' ? 0.25 
+                      : normalizedPlanId === 'gold' ? 0.30 
+                      : normalizedPlanId === 'diamond' ? 0.40 
+                      : 0.20;
+        const maxProfitLimit = processPlan.amount * planCap;
+        const maxCalculationDays = 30;
 
-        for (let day = 1; day <= totalDays; day++) {
+        const daysToSimulate = Math.min(totalDays, maxCalculationDays);
+        let reachedTarget = false;
+
+        for (let day = 1; day <= daysToSimulate; day++) {
           let hash = 0;
           const str = planKey + "_" + day;
           for (let idx = 0; idx < str.length; idx++) {
@@ -539,31 +550,35 @@ export default function App() {
           const dailyPercent = rates[index];
           const dayProfit = processPlan.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
           
-          if (profit + dayProfit >= limitProfit) {
-            profit = limitProfit;
+          if (profit + dayProfit >= maxProfitLimit) {
+            profit = maxProfitLimit;
+            reachedTarget = true;
             break;
           }
           profit += dayProfit;
         }
 
-        // If profit reached exactly the 20% limit, cancel the plan automatically and return the principal
-        if (profit >= limitProfit) {
+        const isTimeCompleted = totalDays >= maxCalculationDays;
+        const reachedCompletion = reachedTarget || isTimeCompleted;
+
+        if (reachedCompletion) {
           try {
             const invRef = doc(db, 'users', currentUid, 'investments', processPlan.id);
             await setDoc(invRef, {
-              status: 'cancelled',
-              cancelledAt: serverTimestamp()
+              status: 'completed',
+              completedAt: serverTimestamp()
             }, { merge: true });
             
-            addToast(`Investment plan reached 20% growth limit! Principal $${processPlan.amount.toFixed(2)} has been returned to your wallet. ⚡`, 'success');
+            const targetReturnPercent = Math.round((1 + planCap) * 100);
+            addToast(`Investment plan (${processPlan.planId.toUpperCase()}) completed! Matured return of ${targetReturnPercent}% reached. Funds are now available in Matured Balance. ⚡`, 'success');
           } catch (e) {
-            console.error("Auto cancel error:", e);
+            console.error("Auto completion error:", e);
           }
         }
       }
     };
 
-    autoCancelCompletedPlans();
+    autoProcessPlanCompletions();
   }, [currentUid, investments, virtualDays, globalSettings]);
 
   // Manual re-fetch of all user data from Firestore using server documents directly (bypassing client caches)
@@ -668,6 +683,7 @@ export default function App() {
           createdAt: data.createdAt,
           timestamp: data.timestamp || '',
           cancelledAt: data.cancelledAt,
+          completedAt: data.completedAt,
         });
       });
       setInvestments(investmentList);
@@ -1004,12 +1020,17 @@ export default function App() {
   // Calculate real-time profit accrued on each investment
   const nowTime = Date.now();
   const investmentProfits = investments.reduce((sum, processPlan) => {
-    // If it's cancelled, we calculate up to cancelledAt, else up to now
+    // If it's cancelled, we calculate up to cancelledAt
+    // If it's completed, we calculate up to completedAt
     let endTime = nowTime;
     if (processPlan.status === 'cancelled' && processPlan.cancelledAt) {
       endTime = processPlan.cancelledAt?.seconds 
         ? processPlan.cancelledAt.seconds * 1000 
         : new Date(processPlan.cancelledAt).getTime() || nowTime;
+    } else if (processPlan.status === 'completed' && processPlan.completedAt) {
+      endTime = processPlan.completedAt?.seconds 
+        ? processPlan.completedAt.seconds * 1000 
+        : new Date(processPlan.completedAt).getTime() || nowTime;
     }
 
     const startTime = processPlan.createdAt?.seconds 
@@ -1022,9 +1043,17 @@ export default function App() {
     
     let profit = 0;
     const planKey = processPlan.id || String(startTime);
-    const maxProfitLimit = processPlan.amount * 0.20; // 20% growth cap
+    const normalizedPlanId = (processPlan.planId || '').toLowerCase().trim();
+    const planCap = normalizedPlanId === 'silver' ? 0.25 
+                  : normalizedPlanId === 'gold' ? 0.30 
+                  : normalizedPlanId === 'diamond' ? 0.40 
+                  : 0.20;
+    const maxProfitLimit = processPlan.amount * planCap;
+    const maxCalculationDays = 30;
 
-    for (let day = 1; day <= totalDays; day++) {
+    const daysToSimulate = Math.min(totalDays, maxCalculationDays);
+
+    for (let day = 1; day <= daysToSimulate; day++) {
       let hash = 0;
       const str = planKey + "_" + day;
       for (let idx = 0; idx < str.length; idx++) {
@@ -1043,6 +1072,54 @@ export default function App() {
     }
     return sum + (profit > 0 ? profit : 0);
   }, 0);
+
+  // Matured Balance computes principal + profit of all completed plans
+  const maturedBalance = investments
+    .filter(i => i.status === 'completed')
+    .reduce((sum, processPlan) => {
+      let endTime = nowTime;
+      if (processPlan.completedAt) {
+        endTime = processPlan.completedAt?.seconds 
+          ? processPlan.completedAt.seconds * 1000 
+          : new Date(processPlan.completedAt).getTime() || nowTime;
+      }
+      const startTime = processPlan.createdAt?.seconds 
+        ? processPlan.createdAt.seconds * 1000 
+        : new Date(processPlan.timestamp).getTime() || nowTime;
+        
+      const elapsedMs = Math.max(0, endTime - startTime);
+      const elapsedDaysReal = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
+      const totalDays = elapsedDaysReal;
+      
+      let profit = 0;
+      const planKey = processPlan.id || String(startTime);
+      const normalizedPlanId = (processPlan.planId || '').toLowerCase().trim();
+      const planCap = normalizedPlanId === 'silver' ? 0.25 
+                    : normalizedPlanId === 'gold' ? 0.30 
+                    : normalizedPlanId === 'diamond' ? 0.40 
+                    : 0.20;
+      const maxProfitLimit = processPlan.amount * planCap;
+      const daysToSimulate = Math.min(totalDays, 30);
+
+      for (let day = 1; day <= daysToSimulate; day++) {
+        let hash = 0;
+        const str = planKey + "_" + day;
+        for (let idx = 0; idx < str.length; idx++) {
+          hash = str.charCodeAt(idx) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % 4;
+        const rates = [1.0, 2.0, 0.1, 0.5];
+        const dailyPercent = rates[index];
+        const dayProfit = processPlan.amount * (dailyPercent / 100) * (globalSettings?.yieldMultiplier || 1.0);
+        
+        if (profit + dayProfit >= maxProfitLimit) {
+          profit = maxProfitLimit;
+          break;
+        }
+        profit += dayProfit;
+      }
+      return sum + processPlan.amount + (profit > 0 ? profit : 0);
+    }, 0);
 
   // The active investments are locked, so subtract from balance
   const activeInvestmentsSum = investments
@@ -1544,6 +1621,7 @@ export default function App() {
                 onUpdateTxStatus={handleUpdateTxStatus}
                 onSignOut={handleSignOut}
                 investmentProfits={investmentProfits}
+                maturedBalance={maturedBalance}
                 onAddToast={addToast}
                 userProfile={userProfile}
                 onClaimDailyReward={handleClaimDailyReward}

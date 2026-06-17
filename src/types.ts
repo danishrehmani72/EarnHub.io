@@ -60,10 +60,11 @@ export interface UserPlan {
   id: string;
   planId: string;
   amount: number;
-  status: 'active' | 'cancelled';
+  status: 'active' | 'cancelled' | 'completed';
   createdAt: any;
   timestamp: string;
   cancelledAt?: any;
+  completedAt?: any;
 }
 
 export interface DailyRewardLog {
