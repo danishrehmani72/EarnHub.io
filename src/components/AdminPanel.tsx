@@ -177,6 +177,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const [processingTxId, setProcessingTxId] = useState<string | null>(null);
   const [blockchainHash, setBlockchainHash] = useState<string | null>(null);
   const [telegramLogs, setTelegramLogs] = useState<{ msg: string; time: string }[]>([]);
+  const [customNotes, setCustomNotes] = useState<Record<string, string>>({});
 
   // Manual override states
   const [overrideTarget, setOverrideTarget] = useState('');
@@ -775,7 +776,10 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       const txRef = doc(db, 'users', userUid, type === 'deposit' ? 'deposits' : 'withdrawals', txId);
       await setDoc(txRef, { status: action }, { merge: true });
 
-      // Send email notification
+      // Retrieve attached custom note if any to send along with custom email
+      const noteMessage = customNotes[txId] || "";
+
+      // Send email notification with optional custom admin note
       const user = allUsers.find(u => u.userId === userUid);
       if (user && user.email) {
         await fetch('/api/send-tx-notification', {
@@ -786,10 +790,18 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             userName: user.name,
             type,
             status: action,
-            amount
+            amount,
+            customNote: noteMessage
           })
         }).catch(err => console.error("Failed to send notification email", err));
       }
+
+      // Cleanup note message state for this transaction
+      setCustomNotes(prev => {
+        const copy = { ...prev };
+        delete copy[txId];
+        return copy;
+      });
 
       onAddToast(`${type === 'deposit' ? 'Deposit' : 'Withdrawal'} status successfully updated to ${action}!`, 'success', type === 'deposit' ? 'deposit_submitted' : 'withdrawal_approved');
       logAuditAction(`Approved ${type} ID ${txId} for user ${userUid} with status: ${action}`, 'financial');
@@ -1893,6 +1905,52 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                         : `Recipient Destination Wallet Address: ${tx.wallet}`
                       }
                     </p>
+
+                    {tx.status === 'pending' && (
+                      <div className="mt-2 space-y-2">
+                        <label className="text-[8px] font-black text-[#D4AF37]/80 uppercase tracking-widest block font-sans">
+                          Attach optional custom notification email short note / custom remark:
+                        </label>
+                        <input
+                          type="text"
+                          value={customNotes[tx.id] || ''}
+                          onChange={(e) => setCustomNotes(prev => ({ ...prev, [tx.id]: e.target.value }))}
+                          placeholder={isDeposit ? "e.g. Block hash verified, or Please attach visible receipt..." : "e.g. Disbursement processed, check ledger explorer..."}
+                          className="w-full bg-[#0a0a0a] border border-white/5 focus:border-[#D4AF37]/35 rounded-lg px-3 py-1.5 text-[9.5px] text-white/90 placeholder-white/25 outline-none font-sans"
+                        />
+                        
+                        {/* Quick Selection Professional Templates */}
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          <span className="text-[7px] font-black text-[#D4AF37] uppercase tracking-wider mr-1">
+                            🎯 Quick Shortcuts:
+                          </span>
+                          {(isDeposit 
+                            ? [
+                                "Receipt verified! Your balance is now active.",
+                                "Authorized! Staking tier increment successfully credited.",
+                                "Verification complete. Welcome to your active portfolio.",
+                                "Attachment unclear. Please resubmit with a visible receipt."
+                              ]
+                            : [
+                                "Withdrawal cleared! Dispatched safely to your wallet.",
+                                "Transaction processed via our secure automated escrow gateway.",
+                                "Disbursed. Please analyze your blockchain ledger block.",
+                                "Invalid address/data. Contact support desk for correction."
+                              ]
+                          ).map((tmpl, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setCustomNotes(prev => ({ ...prev, [tx.id]: tmpl }))}
+                              title={tmpl}
+                              className="text-[7.5px] bg-white/5 hover:bg-[#D4AF37]/10 active:scale-95 text-white/60 hover:text-[#D4AF37] px-2 py-0.5 rounded border border-white/5 hover:border-[#D4AF37]/20 transition-all font-sans cursor-pointer whitespace-nowrap"
+                            >
+                              {tmpl.length > 28 ? tmpl.slice(0, 25) + '...' : tmpl}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center gap-2 self-end lg:self-center">

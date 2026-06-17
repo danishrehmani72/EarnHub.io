@@ -211,7 +211,7 @@ async function sendGeneralEmail({
 
 // API route to notify users about transaction status changes (approvals/rejections)
 app.post("/api/send-tx-notification", async (req, res) => {
-  const { email, userName, type, status, amount } = req.body;
+  const { email, userName, type, status, amount, customNote } = req.body;
   if (!email || !type || !status) {
     return res.status(400).json({ error: "Required fields missing." });
   }
@@ -244,13 +244,27 @@ app.post("/api/send-tx-notification", async (req, res) => {
     messageContent = `Your ${type} has been ${status}.`;
   }
 
-  const text = `Hello ${userName || "User"},\n\n${messageContent}\n\nBest regards,\nMoneyMind Space Administration`;
+  let customNoteSectionHtml = "";
+  let customNoteSectionText = "";
+  if (customNote && String(customNote).trim().length > 0) {
+    const cleanNote = String(customNote).trim();
+    customNoteSectionText = `\n\nNote from Admin: "${cleanNote}"`;
+    customNoteSectionHtml = `
+      <div style="margin-top: 15px; padding: 12px; background-color: #f8fafc; border-left: 4px solid #D4AF37; border-radius: 4px; text-align: left;">
+        <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #d97706; display: block; margin-bottom: 4px; font-family: sans-serif;">Note from Administrator:</span>
+        <p style="font-size: 13px; color: #475569; margin: 0; font-style: italic; font-family: sans-serif;">"${cleanNote}"</p>
+      </div>
+    `;
+  }
+
+  const text = `Hello ${userName || "User"},\n\n${messageContent}${customNoteSectionText}\n\nBest regards,\nMoneyMind Space Administration`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
       <h3 style="color: #D4AF37; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">MoneyMind Space Platform Ledger Notification</h3>
       <p>Hello <strong>${userName || "User"}</strong>,</p>
       <p style="font-size: 15px; color: #334155; line-height: 1.6;">${messageContent}</p>
       ${amount ? `<p style="font-size: 13px; color: #64748b;">Amount: $${Number(amount).toFixed(2)}</p>` : ""}
+      ${customNoteSectionHtml}
       <p style="font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 20px;">
         This is an automated notification. Please contact our 24/7 support if you have any questions.
       </p>
