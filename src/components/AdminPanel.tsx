@@ -156,6 +156,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [securityLogs, setSecurityLogs] = useState<any[]>([]);
+  const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filterWStatus, setFilterWStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
@@ -398,8 +399,8 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const fetchAllData = async () => {
     setIsDataLoading(true);
     try {
-      // 1. Fetch user base profiles plus all subcollections concurrently using collection group queries (exactly 5 parallel queries total!)
-      const [usersSnap, depositsSnap, withdrawalsSnap, investmentsSnap, referralsSnap, secLogsSnap] = await Promise.all([
+      // 1. Fetch user base profiles plus all subcollections concurrently using collection group queries (exactly 5 parallel queries total plus email logs!)
+      const [usersSnap, depositsSnap, withdrawalsSnap, investmentsSnap, referralsSnap, secLogsSnap, emailLogsSnap] = await Promise.all([
         getDocs(collection(db, 'users')),
         getDocs(collectionGroup(db, 'deposits')).catch((err) => {
           console.warn("Failed to fetch collectionGroup deposits", err);
@@ -419,6 +420,10 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         }),
         getDocs(collection(db, 'security_logs')).catch((err) => {
           console.warn("Silent failure loading database security logs collection", err);
+          return { docs: [] } as any;
+        }),
+        getDocs(collection(db, 'email_logs')).catch((err) => {
+          console.warn("Silent failure loading database email logs collection", err);
           return { docs: [] } as any;
         })
       ]);
@@ -549,6 +554,17 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         return timeB - timeA;
       });
       setSecurityLogs(fetchedSecLogs);
+
+      // Process email logs with desc date sort
+      const fetchedEmailLogs = emailLogsSnap && emailLogsSnap.docs ? emailLogsSnap.docs.map((docSnap: any) => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      })).sort((a: any, b: any) => {
+        const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timeB - timeA;
+      }) : [];
+      setEmailLogs(fetchedEmailLogs);
 
       setIsDataLoading(false);
     } catch (e) {
@@ -2397,39 +2413,98 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
       </div>
 
-      {/* AUDIT LOG PERSISTENT LEDGER */}
-      <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
-        <div className="space-y-0.5">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5">
-            <Terminal className="w-4 h-4" />
-            Persistent Platform Audit Log Ledger
-          </h4>
-          <p className="text-[9px] text-white/40">Secure administrative historical trailing ledger recorded on cloud nodes</p>
+      {/* AUDIT & EMAIL LOGS SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+        
+        {/* AUDIT LOG PERSISTENT LEDGER */}
+        <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
+          <div className="space-y-0.5">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5">
+              <Terminal className="w-4 h-4" />
+              Persistent Platform Audit Log Ledger
+            </h4>
+            <p className="text-[9px] text-white/40">Secure administrative historical trailing ledger recorded on cloud nodes</p>
+          </div>
+
+          <div className="bg-[#070707] border border-white/5 rounded-xl h-[240px] overflow-y-auto select-all scrollbar-thin divide-y divide-white/[0.03]">
+            {auditLogs.length === 0 ? (
+              <div className="p-12 text-center text-[10px] font-mono text-white/20 uppercase tracking-widest leading-relaxed">
+                No cloud audit logs captured. Syncing cloud ledger triggers.
+              </div>
+            ) : (
+              auditLogs.map((log) => (
+                <div key={log.id} className="p-3 flex items-center justify-between gap-4 font-mono text-[9.5px] leading-relaxed">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${
+                      log.type === 'auth' ? 'bg-[#D4AF37]' :
+                      log.type === 'financial' ? 'bg-emerald-400' :
+                      log.type === 'security' ? 'bg-rose-500' : 'bg-sky-400'
+                    }`} />
+                    <span className="text-white/30 shrink-0">[{log.time}]</span>
+                    <span className="text-white/50 bg-white/5 px-1.5 py-0.5 rounded leading-none text-[8.5px] font-bold uppercase">{log.type}</span>
+                    <span className="text-white/80">{log.action}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        <div className="bg-[#070707] border border-white/5 rounded-xl h-[200px] overflow-y-auto select-all scrollbar-thin divide-y divide-white/[0.03]">
-          {auditLogs.length === 0 ? (
-            <div className="p-12 text-center text-[10px] font-mono text-white/20 uppercase tracking-widest leading-relaxed">
-              No cloud audit logs captured. Syncing cloud ledger triggers.
-            </div>
-          ) : (
-            auditLogs.map((log) => (
-              <div key={log.id} className="p-3 flex items-center justify-between gap-4 font-mono text-[9.5px] leading-relaxed">
-                <div className="flex items-center gap-2.5">
-                  <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${
-                    log.type === 'auth' ? 'bg-[#D4AF37]' :
-                    log.type === 'financial' ? 'bg-emerald-400' :
-                    log.type === 'security' ? 'bg-rose-500' : 'bg-sky-400'
-                  }`} />
-                  <span className="text-white/30 shrink-0">[{log.time}]</span>
-                  <span className="text-white/50 bg-white/5 px-1.5 py-0.5 rounded leading-none text-[8.5px] font-bold uppercase">{log.type}</span>
-                  <span className="text-white/80">{log.action}</span>
-                </div>
+        {/* EMAIL TRANSMISSION DISPATCH LOGS */}
+        <div id="email-logs-section" className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
+          <div className="space-y-0.5">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5">
+              <Mail className="w-4 h-4 text-[#D4AF37]" />
+              System Email Dispatch Logs (Resend)
+            </h4>
+            <p className="text-[9px] text-white/40">Real-time status tracking for welcome messages, transactions alerts, and system OTP runs</p>
+          </div>
+
+          <div className="bg-[#070707] border border-white/5 rounded-xl h-[240px] overflow-y-auto select-all scrollbar-thin divide-y divide-white/[0.03] text-left">
+            {emailLogs.length === 0 ? (
+              <div className="p-12 text-center text-[10px] font-mono text-white/20 uppercase tracking-widest leading-relaxed">
+                No system email transmissions captured.
               </div>
-            ))
-          )}
+            ) : (
+              emailLogs.map((log, index) => (
+                <div key={log.id || index} className="p-3 flex flex-col gap-1.5 font-mono text-[9.5px]">
+                  <div className="flex items-center justify-between gap-2 text-left">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        log.status === 'success' ? 'bg-emerald-400' : 'bg-rose-500'
+                      }`} />
+                      <span className="text-zinc-400">To: <span className="text-white font-sans font-bold">{log.to}</span></span>
+                    </div>
+                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${
+                      log.status === 'success'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                        : 'bg-rose-500/10 text-rose-400 border-rose-500/25'
+                    }`}>
+                      {log.status === 'success' ? 'SENT' : 'FAILED'}
+                    </span>
+                  </div>
+                  
+                  <div className="text-zinc-300 font-sans pl-3.5 text-left">
+                    Subject: <span className="text-[#D4AF37] font-semibold">"{log.subject}"</span>
+                  </div>
+
+                  {log.error && (
+                    <div className="text-red-400 bg-rose-500/5 p-1.5 rounded text-[8px] border border-rose-500/10 ml-3.5 whitespace-pre-wrap font-mono text-left">
+                      Error: {log.error}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[8px] text-white/35 pl-3.5 text-left">
+                    <span>Provider: <span className="text-zinc-400 uppercase">Resend</span></span>
+                    <span>{log.timestamp ? new Date(log.timestamp).toLocaleString() : 'Just now'}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
       </div>
-    </div>
   </div>
   );
 }
