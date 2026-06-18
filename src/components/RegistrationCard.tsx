@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { UserPlus, Sparkles, TrendingUp, HelpCircle, Key, LogIn, UserCheck, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import CodeModal from './CodeModal';
+import EmailVerificationModal from './EmailVerificationModal';
 import earnhubLogo from '../assets/images/earnhub_logo_1780161493423.png';
 import { db } from '../lib/firebase';
 import { doc, setDoc, serverTimestamp, getDoc, collection, getDocFromServer, query, where, getDocs } from 'firebase/firestore';
@@ -75,6 +76,9 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
   // 1. Store and track User IP, Device Fingerprint, Browser info, Email verification & Captcha states
   const [email, setEmail] = useState('');
+  const [isEmailVerificationModalOpen, setIsEmailVerificationModalOpen] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
+  const [pendingVerificationUserId, setPendingVerificationUserId] = useState('');
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [emailVerificationCode, setEmailVerificationCode] = useState('');
   const [sentCode, setSentCode] = useState<string | null>(null);
@@ -240,10 +244,6 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
     if (!email.trim() || !email.includes('@') || email.length < 5) {
       setError('Please provide a valid email address.');
-      return;
-    }
-    if (!isEmailVerified) {
-      setError('Email address must be verified using the 6-Digit code.');
       return;
     }
     if (!isCaptchaVerified) {
@@ -476,7 +476,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         name: cleanName,
         full_name: cleanName, // lowercase DB key
         email: email.trim(),
-        emailVerified: isEmailVerified,
+        emailVerified: false,
         deviceFingerprint: currentFingerprint,
         ipAddress: clientIp,
         browserInfo: navigator.userAgent,
@@ -585,8 +585,8 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         }
       }
 
-      // 5. Highlight beautiful feedback and transition to login box
-      setSuccessMsg('✅ Successfully Registered!');
+      // 5. Highlight beautiful feedback and trigger post-registration verification modal
+      setSuccessMsg('✅ Successfully Registered! Please complete email verification.');
       
       // Dispatch welcome email via background process
       fetch('/api/send-email', {
@@ -602,10 +602,14 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         })
       }).catch(err => console.error("Welcome email silent failover handler:", err));
       
+      setPendingVerificationEmail(email.trim());
+      setPendingVerificationUserId(cleanUserId);
+      
       setTimeout(() => {
         setMode('login');
         setSuccessMsg('');
         setPassword(''); // Clear security fields
+        setIsEmailVerificationModalOpen(true);
       }, 1500);
     } catch (err: any) {
       console.error(err);
@@ -654,6 +658,16 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         return;
       }
 
+      const userData = userSnap.data();
+      if (userData && userData.emailVerified === false) {
+        setIsLoading(false);
+        setError('');
+        setPendingVerificationEmail(userData.email || '');
+        setPendingVerificationUserId(cleanUserId);
+        setIsEmailVerificationModalOpen(true);
+        return;
+      }
+
       setSuccessMsg('🎉 Login Successful!');
       localStorage.setItem('earnhub_logged_in_uid', cleanUserId);
       
@@ -673,6 +687,21 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Callback triggers when verification code is successfully entered
+  const handleVerificationSuccess = () => {
+    if (pendingVerificationUserId) {
+      const cleanUserId = pendingVerificationUserId.trim().toLowerCase();
+      setSuccessMsg('🎉 Account Verified & Login Successful!');
+      localStorage.setItem('earnhub_logged_in_uid', cleanUserId);
+      setTimeout(() => {
+        onLoginSuccess(cleanUserId);
+      }, 1500);
+    } else {
+      setSuccessMsg('🎉 Account verified. Please login with your password.');
+      setMode('login');
     }
   };
 
@@ -1303,64 +1332,24 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         {/* Anti-Fraud Email and CAPTCHA registration modules */}
         {mode === 'signup' && (
           <div className="space-y-4 border-t border-white/5 pt-4">
-            {/* Email Verification Section */}
+            {/* Email Address Input Section */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm">📧</span>
                 <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">
-                  Verify Email Address (Required)
+                  Email Address
                 </label>
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  disabled={isEmailVerified}
-                  placeholder="e.g. member@domain.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (e.target.value) setError('');
-                  }}
-                  className="flex-1 bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-[#D4AF37]/60 transition-all shadow-inner disabled:opacity-50"
-                />
-                <button
-                  type="button"
-                  disabled={isEmailVerified || isSendingCode || !email.includes('@')}
-                  onClick={handleSendVerificationCode}
-                  className="px-3 py-1 bg-[#D4AF37] hover:bg-[#c39e2e] disabled:bg-white/5 disabled:text-white/20 text-black text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md shadow-[#D4AF37]/10"
-                >
-                  {isSendingCode ? 'Sending...' : isEmailVerified ? 'Verified ✔' : 'Get Code'}
-                </button>
-              </div>
-
-              <div className="flex gap-2 mt-2">
-                <input
-                  type="text"
-                  maxLength={6}
-                  placeholder="Enter 6-Digit Code"
-                  value={enteredCode}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '');
-                    setEnteredCode(val);
-                    if (val) setError('');
-                  }}
-                  className="flex-1 text-center bg-black border border-white/10 rounded-xl p-2 font-mono text-xs tracking-widest text-[#D4AF37] focus:border-[#D4AF37]/50 outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={handleVerifyEmailCode}
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-black text-[10px] font-black rounded-xl transition-all uppercase cursor-pointer"
-                >
-                  Verify
-                </button>
-              </div>
-
-              {isEmailVerified && (
-                <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-1">
-                  <span>✔</span>
-                  <span>Email address verified successfully.</span>
-                </p>
-              )}
+              <input
+                type="email"
+                placeholder="e.g. member@domain.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (e.target.value) setError('');
+                }}
+                className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-[#D4AF37]/60 transition-all shadow-inner"
+              />
             </div>
 
             {/* Google reCAPTCHA Verification Module */}
@@ -1792,6 +1781,13 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
     </AnimatePresence>
 
     <CodeModal isOpen={isCodeModalOpen} onClose={() => setIsCodeModalOpen(false)} sentCode={sentCode} />
+    <EmailVerificationModal
+      isOpen={isEmailVerificationModalOpen}
+      onClose={() => setIsEmailVerificationModalOpen(false)}
+      email={pendingVerificationEmail}
+      userId={pendingVerificationUserId}
+      onVerified={handleVerificationSuccess}
+    />
   </>
 );
 }
