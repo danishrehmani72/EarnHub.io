@@ -171,8 +171,8 @@ async function sendGeneralEmail({
 
   if (resendApiKey) {
     try {
-      console.log(`[Resend Engine] Dispatching request to Resend API for: ${to}`);
-      const response = await fetch("https://api.resend.com/emails", {
+      console.log(`[Resend Engine] Attempting dispatch to Resend API using verified sender <${senderEmail}> for: ${to}`);
+      let response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${resendApiKey}`,
@@ -189,7 +189,28 @@ async function sendGeneralEmail({
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Resend API Error (HTTP ${response.status}): ${errorText}`);
+        console.warn(`[Resend Primary Fail] ${errorText}. Executing automatic retry with onboarding@resend.dev...`);
+        
+        // Automated fallback to onboarding@resend.dev to ensure seamless free-tier delivery
+        response = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            from: `MoneyMind Space <onboarding@resend.dev>`,
+            to: [to],
+            subject,
+            html,
+            text
+          })
+        });
+
+        if (!response.ok) {
+          const finalErrorText = await response.text();
+          throw new Error(`Resend Primary & Fallback failed. Final API Error: ${finalErrorText}`);
+        }
       }
 
       const resData = await response.json();
