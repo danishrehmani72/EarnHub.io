@@ -399,23 +399,32 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const fetchAllData = async () => {
     setIsDataLoading(true);
     try {
+      let depositsFailed = false;
+      let withdrawalsFailed = false;
+      let investmentsFailed = false;
+      let referralsFailed = false;
+
       // 1. Fetch user base profiles plus all subcollections concurrently using collection group queries (exactly 5 parallel queries total plus email logs!)
       const [usersSnap, depositsSnap, withdrawalsSnap, investmentsSnap, referralsSnap, secLogsSnap, emailLogsSnap] = await Promise.all([
         getDocs(collection(db, 'users')),
         getDocs(collectionGroup(db, 'deposits')).catch((err) => {
           console.warn("Failed to fetch collectionGroup deposits", err);
+          depositsFailed = true;
           return { docs: [] } as any;
         }),
         getDocs(collectionGroup(db, 'withdrawals')).catch((err) => {
           console.warn("Failed to fetch collectionGroup withdrawals", err);
+          withdrawalsFailed = true;
           return { docs: [] } as any;
         }),
         getDocs(collectionGroup(db, 'investments')).catch((err) => {
           console.warn("Failed to fetch collectionGroup investments", err);
+          investmentsFailed = true;
           return { docs: [] } as any;
         }),
         getDocs(collectionGroup(db, 'referrals')).catch((err) => {
           console.warn("Failed to fetch collectionGroup referrals", err);
+          referralsFailed = true;
           return { docs: [] } as any;
         }),
         getDocs(collection(db, 'security_logs')).catch((err) => {
@@ -439,29 +448,41 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       let hasInvestments = investmentsSnap.docs && investmentsSnap.docs.length > 0;
       let hasReferrals = referralsSnap.docs && referralsSnap.docs.length > 0;
 
-      // If any collection group returned empty or was blocked by missing composite indexes in Firestore,
+      // If any collection group query actually failed (due to missing indexes or permission blocks),
       // run an ultra-reliable, index-free fallback that queries each user's subcollections in parallel.
-      if (!hasDeposits || !hasWithdrawals || !hasInvestments || !hasReferrals) {
-        console.log("No collection group data detected (possible missing composite index on Firestore). Executing failover collection scan...");
+      if (depositsFailed || withdrawalsFailed || investmentsFailed || referralsFailed) {
+        console.log("Some collection group queries failed. Executing failover target scan...");
         await Promise.all(usersSnap.docs.map(async (userDoc) => {
           const userId = userDoc.id;
-          const [uDeps, uWits, uInvs, uRefs] = await Promise.all([
-            getDocs(collection(db, 'users', userId, 'deposits')).catch(() => ({ docs: [] })),
-            getDocs(collection(db, 'users', userId, 'withdrawals')).catch(() => ({ docs: [] })),
-            getDocs(collection(db, 'users', userId, 'investments')).catch(() => ({ docs: [] })),
-            getDocs(collection(db, 'users', userId, 'referrals')).catch(() => ({ docs: [] }))
-          ]);
+          
+          const depsPromise = depositsFailed 
+            ? getDocs(collection(db, 'users', userId, 'deposits')).catch(() => ({ docs: [] }))
+            : Promise.resolve({ docs: [] });
+            
+          const witsPromise = withdrawalsFailed
+            ? getDocs(collection(db, 'users', userId, 'withdrawals')).catch(() => ({ docs: [] }))
+            : Promise.resolve({ docs: [] });
+            
+          const invsPromise = investmentsFailed
+            ? getDocs(collection(db, 'users', userId, 'investments')).catch(() => ({ docs: [] }))
+            : Promise.resolve({ docs: [] });
+            
+          const refsPromise = referralsFailed
+            ? getDocs(collection(db, 'users', userId, 'referrals')).catch(() => ({ docs: [] }))
+            : Promise.resolve({ docs: [] });
 
-          if (uDeps.docs.length > 0) {
+          const [uDeps, uWits, uInvs, uRefs] = await Promise.all([depsPromise, witsPromise, invsPromise, refsPromise]);
+
+          if (depositsFailed && uDeps.docs.length > 0) {
             depositsByUserId[userId] = uDeps.docs.map(d => ({ id: d.id, ...d.data() }));
           }
-          if (uWits.docs.length > 0) {
+          if (withdrawalsFailed && uWits.docs.length > 0) {
             withdrawalsByUserId[userId] = uWits.docs.map(d => ({ id: d.id, ...d.data() }));
           }
-          if (uInvs.docs.length > 0) {
+          if (investmentsFailed && uInvs.docs.length > 0) {
             investmentsByUserId[userId] = uInvs.docs.map(d => ({ id: d.id, ...d.data() }));
           }
-          if (uRefs.docs.length > 0) {
+          if (referralsFailed && uRefs.docs.length > 0) {
             referralsByUserId[userId] = uRefs.docs.map(d => ({ id: d.id, ...d.data() }));
           }
         }));

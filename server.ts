@@ -374,8 +374,7 @@ app.post("/api/send-email", async (req, res) => {
         <p style="margin-top: 20px; font-size: 14px; color: #334155;">Please log in to your Admin Panel to review and action this deposit.</p>
       </div>
     `;
-  }
-  else if (normType === "withdrawal_admin") {
+  } else if (normType === "withdrawal_admin") {
     subject = `New Withdrawal Request Submitted - $${payload.amount}`;
     text = `A user has submitted a new withdrawal request.\n\nUsername: ${payload.userName || "User"}\nEmail: ${payload.email || "N/A"}\nAmount: $${payload.amount}\nPayment Method: ${payload.paymentMethod || "N/A"}\nDate: ${payload.date || "N/A"}`;
     html = `
@@ -409,6 +408,45 @@ app.post("/api/send-email", async (req, res) => {
           </tr>
         </table>
         <p style="margin-top: 20px; font-size: 14px; color: #334155;">Please log in to your Admin Panel to review and action this withdrawal request.</p>
+      </div>
+    `;
+  } else if (normType === "deposit_submitted") {
+    subject = `Deposit Request Received - $${payload.amount}`;
+    text = `Hello ${payload.userName || "User"},\n\nWe have received your deposit request of $${payload.amount} via ${payload.paymentMethod}. Our verification systems are currently reviewing this transfer (Transaction ID: ${payload.txHash || "N/A"}). This typically takes between 5 to 15 minutes.\n\nBest regards,\nMoneyMind Space Team`;
+    html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #10B981; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 18px; margin-top: 0;">Deposit Request Received</h2>
+        <p>Dear <strong>${payload.userName || "User"}</strong>,</p>
+        <p>We are writing to confirm that your deposit request has been successfully submitted and logged on the ledger:</p>
+        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10B981;">
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Amount:</strong> $${payload.amount}</p>
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Payment Network:</strong> ${payload.paymentMethod || "N/A"}</p>
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Transaction ID/Hash:</strong> ${payload.txHash || "N/A"}</p>
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Time Logged:</strong> ${payload.date || "N/A"}</p>
+        </div>
+        <p style="font-size: 14px; color: #334155; line-height: 1.6;">Our security compliance desk (Chief Officer Danish) is actively auditing this transfer. Once the block receipt is confirmed, the funds will be instantly credited to your active wallet balance.</p>
+        <p style="font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 25px;">
+          This is an automated confirmation alert. Please do not reply directly.
+        </p>
+      </div>
+    `;
+  } else if (normType === "withdrawal_submitted") {
+    subject = `Withdrawal Request Logged - $${payload.amount}`;
+    text = `Hello ${payload.userName || "User"},\n\nYour withdrawal request of $${payload.amount} has been submitted successfully to the processing queue. Our compliance desk evaluates all payouts within 5 to 30 minutes.\n\nBest regards,\nMoneyMind Space Team`;
+    html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #dc2626; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 18px; margin-top: 0;">Withdrawal Request Logged</h2>
+        <p>Dear <strong>${payload.userName || "User"}</strong>,</p>
+        <p>Your withdrawal request has been successfully queued for secure administrative processing:</p>
+        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Amount:</strong> $${payload.amount}</p>
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Payout Network:</strong> ${payload.paymentMethod || "N/A"}</p>
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Time Logged:</strong> ${payload.date || "N/A"}</p>
+        </div>
+        <p style="font-size: 14px; color: #334155; line-height: 1.6;">Danish (our Chief Administrator) will audit and verify your transaction shortly. Once settlement moves green, the funds will be pushed to your transfer destination and you will receive another confirmation email.</p>
+        <p style="font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 25px;">
+          This is an automated platform alert. Thank you for your patience.
+        </p>
       </div>
     `;
   } else {
