@@ -28,7 +28,6 @@ import ReferralHistory from './components/ReferralHistory';
 import AdminPanel from './components/AdminPanel';
 import LiveChatBot from './components/LiveChatBot';
 import RecentWithdrawalToast, { RecentWithdrawalRecord } from './components/RecentWithdrawalToast';
-import { AdsterraBanner } from './components/AdsterraBanner';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
 import earnhubLogo from './assets/images/earnhub_logo_1780161493423.png';
@@ -49,7 +48,9 @@ import {
   RefreshCw,
   Play,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  ShieldAlert,
+  Clock
 } from 'lucide-react';
 
 export function getPlanCapPercent(planId: string, amount: number): number {
@@ -191,6 +192,11 @@ export default function App() {
     pendingRequests: 3
   });
   const [isStatsLoading, setIsStatsLoading] = useState(true);
+
+  // Session inactivity auto sign-out states
+  const [showInactivityWarning, setShowInactivityWarning] = useState(false);
+  const [inactivitySecondsLeft, setInactivitySecondsLeft] = useState(60);
+  const lastActiveRef = useRef<number>(Date.now());
 
   // Synchronize and aggregate database stats in real-time
   useEffect(() => {
@@ -462,6 +468,68 @@ export default function App() {
       setLoading(false);
     }
   }, []);
+
+  // Monitor user activity and automatically sign out after 30 minutes of inactivity
+  useEffect(() => {
+    if (!userProfile) {
+      setShowInactivityWarning(false);
+      return;
+    }
+
+    // Initialize with current time on session login/restoration
+    lastActiveRef.current = Date.now();
+    setShowInactivityWarning(false);
+
+    const resetTimer = () => {
+      lastActiveRef.current = Date.now();
+      setShowInactivityWarning(prev => {
+        if (prev) {
+          return false;
+        }
+        return prev;
+      });
+    };
+
+    // Tracking comprehensive user system interactions for inactivity audit
+    const activityEvents = [
+      'mousedown', 'mousemove', 'keypress', 
+      'scroll', 'touchstart', 'click', 'keydown'
+    ];
+
+    activityEvents.forEach(evt => {
+      window.addEventListener(evt, resetTimer, { passive: true });
+    });
+
+    const checkInactivityInterval = setInterval(() => {
+      const elapsedMs = Date.now() - lastActiveRef.current;
+      const totalInactivityLimitMs = 30 * 60 * 1000; // 30 minutes in milliseconds
+      const warningStartMs = 29 * 60 * 1000; // Warning starts 60 seconds before (at 29 minutes)
+
+      if (elapsedMs >= totalInactivityLimitMs) {
+        clearInterval(checkInactivityInterval);
+        setShowInactivityWarning(false);
+        handleSignOut();
+        addToast("You have been signed out due to 30 minutes of inactivity.", "error");
+      } else if (elapsedMs >= warningStartMs) {
+        const msLeft = totalInactivityLimitMs - elapsedMs;
+        const secLeft = Math.max(1, Math.ceil(msLeft / 1000));
+        setInactivitySecondsLeft(secLeft);
+        setShowInactivityWarning(true);
+      } else {
+        setShowInactivityWarning(prev => {
+          if (prev) return false;
+          return prev;
+        });
+      }
+    }, 1000);
+
+    return () => {
+      activityEvents.forEach(evt => {
+        window.removeEventListener(evt, resetTimer);
+      });
+      clearInterval(checkInactivityInterval);
+    };
+  }, [userProfile]);
 
   // Set up real-time Firestore synchronization once currentUid is resolved
   useEffect(() => {
@@ -1844,9 +1912,6 @@ export default function App() {
                     inviterName={inviterName} 
                     onLoginSuccess={(userId) => setCurrentUid(userId)} 
                   />
-                  <div className="w-full max-w-sm">
-                    <AdsterraBanner />
-                  </div>
                 </div>
               </div>
 
@@ -2430,7 +2495,75 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Session Inactivity Auto Sign-Out Warning Overlay */}
+      <AnimatePresence>
+        {showInactivityWarning && (
+          <div id="inactivity-warning-overlay" className="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+            <motion.div
+              id="inactivity-warning-container"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-sm bg-[#0C0C0C] border border-[#D4AF37]/35 rounded-2xl p-6 md:p-8 space-y-5 shadow-[0_0_50px_rgba(212,175,55,0.15)] text-center text-white"
+            >
+              {/* Alert Icon */}
+              <div id="inactivity-icon-box" className="w-14 h-14 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center mx-auto text-amber-400">
+                <ShieldAlert className="w-6 h-6 animate-pulse" />
+              </div>
 
+              {/* Title Header */}
+              <div id="inactivity-title-group" className="space-y-1.5">
+                <h3 id="inactivity-title" className="text-base uppercase tracking-[0.2em] text-[#D4AF37] font-black font-serif animate-pulse">Session Security Alert</h3>
+                <p id="inactivity-subtitle" className="text-[9px] text-zinc-500 uppercase tracking-widest font-sans font-bold">Inactivity Protection Audit</p>
+              </div>
+
+              {/* Description Body */}
+              <p id="inactivity-description" className="text-xs text-zinc-400 font-sans leading-relaxed">
+                For the safety of your funds and stake earnings, you will be automatically signed out soon due to inactivity.
+              </p>
+
+              {/* Countdown Tracker Box */}
+              <div id="inactivity-countdown-box" className="bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center gap-1.5">
+                <div id="inactivity-counter-row" className="flex items-center gap-2 text-amber-400">
+                  <Clock className="w-4 h-4 shrink-0 animate-pulse" />
+                  <span id="inactivity-countdown-seconds" className="font-mono text-2xl font-black">{inactivitySecondsLeft}s</span>
+                </div>
+                <span id="inactivity-countdown-label" className="text-[9px] text-zinc-500 font-bold font-sans uppercase tracking-wider">
+                  Remaining Session Lifetime
+                </span>
+              </div>
+
+              {/* Actions Button Panel */}
+              <div id="inactivity-actions" className="flex items-center gap-3 pt-1">
+                <button 
+                  id="btn-extend-session"
+                  type="button"
+                  onClick={() => {
+                    lastActiveRef.current = Date.now();
+                    setShowInactivityWarning(false);
+                    addToast("Secure session extended successfully.", "success");
+                  }}
+                  className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-black font-bold text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] cursor-pointer border-0"
+                >
+                  Keep Me Logged In
+                </button>
+                <button 
+                  id="btn-logout-session"
+                  type="button"
+                  onClick={async () => {
+                    setShowInactivityWarning(false);
+                    await handleSignOut();
+                    addToast("You have been signed out successfully.", "success");
+                  }}
+                  className="px-4 py-3 border border-white/5 bg-transparent hover:bg-white/5 active:scale-[0.98] transition-all rounded-xl text-zinc-400 hover:text-white font-bold text-xs uppercase cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <LiveChatBot />
 

@@ -50,8 +50,6 @@ import { AvatarIcon, getAvatarConfig } from '../lib/avatars';
 
 import { PlanMatrix } from './PlanMatrix';
 import { playSound } from '../lib/sounds';
-import { AdsterraBanner } from './AdsterraBanner';
-import { AdsterraNativeBanner } from './AdsterraNativeBanner';
 
 export function getPlanCapPercent(planId: string, amount: number): number {
   const normId = (planId || '').toLowerCase().trim();
@@ -293,35 +291,6 @@ export default function DashboardCard({
 
   // Cooldown calculation for daily check-in claims
   const [claimCooldown, setClaimCooldown] = useState('');
-
-  // Adsterra Smartlink Sponsored Node cooldown state
-  const [adCooldown, setAdCooldown] = useState('');
-  useEffect(() => {
-    const updateAdCooldown = () => {
-      const lastAdClaim = localStorage.getItem(`earnhub_ad_cooldown_${userId}`);
-      if (!lastAdClaim) {
-        setAdCooldown('');
-        return;
-      }
-      const lastTime = parseInt(lastAdClaim, 10);
-      const now = Date.now();
-      const cooldownMs = 12 * 60 * 60 * 1000; // 12 hours cooldown
-      if (now - lastTime >= cooldownMs) {
-        setAdCooldown('');
-        localStorage.removeItem(`earnhub_ad_cooldown_${userId}`);
-      } else {
-        const diff = cooldownMs - (now - lastTime);
-        const h = Math.floor(diff / (1000 * 60 * 60));
-        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const s = Math.floor((diff % (1000 * 60)) / 1000);
-        setAdCooldown(`${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`);
-      }
-    };
-    
-    updateAdCooldown();
-    const interval = setInterval(updateAdCooldown, 1000);
-    return () => clearInterval(interval);
-  }, [userId]);
 
   // Pagination states
   const [depositsPage, setDepositsPage] = useState(1);
@@ -1929,86 +1898,6 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 </div>
               </div>
 
-              {/* Premium Sponsored Traffic Node booster (Adsterra Smartlink integration) */}
-              <div className="bg-[#121212] border border-emerald-500/15 rounded-2xl p-5 relative overflow-hidden space-y-4 shadow-[0_0_30px_rgba(16,185,129,0.03)] text-left">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
-                
-                <div className="space-y-3">
-                  <div className="flex items-center gap-1.5 text-emerald-400">
-                    <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
-                    <span className="text-[9px] uppercase font-bold tracking-[0.2em] font-sans">📢 Sponsored Partner Bonus</span>
-                  </div>
-                  <h3 className="text-sm font-bold text-white tracking-wide">
-                    Premium AD Earning Network
-                  </h3>
-                  <p className="text-xs text-white/50 leading-relaxed">
-                    We occasionally collaborate with advertising partners to provide extra earning opportunities for our members. Click below to complete the sponsored visit and claim supplementary yield.
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono text-white/70 bg-black/40 border border-white/5 rounded-xl p-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                      <span>Reward: <strong className="text-emerald-400">{currencySymbol}{(0.05 * conversionRate).toFixed(2)} per task</strong></span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                      <span>Availability: <strong>Once every 12 hours</strong></span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                      <span>Status: <strong>Automatic verification & crediting</strong></span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                      <span>Requirement: <strong>No purchase or deposit required</strong></span>
-                    </div>
-                  </div>
-
-                  <p className="text-[10px] text-white/40 italic">
-                    Complete the sponsored visit and receive your bonus after successful verification. Next task will become available after the cooldown period ends.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-4 justify-between pt-3 border-t border-white/[0.03]">
-                  {/* Cooldown Status */}
-                  <div className="text-left flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${adCooldown ? 'bg-orange-400' : 'bg-emerald-400 animate-ping'}`} />
-                    <div>
-                      <span className="text-[8px] uppercase tracking-wider text-white/30 block leading-none mb-1">Booster Link Status</span>
-                      <span className="text-[11px] font-mono text-white/70">
-                        {adCooldown ? `Next task available in: ${adCooldown}` : "Node Ready for claim"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Visit & Claim Link */}
-                  <button
-                    disabled={!!adCooldown}
-                    onClick={async () => {
-                      if (adCooldown) return;
-                      
-                      // Open Adsterra Smartlink in a new window/tab
-                      window.open("https://www.effectivecpmnetwork.com/f4ye5x4p9?key=83af0c2231d6e4ebd56ee5a055cf59e7", "_blank");
-                      
-                      if (onClaimDailyReward) {
-                        const boostAmt = 0.05;
-                        await onClaimDailyReward(boostAmt);
-                        localStorage.setItem(`earnhub_ad_cooldown_${userId}`, Date.now().toString());
-                        onAddToast(`Sponsored partner bonus of ${currencySymbol}${(boostAmt * conversionRate).toFixed(2)} credited! ⚡`, 'success');
-                      }
-                    }}
-                    className={`px-5 py-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-200 outline-none cursor-pointer w-full sm:w-auto ${
-                      adCooldown 
-                        ? 'bg-white/5 border-white/5 text-white/30 cursor-not-allowed' 
-                        : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 hover:shadow-lg hover:shadow-emerald-500/10 active:scale-[0.98] border-transparent text-black font-extrabold'
-                    }`}
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>{adCooldown ? 'Booster Cooldown' : 'Complete Visit & Claim'}</span>
-                  </button>
-                </div>
-              </div>
-
               {/* Direct Referral Link Copy Area */}
               <div className="space-y-3 pt-2">
                 <label className="block text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
@@ -2147,11 +2036,6 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 </div>
               </div>
 
-              {/* Adsterra Banner Ad Space */}
-              <div className="mt-8 flex justify-center">
-                <AdsterraBanner />
-              </div>
-
               {/* Premium Customer Support & Help Desk Card */}
               <div className="bg-[#121212] border border-white/5 rounded-2xl p-5 relative overflow-hidden mt-6 transition-all hover:border-sky-500/20">
                 <div className="absolute top-0 right-0 p-3 text-sky-400/5 select-none pointer-events-none">
@@ -2189,11 +2073,6 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </a>
                   </div>
                 </div>
-              </div>
-
-              {/* Adsterra Native Recommendation Banner */}
-              <div className="mt-8">
-                <AdsterraNativeBanner />
               </div>
             </motion.div>
           )}
