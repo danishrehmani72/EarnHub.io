@@ -10,6 +10,7 @@ export interface RecentWithdrawalRecord {
   wallet: string;
   timestamp: string;
   userInitial: string;
+  status?: string;
 }
 
 interface RecentWithdrawalToastProps {

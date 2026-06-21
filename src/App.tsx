@@ -184,6 +184,12 @@ export default function App() {
 
   // Dynamic Real Database statistics states
   const [approvedWithdrawalsFeed, setApprovedWithdrawalsFeed] = useState<RecentWithdrawalRecord[]>([]);
+  const [approvedFeedRaw, setApprovedFeedRaw] = useState<RecentWithdrawalRecord[]>([]);
+  const [pendingFeedRaw, setPendingFeedRaw] = useState<RecentWithdrawalRecord[]>([]);
+
+  useEffect(() => {
+    setApprovedWithdrawalsFeed([...pendingFeedRaw, ...approvedFeedRaw]);
+  }, [approvedFeedRaw, pendingFeedRaw]);
   const [publicStats, setPublicStats] = useState({
     totalRegisteredUsers: 142,
     activeUsers: 81,
@@ -200,16 +206,9 @@ export default function App() {
 
   // Synchronize and aggregate database stats in real-time
   useEffect(() => {
-    // 1. Live listener for approved withdrawals feed (last 30)
-    const withdrawalsQuery = query(
-      collectionGroup(db, 'withdrawals'),
-      where('status', '==', 'approved'),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubWithdrawals = onSnapshot(withdrawalsQuery, (snap) => {
+    const parseSnap = (snap: any, statusVal: string) => {
       const list: RecentWithdrawalRecord[] = [];
-      snap.forEach((docSnap) => {
+      snap.forEach((docSnap: any) => {
         const d = docSnap.data();
         let userInitial = "A*** K***";
         if (d.userName) {
@@ -231,12 +230,35 @@ export default function App() {
           network: d.network || "Binance",
           wallet: d.wallet || "",
           timestamp: d.timestamp || "Just now",
-          userInitial
+          userInitial,
+          status: d.status || statusVal
         });
       });
-      setApprovedWithdrawalsFeed(list);
+      return list;
+    };
+
+    // 1a. Live listener for approved withdrawals feed (last 30)
+    const approvedQuery = query(
+      collectionGroup(db, 'withdrawals'),
+      where('status', '==', 'approved'),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubApproved = onSnapshot(approvedQuery, (snap) => {
+      setApprovedFeedRaw(parseSnap(snap, 'approved'));
     }, (err) => {
-      console.warn("Silent withdrawals feed sync issue:", err);
+      console.warn("Silent approved withdrawals feed sync issue:", err);
+    });
+
+    // 1b. Live listener for pending withdrawals feed (last 30)
+    const pendingQuery = query(
+      collectionGroup(db, 'withdrawals'),
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubPending = onSnapshot(pendingQuery, (snap) => {
+      setPendingFeedRaw(parseSnap(snap, 'pending'));
+    }, (err) => {
+      console.warn("Silent pending withdrawals feed sync issue:", err);
     });
 
     // 2. Aggregate stats directly from database
@@ -308,7 +330,8 @@ export default function App() {
     const statsInterval = setInterval(aggregateDbStats, 45000);
 
     return () => {
-      unsubWithdrawals();
+      unsubApproved();
+      unsubPending();
       clearInterval(statsInterval);
     };
   }, []);
@@ -2055,14 +2078,14 @@ export default function App() {
               {/* SECTION 3: RECENT APPROVED WITHDRAWALS LIVE FEED */}
               <div className="w-full max-w-6xl mx-auto space-y-8 animate-fade-in">
                 <div className="text-center space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#10B981] bg-[#10B981]/10 px-3.5 py-1 rounded-full border border-[#10B981]/20 inline-block font-sans">
-                    Guaranteed Settlements
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#D4AF37] bg-[#D4AF37]/10 px-3.5 py-1 rounded-full border border-[#D4AF37]/20 inline-block font-sans">
+                    Settlement & Verification System
                   </span>
                   <h2 className="text-3xl md:text-4xl font-black font-serif text-white tracking-tight">
-                    🧾 Real Approved Withdrawals Feed
+                    🧾 Live Real-Time Transactions Feed
                   </h2>
                   <p className="text-xs text-zinc-400 font-sans max-w-md mx-auto leading-relaxed">
-                    A transparency-backed rolling feed showing the latest real payout hashes confirmed in the database ledger. No fake records.
+                    A transparency-backed rolling ledger showing active pending requests alongside approved payout settlements. No fake records.
                   </p>
                 </div>
 
@@ -2072,13 +2095,13 @@ export default function App() {
                     <span>VIP Member (Initials)</span>
                     <span>Payout Amount</span>
                     <span>Payout Channel</span>
-                    <span className="text-right">Approval Timestamp</span>
+                    <span className="text-right">Status & Timeline</span>
                   </div>
 
                   {/* Table Rows scrolling block */}
                   <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto font-sans text-xs">
                     {approvedWithdrawalsFeed && approvedWithdrawalsFeed.length > 0 ? (
-                      approvedWithdrawalsFeed.slice(0, 10).map((record) => (
+                      approvedWithdrawalsFeed.slice(0, 15).map((record) => (
                         <div key={record.id} className="grid grid-cols-4 px-6 py-4 items-center text-left hover:bg-white/[0.01] transition-all">
                           <span className="font-extrabold text-zinc-200">{record.userInitial}</span>
                           <span className="font-black font-mono text-[#10B981]">${Number(record.amount || 0).toFixed(2)}</span>
@@ -2086,9 +2109,17 @@ export default function App() {
                             🏦 {record.network}
                           </span>
                           <div className="text-right flex flex-col items-end gap-1">
-                            <span className="text-[10px] py-0.5 px-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-black text-[8px] uppercase tracking-widest">
-                              Approved
-                            </span>
+                            {record.status === 'pending' ? (
+                              <span className="text-[10px] py-0.5 px-2 bg-amber-500/15 border border-amber-500/25 text-amber-500 rounded-full font-black text-[8px] uppercase tracking-widest flex items-center gap-1 select-none">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                Pending
+                              </span>
+                            ) : (
+                              <span className="text-[10px] py-0.5 px-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-black text-[8px] uppercase tracking-widest flex items-center gap-1 select-none">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                Approved
+                              </span>
+                            )}
                             <span className="text-[9px] text-zinc-500 font-medium">{record.timestamp}</span>
                           </div>
                         </div>
