@@ -51,7 +51,8 @@ import {
   RotateCcw,
   ShieldAlert,
   Clock,
-  Mail
+  Mail,
+  Settings
 } from 'lucide-react';
 
 export function getPlanCapPercent(planId: string, amount: number): number {
@@ -178,7 +179,7 @@ export default function App() {
 
   // Load and manage simulated days offset
   const [virtualDays, setVirtualDays] = useState<number>(0);
-  const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'faq'>('overview');
+  const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'faq' | 'settings'>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [openedFooterDoc, setOpenedFooterDoc] = useState<'about' | 'contact' | 'privacy' | 'terms' | null>(null);
@@ -1077,6 +1078,22 @@ export default function App() {
     }
   };
 
+  // Update user profile display name and avatar
+  const handleUpdateProfile = async (newName: string, newAvatar: string) => {
+    if (!currentUid) return;
+    try {
+      const userRef = doc(db, 'users', currentUid);
+      await setDoc(userRef, {
+        name: newName,
+        avatar: newAvatar,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      addToast('Profile updated successfully! ✨', 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${currentUid}`);
+    }
+  };
+
   // Submit a deposit record
   const handleCreateDeposit = async (amount: number, network: string, txHash: string) => {
     if (!currentUid) return;
@@ -1344,7 +1361,7 @@ export default function App() {
   };
 
   // Handle click on top navbar or mobile drawer menu items
-  const handleNavClick = (target: 'deposit' | 'withdraw' | 'helpline' | 'faq' | 'dashboard' | 'admin') => {
+  const handleNavClick = (target: 'deposit' | 'withdraw' | 'helpline' | 'faq' | 'dashboard' | 'admin' | 'settings') => {
     setMobileMenuOpen(false); // Close mobile drawer if open
     
     if (target === 'admin') {
@@ -1359,8 +1376,8 @@ export default function App() {
     }
 
     if (!isRegistered) {
-      if (target === 'faq') {
-        addToast('Please login or register to access FAQs and other premium features!', 'error');
+      if (target === 'faq' || target === 'settings') {
+        addToast('Please login or register to access premium features and settings!', 'error');
       } else {
         addToast(`Please login or register to access the ${target === 'deposit' ? 'Deposit' : 'Withdrawal'} Portal!`, 'error');
       }
@@ -1378,6 +1395,12 @@ export default function App() {
     // Interactive updates if user is Onboarded / Registered
     if (target === 'dashboard') {
       setDashboardTab('overview');
+      setTimeout(() => {
+        const el = document.getElementById('dashboard-container');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else if (target === 'settings') {
+      setDashboardTab('settings');
       setTimeout(() => {
         const el = document.getElementById('dashboard-container');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1742,6 +1765,15 @@ export default function App() {
           >
             Dashboard
           </button>
+
+          <button 
+            type="button"
+            onClick={() => handleNavClick('settings')}
+            className={`transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 ${isRegistered && dashboardTab === 'settings' ? 'text-white border-b border-[#D4AF37]' : 'hover:text-white/90'}`}
+          >
+            <Settings className="w-4 h-4 text-white/70" />
+            Settings
+          </button>
           
           <button 
             type="button"
@@ -1858,6 +1890,19 @@ export default function App() {
                     Dashboard Overview
                   </span>
                   <span className="text-[10px] bg-[#D4AF37]/15 border border-[#D4AF37]/20 px-2 py-0.5 rounded text-[#D4AF37] uppercase font-bold tracking-wider">Growth</span>
+                </motion.button>
+
+                <motion.button 
+                  variants={mobileItemVariants}
+                  type="button"
+                  onClick={() => handleNavClick('settings')}
+                  className={`py-3 px-4 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer bg-transparent ${isRegistered && dashboardTab === 'settings' ? 'text-white font-extrabold border-[#D4AF37]/35 bg-[#D4AF37]/10' : 'border-white/5 hover:border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-[#D4AF37]" />
+                    Profile Settings
+                  </span>
+                  <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-white/60 uppercase font-bold tracking-wider">Profile</span>
                 </motion.button>
 
                 <motion.button 
@@ -2315,6 +2360,7 @@ export default function App() {
                 virtualDays={virtualDays}
                 activeTab={dashboardTab}
                 onActiveTabChange={setDashboardTab}
+                onUpdateProfile={handleUpdateProfile}
                 onRefresh={handleRefreshAllData}
                 globalSettings={globalSettings}
               />

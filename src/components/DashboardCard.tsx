@@ -29,7 +29,8 @@ import {
   Volume2,
   VolumeX,
   Zap,
-  ExternalLink
+  ExternalLink,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { 
@@ -46,7 +47,7 @@ import {
 } from 'recharts';
 import { FaqSection } from './FaqSection';
 import { ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog } from '../types';
-import { AvatarIcon, getAvatarConfig } from '../lib/avatars';
+import { AvatarIcon, getAvatarConfig, AVATAR_PRESETS } from '../lib/avatars';
 
 import { PlanMatrix } from './PlanMatrix';
 import { playSound } from '../lib/sounds';
@@ -98,8 +99,9 @@ interface DashboardCardProps {
   userProfile?: any;
   onClaimDailyReward?: (amount: number) => Promise<void>;
   virtualDays?: number;
-  activeTab?: 'overview' | 'funding' | 'faq';
-  onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq') => void;
+  activeTab?: 'overview' | 'funding' | 'faq' | 'settings';
+  onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq' | 'settings') => void;
+  onUpdateProfile?: (newName: string, newAvatar: string) => Promise<void>;
   dailyRewardLogs?: DailyRewardLog[];
   onRefresh?: () => Promise<void>;
   globalSettings?: {
@@ -133,12 +135,13 @@ export default function DashboardCard({
   virtualDays = 0,
   activeTab: activeTabProp,
   onActiveTabChange,
+  onUpdateProfile,
   dailyRewardLogs = [],
   onRefresh,
   globalSettings,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
-  const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq'>('overview');
+  const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq' | 'settings'>('overview');
 
   const [isMuted, setIsMuted] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -237,6 +240,18 @@ export default function DashboardCard({
       setIsRefreshing(false);
     }
   };
+
+  const [profileName, setProfileName] = useState(userProfile?.name || '');
+  const [profileAvatar, setProfileAvatar] = useState(userProfile?.avatar || 'star');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  // Sync state when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+      setProfileName(userProfile.name || '');
+      setProfileAvatar(userProfile.avatar || 'star');
+    }
+  }, [userProfile]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (window.scrollY === 0 && !isRefreshing && pullStatus === 'idle') {
@@ -1171,10 +1186,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       </div>
 
       {/* Navigation Tabs */}
-      <div className="grid grid-cols-3 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
+      <div className="grid grid-cols-4 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`py-4 px-2 sm:py-5 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+          className={`py-4 px-1.5 sm:py-5 sm:px-3 rounded-xl text-[8px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
             activeTab === 'overview'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
@@ -1186,26 +1201,38 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
         
         <button
           onClick={() => setActiveTab('funding')}
-          className={`py-4 px-2 sm:py-5 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+          className={`py-4 px-1.5 sm:py-5 sm:px-3 rounded-xl text-[8px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
             activeTab === 'funding'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
           <Wallet className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="text-center leading-tight">Withdraw & Deposit</span>
+          <span className="text-center leading-tight">Funds</span>
         </button>
 
         <button
           onClick={() => setActiveTab('faq')}
-          className={`py-4 px-2 sm:py-5 sm:px-3 rounded-xl text-[9px] xs:text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1.5 cursor-pointer ${
+          className={`py-4 px-1.5 sm:py-5 sm:px-3 rounded-xl text-[8px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
             activeTab === 'faq'
               ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="text-center leading-tight">FAQ Section</span>
+          <span className="text-center leading-tight">FAQ</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`py-4 px-1.5 sm:py-5 sm:px-3 rounded-xl text-[8px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
+            activeTab === 'settings'
+              ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
+              : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
+          }`}
+        >
+          <Settings className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
+          <span className="text-center leading-tight">Settings</span>
         </button>
       </div>
 
@@ -3385,6 +3412,177 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               id="faq-section"
             >
               <FaqSection />
+            </motion.div>
+          )}
+
+          {activeTab === 'settings' && (
+            <motion.div
+              key="settings-tab"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6 scroll-mt-24"
+              id="settings-section"
+            >
+              <div className="bg-[#0c0c0c]/90 border border-white/5 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+                {/* Visual gradient backdrop decor */}
+                <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/5 blur-[120px] rounded-full pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+                <div className="relative space-y-6">
+                  {/* Title & Description */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase font-sans">
+                      Account Hub
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-bold font-serif text-white tracking-tight">
+                      Profile Settings
+                    </h2>
+                    <p className="text-xs text-zinc-400">
+                      Customize your identity in the MoneyMind Space. Update your public display name and select an avatar representative of your profile status.
+                    </p>
+                  </div>
+
+                  {/* Form Container */}
+                  <form 
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!profileName.trim()) {
+                        onAddToast('Display name cannot be empty!', 'error');
+                        return;
+                      }
+                      if (profileName.length > 50) {
+                        onAddToast('Display name must be less than 50 characters!', 'error');
+                        return;
+                      }
+                      setIsSavingProfile(true);
+                      try {
+                        if (onUpdateProfile) {
+                          await onUpdateProfile(profileName.trim(), profileAvatar);
+                          playSound('new_referral');
+                        } else {
+                          onAddToast('Profile update handler is not configured.', 'error');
+                        }
+                      } catch (err) {
+                        console.error("Profile save error:", err);
+                        onAddToast('Failed to save profile settings.', 'error');
+                      } finally {
+                        setIsSavingProfile(false);
+                      }
+                    }} 
+                    className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+                  >
+                    {/* Left Column: Input and Save Button */}
+                    <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] font-black text-white/70 uppercase tracking-widest font-sans">
+                            Display Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Enter display name"
+                            value={profileName}
+                            onChange={(e) => setProfileName(e.target.value)}
+                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-sans placeholder-white/25 outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all shadow-inner shadow-black"
+                          />
+                        </div>
+
+                        {/* Public Member details */}
+                        <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-3">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-zinc-500 uppercase font-black tracking-widest">Status:</span>
+                            <span className="text-[#D4AF37] font-bold uppercase tracking-widest bg-[#D4AF37]/10 px-2.5 py-0.5 rounded-md border border-[#D4AF37]/20">
+                              Premium Member
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-zinc-500 uppercase font-black tracking-widest">ID:</span>
+                            <span className="text-zinc-400 font-mono text-[10px] break-all max-w-[150px] text-right">
+                              {userProfile?.userId || 'N/A'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-zinc-500 uppercase font-black tracking-widest">Registered On:</span>
+                            <span className="text-zinc-400">
+                              {userProfile?.createdAt ? new Date(userProfile.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 lg:pt-0">
+                        <button
+                          type="submit"
+                          disabled={isSavingProfile}
+                          className="w-full py-4 bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-xl hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-lg shadow-[#D4AF37]/10 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                        >
+                          {isSavingProfile ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                              Saving Changes...
+                            </>
+                          ) : (
+                            'Save Profile Settings'
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Avatar Customization Hub */}
+                    <div className="lg:col-span-7 space-y-4">
+                      <label className="block text-[10px] font-black text-white/70 uppercase tracking-widest font-sans">
+                        Choose Your Profile Emblem
+                      </label>
+
+                      {/* Selected Badge Preview */}
+                      <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex items-center gap-4">
+                        <div className={`w-14 h-14 rounded-xl border flex items-center justify-center shadow-lg transition-all duration-300 ${getAvatarConfig(profileAvatar).color}`}>
+                          <AvatarIcon id={profileAvatar} className="w-8 h-8" />
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest font-sans">Active Emblem</p>
+                          <h4 className="text-sm font-bold text-white tracking-wide">{getAvatarConfig(profileAvatar).label}</h4>
+                          <p className="text-[10px] text-zinc-500 font-sans">Click on any avatar below to assign to your name.</p>
+                        </div>
+                      </div>
+
+                      {/* Avatar Selection Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {AVATAR_PRESETS.map((preset) => {
+                          const isSelected = profileAvatar === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => setProfileAvatar(preset.id)}
+                              className={`p-3.5 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer text-center relative group bg-transparent ${
+                                isSelected
+                                  ? 'bg-[#D4AF37]/10 border-[#D4AF37]/80 text-[#D4AF37] scale-105 shadow-md shadow-black/40 ring-1 ring-[#D4AF37]/30'
+                                  : 'border-white/5 hover:border-white/20 bg-white/[0.01] hover:bg-white/[0.03] text-white/60 hover:text-white'
+                              }`}
+                            >
+                              <div className={`p-2 rounded-lg border transition-transform duration-300 group-hover:scale-110 ${preset.color}`}>
+                                <AvatarIcon id={preset.id} className="w-5 h-5" />
+                              </div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider block">
+                                {preset.label}
+                              </span>
+                              {isSelected && (
+                                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -176,6 +176,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
   // Simulation controls
   const [processingTxId, setProcessingTxId] = useState<string | null>(null);
+  const [activeScreenshotModal, setActiveScreenshotModal] = useState<string | null>(null);
   const [blockchainHash, setBlockchainHash] = useState<string | null>(null);
   const [telegramLogs, setTelegramLogs] = useState<{ msg: string; time: string }[]>([]);
   const [customNotes, setCustomNotes] = useState<Record<string, string>>({});
@@ -1936,12 +1937,29 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                       </span>
                     </div>
 
-                    <p className="text-[9px] font-mono text-white/40 break-all select-all">
-                      {isDeposit 
-                        ? `TXHash Identifier: ${tx.txHash}` 
-                        : `Recipient Destination Wallet Address: ${tx.wallet}`
-                      }
-                    </p>
+                    {isDeposit ? (
+                      tx.txHash && tx.txHash.startsWith('data:image/') ? (
+                        <div className="mt-2 space-y-1">
+                          <span className="block text-[8px] font-black text-emerald-400 uppercase tracking-widest font-sans">
+                            📸 Attached Receipt Screenshot:
+                          </span>
+                          <div className="relative group max-w-xs overflow-hidden rounded-xl border border-white/10 bg-black/40 p-1 cursor-pointer" onClick={() => setActiveScreenshotModal(tx.txHash)}>
+                            <img src={tx.txHash} alt="Receipt Screenshot" className="max-h-24 w-auto object-contain rounded-lg group-hover:scale-105 transition-all" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg">
+                              <span className="text-[9px] font-black uppercase text-white tracking-widest">🔍 Zoom Image</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[9px] font-mono text-white/40 break-all select-all">
+                          TXHash Identifier: {tx.txHash}
+                        </p>
+                      )
+                    ) : (
+                      <p className="text-[9px] font-mono text-white/40 break-all select-all">
+                        Recipient Destination Wallet Address: {tx.wallet}
+                      </p>
+                    )}
 
                     {tx.status === 'pending' && (
                       <div className="mt-2 space-y-2">
@@ -2526,6 +2544,42 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         </div>
 
       </div>
+
+      {/* Zoomable Screenshot Modal */}
+      {activeScreenshotModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md transition-all">
+          <div className="relative max-w-4xl max-h-[90vh] bg-[#0c0c0c] border border-white/10 rounded-2xl p-3 flex flex-col items-center shadow-2xl">
+            <button 
+              onClick={() => setActiveScreenshotModal(null)}
+              className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[#D4AF37] hover:bg-yellow-500 text-black font-black text-sm flex items-center justify-center border border-black cursor-pointer shadow-lg transition-transform hover:scale-110"
+              title="Close"
+            >
+              ✕
+            </button>
+            <div className="overflow-auto max-h-[80vh] w-full flex justify-center">
+              <img 
+                src={activeScreenshotModal} 
+                alt="Receipt Zoomed" 
+                className="max-w-full h-auto object-contain rounded-lg border border-white/5"
+              />
+            </div>
+            <div className="mt-3 flex items-center justify-between w-full px-2 text-[10px] text-zinc-400 font-mono">
+              <span>💡 Press escape or click button to close</span>
+              <button 
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = activeScreenshotModal;
+                  link.download = `receipt_screenshot_${Date.now()}.jpg`;
+                  link.click();
+                }}
+                className="px-3 py-1 bg-white/5 hover:bg-[#D4AF37] hover:text-black rounded border border-white/10 text-[9px] font-bold transition-all cursor-pointer"
+              >
+                📥 Download Original
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
   </div>
   );
 }
