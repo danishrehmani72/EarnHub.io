@@ -6,11 +6,11 @@ import { playSound } from "../lib/sounds";
 const getClientFallbackReply = (msg: string): string => {
   const norm = msg.toLowerCase().trim();
   
-  if (norm.includes("withdraw") || norm.includes("nikal") || norm.includes("payout") || norm.includes("danish") || norm.includes("review")) {
-    return `**Withdrawal & Danish Review Info:** 💰
+  if (norm.includes("withdraw") || norm.includes("nikal") || norm.includes("payout") || norm.includes("review")) {
+    return `**Withdrawal Review Info:** 💰
 
 1. **How to Withdraw**: Dashboard par **Withdraw Panel** par jayen, apna target account select karen (Easypaisa, JazzCash, SadaPay ya Pakistani Bank Account) aur request submit karen.
-2. **Danish Review Time**: Chief Administrator **Danish** (Operator ID: DANISH125) security audit ke baad **10 se 30 minutes** (maximum 1 se 2 ghante) me withdrawals approve kar deta hai, jo direct aapke account me transfer ho jata hai.
+2. **Review Time**: Hamara security audit system automatic checks ke baad **10 se 30 minutes** (maximum 1 se 2 ghante) me withdrawals approve kar deta hai, jo direct aapke account me transfer ho jata hai.
 3. **Minimum Limit**: Minimum withdrawal limit PKR 100 ya $1 hai. 
 
 🛡️ MoneyMind Governance Core live review ensures absolute financial security! Let us know if you need any other help.`;
@@ -68,7 +68,7 @@ Hum humesha aapko 24/7 live guide karne ke liye hazir hain! Custom plan choose k
   return `Shukriya hum se rabta karne ka! 🌟 MoneyMind Space high-yield staking aur referral networks me sab se secure aur fast service provide karta hai.
 
 - Agar aap **deposit/pese add** karna chahte hain, dashboard me 'Deposit Panel' click karen.
-- Agar aap **withdrawal/payout** poochna chahte hain, 'Withdraw Panel' click karen (Admin Danish verifies this under 10-30 mins).
+- Agar aap **withdrawal/payout** poochna chahte hain, 'Withdraw Panel' click karen (System reviews and verifies this under 10-30 mins).
 - Agar aap koi **plan choose** karna chahte hain, 'Buy Plan' matrix check karen.
 
 Aapka koi makhsoos sawal hai tou be-jhijhak likhein, main Roman Urdu aur English dono me active hoon! 🛡️`;
@@ -111,7 +111,7 @@ export default function LiveChatBot() {
     { label: "🤖 AI Features?", text: "IA features kon koncy hain aur hume kese help karte hain?" },
     { label: "💰 Paise Kese Kamaen?", text: "How to earn money and what are investment plans?" },
     { label: "💸 Deposit Steps?", text: "How can I deposit money through Easypaisa or JazzCash?" },
-    { label: "🛡️ Withdrawal & Rules?", text: "Withdrawal kese nikalen aur Danish admin review kitna time leta hai?" },
+    { label: "🛡️ Withdrawal & Rules?", text: "Withdrawal kese nikalen aur security review kitna time leta hai?" },
   ];
 
   const handleSendMessage = async (textToSend: string) => {

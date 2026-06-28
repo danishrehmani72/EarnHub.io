@@ -498,7 +498,7 @@ app.post("/api/chat-bot", async (req, res) => {
 1. Navigate to the **Withdraw Panel** on your dashboard.
 2. Choose your payout gate (**Easypaisa**, **JazzCash**, **SadaPay**, or bank account).
 3. Input your clean account details and click trigger.
-4. Danish (our chief administrator) reviews and pushes instant disbursements safely!`;
+4. Our automatic security compliance desk reviews and pushes instant disbursements safely!`;
     }
     if (msg.includes("refer") || msg.includes("invite") || msg.includes("friend") || msg.includes("dost")) {
       return `Aap apne doston ko invite kar ke **3 Levels** tak commission earn kar saktay hain!
@@ -522,7 +522,7 @@ Key Info:
 - Pakistan Rails supported: Easypaisa, JazzCash, SadaPay, NayaPay, Bank Transfers.
 - Crypto Rails: USDT (TRC-20), Bitcoin, Ethereum.
 - Features: Flexible investment plans, micro staking rewards, referral commission tiers (Level 1, Level 2, Level 3), daily login bonuses, and secure instant payouts.
-- Chief Administrator: Danish (Operator ID: DANISH125).
+- System Reviewer: Active automated security desk compliance node.
 
 Guideline regarding answers:
 1. Speak the language the user speaks. If the user asks in Roman Urdu (e.g. "IA features kon koncy hain", "kia hal hai", "pese kese kamaen"), answer them in Roman Urdu with high energy and premium support!
@@ -533,7 +533,7 @@ Guideline regarding answers:
    - Intelligent Security Ledger: Real-time fraud detection and instant multi-factor transaction check.
    - Automated Telegram Live Webhook Feeds: Real-time notification BOT dispatchers to admins for instant secure updates.
    - Dynamic Financial Analytics: Real-time revenue, registration flow charts and active ledger feeds.
-5. Remind users that Danish reviews all operations for supreme processing security!
+5. Remind users that the automated compliance desk reviews all operations for supreme processing security!
 `;
 
       const contents = history && Array.isArray(history) && history.length > 0
