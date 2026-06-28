@@ -1584,7 +1584,7 @@ export default function App() {
             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Profile Integrity Breach / Compliance Flag</p>
           </div>
           <p className="text-xs text-white/70 leading-relaxed">
-            Your MoneyMind Space account <strong className="text-white">#{userProfile.userId}</strong> has been suspended by Danish (Chief Security Officer) under compliance guidelines of multiple accounts or suspicious ledger deposits.
+            Your MoneyMind Space account <strong className="text-white">#{userProfile.userId}</strong> has been suspended by our Compliance Desk under compliance guidelines of multiple accounts or suspicious ledger deposits.
           </p>
           <div className="p-3 bg-red-500/5 rounded-2xl border border-red-500/10 text-[10px] leading-relaxed text-red-400">
             If you believe this is a false block, contact our 24/7 compliance desk on Telegram to submit identification credentials.
@@ -2077,7 +2077,7 @@ export default function App() {
                     </div>
                     <h3 className="text-xs font-black text-white uppercase tracking-wider font-serif">Manual Verification</h3>
                     <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
-                      Our chief security and layout compliance administrator, Danish, manually audits all incoming deposit hashes in 5-20 minutes for high safety.
+                      Our security and layout compliance desk manually audits all incoming deposit hashes in 5-20 minutes for high safety.
                     </p>
                   </div>
 

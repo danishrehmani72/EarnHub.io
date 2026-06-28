@@ -424,7 +424,7 @@ app.post("/api/send-email", async (req, res) => {
           <p style="margin: 5px 0; font-size: 13px;"><strong>Transaction ID/Hash:</strong> ${payload.txHash || "N/A"}</p>
           <p style="margin: 5px 0; font-size: 13px;"><strong>Time Logged:</strong> ${payload.date || "N/A"}</p>
         </div>
-        <p style="font-size: 14px; color: #334155; line-height: 1.6;">Our security compliance desk (Chief Officer Danish) is actively auditing this transfer. Once the block receipt is confirmed, the funds will be instantly credited to your active wallet balance.</p>
+        <p style="font-size: 14px; color: #334155; line-height: 1.6;">Our security compliance desk is actively auditing this transfer. Once the block receipt is confirmed, the funds will be instantly credited to your active wallet balance.</p>
         <p style="font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 25px;">
           This is an automated confirmation alert. Please do not reply directly.
         </p>
@@ -443,7 +443,7 @@ app.post("/api/send-email", async (req, res) => {
           <p style="margin: 5px 0; font-size: 13px;"><strong>Payout Network:</strong> ${payload.paymentMethod || "N/A"}</p>
           <p style="margin: 5px 0; font-size: 13px;"><strong>Time Logged:</strong> ${payload.date || "N/A"}</p>
         </div>
-        <p style="font-size: 14px; color: #334155; line-height: 1.6;">Danish (our Chief Administrator) will audit and verify your transaction shortly. Once settlement moves green, the funds will be pushed to your transfer destination and you will receive another confirmation email.</p>
+        <p style="font-size: 14px; color: #334155; line-height: 1.6;">Our compliance desk will audit and verify your transaction shortly. Once settlement moves green, the funds will be pushed to your transfer destination and you will receive another confirmation email.</p>
         <p style="font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 25px;">
           This is an automated platform alert. Thank you for your patience.
         </p>
