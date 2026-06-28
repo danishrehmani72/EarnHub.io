@@ -512,6 +512,22 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     }
   };
 
+  const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>, setScreenshot: React.Dispatch<React.SetStateAction<string>>, setError: React.Dispatch<React.SetStateAction<string>>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setError('❌ Screenshot size must be less than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshot(reader.result as string);
+        setError('');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handlePkDepositSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPkDepError('');
@@ -525,7 +541,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     }
 
     if (!pkDepSenderNumber.trim() || !pkDepSenderName.trim() || !pkDepTxid.trim()) {
-      setPkDepError('❌ Please fill in all payment details and Transaction ID correctly.');
+      setPkDepError('❌ Please fill in all payment details and upload the payment screenshot.');
       return;
     }
 
@@ -563,7 +579,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     }
     const amtUSD = amtInput / conversionRate;
     if (!depTxHash.trim()) {
-      setDepError('Please provide the transaction hash / TXHash for validation.');
+      setDepError('Please upload the transaction receipt screenshot for validation.');
       return;
     }
 
@@ -2368,16 +2384,42 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         {/* TXID / Ref receipt Number */}
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs">⛓</span>
-                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Transaction ID (TXID) / Reference No.</label>
+                            <span className="text-xs">📸</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Payment Screenshot</label>
                           </div>
-                          <input
-                            type="text"
-                            placeholder="Enter Easypaisa TXID / Receipt TRX ID"
-                            value={pkDepTxid}
-                            onChange={(e) => setPkDepTxid(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
-                          />
+                          {pkDepTxid && pkDepTxid.startsWith('data:image/') ? (
+                            <div className="relative rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-2 flex flex-col items-center justify-center gap-3">
+                               <div className="relative inline-block">
+                                 <img src={pkDepTxid} alt="Screenshot" className="max-h-32 object-contain rounded-lg border border-white/10" />
+                                 <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-md border border-emerald-400 flex items-center gap-1">
+                                   <CheckCircle className="w-3 h-3" />
+                                   Attached
+                                 </div>
+                               </div>
+                               <button 
+                                 type="button" 
+                                 onClick={() => setPkDepTxid('')}
+                                 className="text-[10px] text-red-400 font-bold hover:text-red-300 transition-colors bg-red-400/10 px-3 py-1.5 rounded-lg"
+                               >
+                                 Remove Screenshot
+                               </button>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center w-full h-24 bg-black/80 border border-white/10 border-dashed rounded-xl cursor-pointer hover:bg-white/5 hover:border-emerald-500/50 transition-all group shadow-inner shadow-black">
+                              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                <Upload className="w-5 h-5 text-white/40 mb-2 group-hover:text-emerald-500/70 transition-colors" />
+                                <p className="text-[10px] text-white/50 uppercase tracking-wider font-bold">
+                                  Click to upload receipt
+                                </p>
+                              </div>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => handleScreenshotUpload(e, setPkDepTxid, setPkDepError)}
+                              />
+                            </label>
+                          )}
                         </div>
 
                         {/* Important Notice Box */}
@@ -2500,16 +2542,42 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         {/* Tx Hash proof */}
                         <div className="space-y-1.5 bg-transparent">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-sm">⛓</span>
-                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Blockchain TXID / TxHash</label>
+                            <span className="text-sm">📸</span>
+                            <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Transaction Receipt Screenshot</label>
                           </div>
-                          <input
-                            type="text"
-                            placeholder="Paste transaction receipt hash / TXID"
-                            value={depTxHash}
-                            onChange={(e) => setDepTxHash(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
-                          />
+                          {depTxHash && depTxHash.startsWith('data:image/') ? (
+                            <div className="relative rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-2 flex flex-col items-center justify-center gap-3">
+                               <div className="relative inline-block">
+                                 <img src={depTxHash} alt="Screenshot" className="max-h-32 object-contain rounded-lg border border-white/10" />
+                                 <div className="absolute top-2 right-2 bg-[#D4AF37] text-black text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-md border border-amber-300 flex items-center gap-1">
+                                   <CheckCircle className="w-3 h-3" />
+                                   Attached
+                                 </div>
+                               </div>
+                               <button 
+                                 type="button" 
+                                 onClick={() => setDepTxHash('')}
+                                 className="text-[10px] text-red-400 font-bold hover:text-red-300 transition-colors bg-red-400/10 px-3 py-1.5 rounded-lg"
+                               >
+                                 Remove Screenshot
+                               </button>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center w-full h-24 bg-black/80 border border-white/10 border-dashed rounded-xl cursor-pointer hover:bg-white/5 hover:border-[#D4AF37]/50 transition-all group shadow-inner shadow-black">
+                              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                <Upload className="w-5 h-5 text-white/40 mb-2 group-hover:text-[#D4AF37]/70 transition-colors" />
+                                <p className="text-[10px] text-white/50 uppercase tracking-wider font-bold">
+                                  Click to upload receipt
+                                </p>
+                              </div>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => handleScreenshotUpload(e, setDepTxHash, setDepError)}
+                              />
+                            </label>
+                          )}
                         </div>
 
                         {/* Divider line style */}
