@@ -1203,7 +1203,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       </div>
 
       {/* Navigation Tabs */}
-      <div className="grid grid-cols-4 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
+      <div className="grid grid-cols-3 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
         <button
           onClick={() => setActiveTab('overview')}
           className={`py-4 px-1.5 sm:py-5 sm:px-3 rounded-xl text-[8px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
@@ -1239,18 +1239,6 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           <HelpCircle className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
           <span className="text-center leading-tight">FAQ</span>
         </button>
-
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`py-4 px-1.5 sm:py-5 sm:px-3 rounded-xl text-[8px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
-            activeTab === 'settings'
-              ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
-              : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
-          }`}
-        >
-          <Settings className="w-3.5 h-3.5 whitespace-nowrap shrink-0" />
-          <span className="text-center leading-tight">Settings</span>
-        </button>
       </div>
 
       <div className="p-6 md:p-8 space-y-6">
@@ -1258,10 +1246,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           {activeTab === 'overview' && (
             <motion.div
               key="overview-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="space-y-6"
             >
               {/* Dynamic Cards: Balance, Investment, Timer, Referrals */}
@@ -2124,10 +2112,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           {activeTab === 'funding' && (
             <motion.div
               key="funding-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="space-y-8"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -3473,10 +3461,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           {activeTab === 'faq' && (
             <motion.div
               key="faq-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="space-y-6 scroll-mt-24"
               id="faq-section"
             >
@@ -3487,10 +3475,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           {activeTab === 'settings' && (
             <motion.div
               key="settings-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="space-y-6 scroll-mt-24"
               id="settings-section"
             >

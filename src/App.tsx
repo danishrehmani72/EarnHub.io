@@ -52,7 +52,8 @@ import {
   ShieldAlert,
   Clock,
   Mail,
-  Settings
+  Settings,
+  MoreVertical
 } from 'lucide-react';
 
 export function getPlanCapPercent(planId: string, amount: number): number {
@@ -181,6 +182,7 @@ export default function App() {
   const [virtualDays, setVirtualDays] = useState<number>(0);
   const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'faq' | 'settings'>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [openedFooterDoc, setOpenedFooterDoc] = useState<'about' | 'contact' | 'privacy' | 'terms' | null>(null);
 
@@ -1765,15 +1767,6 @@ export default function App() {
           >
             Dashboard
           </button>
-
-          <button 
-            type="button"
-            onClick={() => handleNavClick('settings')}
-            className={`transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 ${isRegistered && dashboardTab === 'settings' ? 'text-white border-b border-[#D4AF37]' : 'hover:text-white/90'}`}
-          >
-            <Settings className="w-4 h-4 text-white/70" />
-            Settings
-          </button>
           
           <button 
             type="button"
@@ -1846,6 +1839,49 @@ export default function App() {
             </div>
           )}
 
+          {/* 3 Dot Menu / Settings */}
+          {isRegistered && (
+            <div className="relative">
+              <button 
+                type="button"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="p-2 rounded-lg border border-white/10 hover:bg-white/5 active:scale-95 transition-all text-white/80 cursor-pointer bg-transparent"
+                aria-label="Toggle User Menu"
+              >
+                <MoreVertical className="w-5 h-5 text-white" />
+              </button>
+
+              <AnimatePresence>
+                {userMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-48 bg-[#0C0C0C]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 py-1"
+                    >
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          handleNavClick('settings');
+                        }}
+                        className="w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-wider text-white/80 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2 cursor-pointer bg-transparent border-none outline-none"
+                      >
+                        <Settings className="w-4 h-4 text-[#D4AF37]" />
+                        Settings
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
           {/* Mobile menu trigger */}
           <button 
             type="button"
@@ -1890,19 +1926,6 @@ export default function App() {
                     Dashboard Overview
                   </span>
                   <span className="text-[10px] bg-[#D4AF37]/15 border border-[#D4AF37]/20 px-2 py-0.5 rounded text-[#D4AF37] uppercase font-bold tracking-wider">Growth</span>
-                </motion.button>
-
-                <motion.button 
-                  variants={mobileItemVariants}
-                  type="button"
-                  onClick={() => handleNavClick('settings')}
-                  className={`py-3 px-4 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer bg-transparent ${isRegistered && dashboardTab === 'settings' ? 'text-white font-extrabold border-[#D4AF37]/35 bg-[#D4AF37]/10' : 'border-white/5 hover:border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Settings className="w-4 h-4 text-[#D4AF37]" />
-                    Profile Settings
-                  </span>
-                  <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-white/60 uppercase font-bold tracking-wider">Profile</span>
                 </motion.button>
 
                 <motion.button 
