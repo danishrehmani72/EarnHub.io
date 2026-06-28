@@ -30,7 +30,8 @@ import {
   VolumeX,
   Zap,
   ExternalLink,
-  Settings
+  Settings,
+  Upload
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { 
