@@ -368,9 +368,14 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
   const [themeInternal, setThemeInternal] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('earnhub_theme') as 'light' | 'dark') || 'light';
+      const stored = localStorage.getItem('earnhub_theme');
+      if (stored === 'light') {
+        localStorage.setItem('earnhub_theme', 'dark');
+        return 'dark';
+      }
+      return (stored as 'light' | 'dark') || 'dark';
     }
-    return 'light';
+    return 'dark';
   });
 
   const theme = themeProp !== undefined ? themeProp : themeInternal;
@@ -3517,32 +3522,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       App Customization
                     </h2>
                     <p className="text-xs text-zinc-400">
-                      Customize your visual layout, default currency values, and audio parameters.
+                      Customize your default currency values and audio parameters.
                     </p>
-                  </div>
-
-                  {/* 1. Theme Toggle Button */}
-                  <div className="bg-zinc-55/5 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-5 flex items-center justify-between transition-colors hover:bg-zinc-50 dark:hover:bg-white/[0.03]">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-gray-100 dark:bg-slate-950 border border-gray-200 dark:border-white/10">
-                        <Sparkles className="w-5 h-5 text-emerald-500" />
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-bold text-slate-800 dark:text-white tracking-wide">High-Contrast Light Theme</h4>
-                        <p className="text-xs text-zinc-500 font-sans">Toggle between standard light view and sleek dark mode.</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                      className="text-emerald-500 hover:text-emerald-400 transition-colors focus:outline-none cursor-pointer bg-transparent border-0"
-                    >
-                      {theme === 'light' ? (
-                        <ToggleRight className="w-10 h-10 text-emerald-500" />
-                      ) : (
-                        <ToggleLeft className="w-10 h-10 text-zinc-400 dark:text-zinc-600 hover:text-zinc-500" />
-                      )}
-                    </button>
                   </div>
 
                   {/* 2. Currency Selector Option */}

@@ -189,9 +189,14 @@ export default function App() {
   // High-contrast Theme state (persisted via localStorage)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('earnhub_theme') as 'light' | 'dark') || 'light';
+      const stored = localStorage.getItem('earnhub_theme');
+      if (stored === 'light') {
+        localStorage.setItem('earnhub_theme', 'dark');
+        return 'dark';
+      }
+      return (stored as 'light' | 'dark') || 'dark';
     }
-    return 'light';
+    return 'dark';
   });
 
   useEffect(() => {
