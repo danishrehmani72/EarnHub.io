@@ -1337,18 +1337,19 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 onCancelPlan={onCancelPlan!}
                 currencySymbol={currencySymbol}
                 conversionRate={conversionRate}
+                theme={theme}
               />
 
               {/* LIVE STAKING PROJECTOR & INTEREST ESTIMATOR */}
-              <div className="bg-[#121212]/50 border border-white/5 rounded-3xl p-5 md:p-6 space-y-4 shadow-xl relative overflow-hidden">
+              <div className="bg-white dark:bg-[#121212]/50 border border-gray-100 dark:border-white/5 rounded-3xl p-5 md:p-6 space-y-4 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
-                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-3">
                   <div className="space-y-0.5 text-left">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
                       Dynamic Staking Yield Estimator
                     </h4>
-                    <p className="text-[8.5px] text-white/40 font-sans">Simulate and project your future earnings in real-time</p>
+                    <p className="text-[8.5px] text-slate-400 dark:text-white/40 font-sans">Simulate and project your future earnings in real-time</p>
                   </div>
                   {globalSettings && globalSettings.yieldMultiplier > 1.0 && (
                     <span className="text-[7px] font-mono font-black text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider animate-bounce select-none">
@@ -1360,7 +1361,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 <div className="space-y-5">
                   {/* Slider 1: Amount */}
                   <div className="space-y-1.5 text-left">
-                    <div className="flex items-center justify-between text-[9px] font-bold text-white/50 uppercase tracking-wider font-sans">
+                    <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider font-sans">
                       <span>Staking Capital Amount</span>
                       <span className="text-blue-400 font-mono text-[11px] font-black">
                         {currencySymbol}{(calcAmount * conversionRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1373,9 +1374,9 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       step="5"
                       value={calcAmount}
                       onChange={(e) => setCalcAmount(Number(e.target.value))}
-                      className="w-full accent-[#D4AF37] bg-slate-950/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
+                      className="w-full accent-[#D4AF37] bg-gray-200 dark:bg-slate-950/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-gray-200 dark:border-white/5 hover:border-slate-400 transition-colors cursor-pointer"
                     />
-                    <div className="flex justify-between text-[7px] font-mono text-white/30">
+                    <div className="flex justify-between text-[7px] font-mono text-slate-400 dark:text-white/30">
                       <span>Min: {currencySymbol}{(5 * conversionRate).toFixed(2)}</span>
                       <span>Mid: {currencySymbol}{(500 * conversionRate).toFixed(2)}</span>
                       <span>Max: {currencySymbol}{(1000 * conversionRate).toFixed(2)}</span>
@@ -1384,7 +1385,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                   {/* Slider 2: Duration */}
                   <div className="space-y-1.5 text-left">
-                    <div className="flex items-center justify-between text-[9px] font-bold text-white/50 uppercase tracking-wider font-sans">
+                    <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 dark:text-white/50 uppercase tracking-wider font-sans">
                       <span>Lock-in Duration (Days)</span>
                       <span className="text-blue-400 font-mono text-[11px] font-black">
                         {calcDays} Days
@@ -1397,9 +1398,9 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       step="1"
                       value={calcDays}
                       onChange={(e) => setCalcDays(Number(e.target.value))}
-                      className="w-full accent-[#D4AF37] bg-slate-950/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
+                      className="w-full accent-[#D4AF37] bg-gray-200 dark:bg-slate-950/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-gray-200 dark:border-white/5 hover:border-slate-400 transition-colors cursor-pointer"
                     />
-                    <div className="flex justify-between text-[7px] font-mono text-white/30">
+                    <div className="flex justify-between text-[7px] font-mono text-slate-400 dark:text-white/30">
                       <span>1 Day</span>
                       <span>180 Days</span>
                       <span>365 Days</span>
@@ -1408,9 +1409,9 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                   {/* Summary output table cards */}
                   <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-3 text-left space-y-1">
-                      <span className="text-[7.5px] uppercase tracking-widest font-black text-white/40 font-sans block">Dynamic Daily Yield</span>
-                      <p className="text-[12px] font-serif font-bold text-white leading-tight">
+                    <div className="bg-gray-50 dark:bg-slate-950/40 border border-gray-100 dark:border-white/5 rounded-2xl p-3 text-left space-y-1">
+                      <span className="text-[7.5px] uppercase tracking-widest font-black text-slate-400 dark:text-white/40 font-sans block">Dynamic Daily Yield</span>
+                      <p className="text-[12px] font-serif font-bold text-slate-800 dark:text-white leading-tight">
                         {currencySymbol}{(( (calcAmount >= 100 ? 0.07 : calcAmount >= 50 ? 0.05 : calcAmount >= 15 ? 0.04 : 0.03) * calcAmount * (globalSettings?.yieldMultiplier || 1.0) ) * conversionRate).toFixed(2)}
                       </p>
                       <span className="text-[6.5px] font-mono text-blue-400/85 block">
@@ -1418,12 +1419,12 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       </span>
                     </div>
 
-                    <div className="bg-[#1c160c]/35 border border-amber-500/10 rounded-2xl p-3 text-left space-y-1">
+                    <div className="bg-amber-50 dark:bg-[#1c160c]/35 border border-amber-500/10 rounded-2xl p-3 text-left space-y-1">
                       <span className="text-[7.5px] uppercase tracking-widest font-black text-blue-400/65 font-sans block">Total Est. Staking Gains</span>
-                      <p className="text-[13px] font-serif font-black text-amber-400 leading-tight">
+                      <p className="text-[13px] font-serif font-black text-amber-500 dark:text-amber-400 leading-tight">
                         {currencySymbol}{(calculatedProjProfit * conversionRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
-                      <span className="text-[6.5px] font-mono text-white/30 block">
+                      <span className="text-[6.5px] font-mono text-slate-400 dark:text-white/30 block">
                         Capital return after {calcDays}d
                       </span>
                     </div>
@@ -1432,9 +1433,9 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               </div>
 
               {/* Dynamic Earnings Growth Over Time Chart */}
-              <div className="bg-white/[0.02] rounded-2xl border border-white/5 p-5 space-y-4">
+              <div className="bg-gray-50 dark:bg-white/[0.02] rounded-2xl border border-gray-100 dark:border-white/5 p-5 space-y-4">
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-wider font-sans">
-                  <span className="font-semibold text-white/40">Earnings Progression Timeline</span>
+                  <span className="font-semibold text-slate-400 dark:text-white/40">Earnings Progression Timeline</span>
                   <span className="font-bold text-blue-400 flex items-center gap-1.5">
                     <TrendingUp className="w-3.5 h-3.5" />
                     Growth Curve
@@ -1443,17 +1444,17 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 <div className="h-44 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.05)"} vertical={false} />
                       <XAxis 
                         dataKey="label" 
-                        stroke="rgba(255,255,255,0.2)" 
+                        stroke={theme === "dark" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.4)"} 
                         fontSize={9} 
                         tickLine={false} 
                         axisLine={false}
                         dy={8}
                       />
                       <YAxis 
-                        stroke="rgba(255,255,255,0.2)" 
+                        stroke={theme === "dark" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.4)"} 
                         fontSize={9} 
                         tickLine={false} 
                         axisLine={false}
@@ -1464,11 +1465,11 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
                             return (
-                              <div className="bg-[#161616] border border-white/10 p-2.5 rounded-lg shadow-xl font-sans">
-                                <p className="text-white/40 font-semibold mb-1 uppercase tracking-widest text-[8px]">
+                              <div className="bg-white dark:bg-[#161616] border border-gray-200 dark:border-white/10 p-2.5 rounded-lg shadow-xl font-sans">
+                                <p className="text-slate-500 dark:text-white/40 font-semibold mb-1 uppercase tracking-widest text-[8px]">
                                   {payload[0].payload.label}
                                 </p>
-                                <p className="text-blue-400 font-bold font-mono text-xs">
+                                <p className="text-emerald-600 dark:text-blue-400 font-bold font-mono text-xs">
                                   Balance: {currencySymbol}{Number(Number(payload[0].value) * conversionRate).toFixed(2)}
                                 </p>
                               </div>
@@ -1483,8 +1484,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         dataKey="balance" 
                         stroke="#D4AF37" 
                         strokeWidth={2}
-                        dot={{ r: 3, stroke: '#111111', strokeWidth: 1, fill: '#D4AF37' }}
-                        activeDot={{ r: 5, stroke: '#111111', strokeWidth: 1.5, fill: '#D4AF37' }}
+                        dot={{ r: 3, stroke: theme === "dark" ? "#111111" : "#ffffff", strokeWidth: 1, fill: '#D4AF37' }}
+                        activeDot={{ r: 5, stroke: theme === "dark" ? "#111111" : "#ffffff", strokeWidth: 1.5, fill: '#D4AF37' }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -3281,7 +3282,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               className="space-y-6 scroll-mt-24"
               id="faq-section"
             >
-              <FaqSection />
+              <FaqSection theme={theme} />
             </motion.div>
           )}
 
