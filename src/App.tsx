@@ -186,6 +186,20 @@ export default function App() {
   });
   const [isStatsLoading, setIsStatsLoading] = useState(true);
 
+  // High-contrast Theme state (persisted via localStorage)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('earnhub_theme') as 'light' | 'dark') || 'light';
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('earnhub_theme', theme);
+    }
+  }, [theme]);
+
   // Session inactivity auto sign-out states
   const [showInactivityWarning, setShowInactivityWarning] = useState(false);
   const [inactivitySecondsLeft, setInactivitySecondsLeft] = useState(60);
@@ -1600,10 +1614,10 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#060202] bg-[linear-gradient(to_right,#1a0606_1px,transparent_1px),linear-gradient(to_bottom,#1a0606_1px,transparent_1px)] bg-[size:32px_32px] text-[#E5E7EB] font-sans flex flex-col justify-between antialiased selection:bg-red-600/20 selection:text-red-400 relative overflow-x-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.1)_0%,transparent_75%)] pointer-events-none" />
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-red-600/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className={`min-h-screen font-sans flex flex-col justify-between antialiased transition-all duration-300 relative overflow-x-hidden ${theme === 'dark' ? 'bg-[#060202] bg-[linear-gradient(to_right,#1a0606_1px,transparent_1px),linear-gradient(to_bottom,#1a0606_1px,transparent_1px)] text-[#E5E7EB] selection:bg-red-600/20 selection:text-red-400' : 'bg-[#FAFCFA] bg-[linear-gradient(to_right,rgba(16,185,129,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.04)_1px,transparent_1px)] text-slate-800 selection:bg-emerald-200 selection:text-emerald-800'}`} style={{ backgroundImage: theme === 'dark' ? 'linear-gradient(to_right,#1a0606_1px,transparent_1px),linear-gradient(to_bottom,#1a0606_1px,transparent_1px)' : 'linear-gradient(to_right,rgba(16,185,129,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.04)_1px,transparent_1px)', backgroundSize: '32px 32px' }}>
+      <div className={`absolute inset-0 pointer-events-none ${theme === 'dark' ? 'bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.1)_0%,transparent_75%)]' : 'bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.06)_0%,transparent_75%)]'}`} />
+      <div className={`absolute -top-40 -left-40 w-96 h-96 rounded-full blur-[120px] pointer-events-none ${theme === 'dark' ? 'bg-red-600/5' : 'bg-emerald-500/4'}`} />
+      <div className={`absolute -bottom-40 -right-40 w-96 h-96 rounded-full blur-[120px] pointer-events-none ${theme === 'dark' ? 'bg-emerald-600/5' : 'bg-teal-500/4'}`} />
       
       {/* Toast Notification Container */}
       <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-[340px] xs:max-w-sm w-full pointer-events-none">
@@ -2335,32 +2349,34 @@ export default function App() {
                 onUpdateProfile={handleUpdateProfile}
                 onRefresh={handleRefreshAllData}
                 globalSettings={globalSettings}
+                theme={theme}
+                setTheme={setTheme}
               />
-              <ReferralHistory logs={logs} userId={currentUid || ''} walletBalance={balance} />
+              <ReferralHistory logs={logs} userId={currentUid || ''} walletBalance={balance} theme={theme} />
             </div>
           )}
         </AnimatePresence>
       </main>
 
       {/* Footer Bar */}
-      <footer className="border-t border-white/5 bg-slate-950 flex flex-col md:flex-row items-center justify-between px-6 md:px-10 py-6 md:py-4 text-[10px] text-[#E5E7EB]/20 uppercase tracking-[0.25em] space-y-3 md:space-y-0">
+      <footer className={`border-t flex flex-col md:flex-row items-center justify-between px-6 md:px-10 py-6 md:py-4 text-[10px] uppercase tracking-[0.25em] space-y-3 md:space-y-0 ${theme === 'dark' ? 'border-white/5 bg-slate-950 text-[#E5E7EB]/20' : 'border-gray-200 bg-white text-slate-400'}`}>
         <div className="text-center md:text-left">&copy; {new Date().getFullYear()} Apex Capital</div>
         
         {/* AdSense policy and branding links */}
-        <div className="flex flex-wrap justify-center gap-3.5 text-blue-400 font-sans text-[9px] font-bold tracking-wider uppercase">
-          <button onClick={() => setOpenedFooterDoc('about')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">About Us</button>
+        <div className={`flex flex-wrap justify-center gap-3.5 font-sans text-[9px] font-bold tracking-wider uppercase ${theme === 'dark' ? 'text-blue-400' : 'text-emerald-600'}`}>
+          <button onClick={() => setOpenedFooterDoc('about')} className="hover:underline hover:text-emerald-500 cursor-pointer bg-transparent border-0 uppercase">About Us</button>
           <span>•</span>
-          <button onClick={() => setOpenedFooterDoc('contact')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">Contact Us</button>
+          <button onClick={() => setOpenedFooterDoc('contact')} className="hover:underline hover:text-emerald-500 cursor-pointer bg-transparent border-0 uppercase">Contact Us</button>
           <span>•</span>
-          <button onClick={() => setOpenedFooterDoc('privacy')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">Privacy Policy</button>
+          <button onClick={() => setOpenedFooterDoc('privacy')} className="hover:underline hover:text-emerald-500 cursor-pointer bg-transparent border-0 uppercase">Privacy Policy</button>
           <span>•</span>
-          <button onClick={() => setOpenedFooterDoc('terms')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">Terms & Conditions</button>
+          <button onClick={() => setOpenedFooterDoc('terms')} className="hover:underline hover:text-emerald-500 cursor-pointer bg-transparent border-0 uppercase">Terms & Conditions</button>
         </div>
 
         <div className="flex gap-4 items-center font-sans tracking-widest justify-center">
           <span>Compliance: #MMS-992-KLR</span>
-          <span className="text-blue-400/40 font-semibold">•</span>
-          <span className="text-blue-400/50">Status: Active</span>
+          <span className={`${theme === 'dark' ? 'text-blue-400/40' : 'text-emerald-500/40'} font-semibold`}>•</span>
+          <span className={theme === 'dark' ? 'text-blue-400/50' : 'text-emerald-600 font-bold'}>Status: Active</span>
         </div>
       </footer>
 
@@ -2893,10 +2909,6 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
-
-      
-      {/* Real-time Simulated Recent Payout & Withdrawal Feed Popups Sourced from DB */}
-      <RecentWithdrawalToast feed={approvedWithdrawalsFeed} />
     </div>
   );
 }

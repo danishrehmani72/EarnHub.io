@@ -109,6 +109,8 @@ interface DashboardCardProps {
     systemAnnouncement: string;
     isAnnouncementActive: boolean;
   };
+  theme?: 'light' | 'dark';
+  setTheme?: (theme: 'light' | 'dark') => void;
 }
 
 export default function DashboardCard({
@@ -139,6 +141,8 @@ export default function DashboardCard({
   dailyRewardLogs = [],
   onRefresh,
   globalSettings,
+  theme: themeProp,
+  setTheme: setThemeProp,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
   const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq' | 'settings'>('overview');
@@ -362,18 +366,21 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     return 'PKR';
   });
 
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+  const [themeInternal, setThemeInternal] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('earnhub_theme') as 'light' | 'dark') || 'light';
     }
     return 'light';
   });
 
+  const theme = themeProp !== undefined ? themeProp : themeInternal;
+  const setTheme = setThemeProp !== undefined ? setThemeProp : setThemeInternal;
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('earnhub_theme', theme);
+    if (typeof window !== 'undefined' && themeProp === undefined) {
+      localStorage.setItem('earnhub_theme', themeInternal);
     }
-  }, [theme]);
+  }, [themeInternal, themeProp]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
