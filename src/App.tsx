@@ -58,27 +58,11 @@ import {
 
 export function getPlanCapPercent(planId: string, amount: number): number {
   const normId = (planId || '').toLowerCase().trim();
-  if (normId === 'bronze') {
-    if (amount <= 7.5) return 1.00; // $5 -> $10 (+100%, $5 profit)
-    if (amount <= 12.5) return 0.70; // $10 -> $17 (+70%, $7 profit)
-    return 0.666667; // $15 -> $25 (+66.67%, $10 profit)
-  }
-  if (normId === 'silver') {
-    if (amount <= 25) return 0.60; // $20 -> $32 (+60%, $12 profit)
-    if (amount <= 40) return 0.633333; // $30 -> $49 (+63.33%, $19 profit)
-    return 0.66; // $50 -> $83 (+66%, $33 profit)
-  }
-  if (normId === 'gold') {
-    if (amount <= 62.5) return 0.50; // $50 -> $75 (+50%, $25 profit)
-    if (amount <= 87.5) return 0.533333; // $75 -> $115 (+53.33%, $40 profit)
-    return 0.40; // $100 -> $140 (+40%, $40 profit)
-  }
-  if (normId === 'diamond') {
-    if (amount <= 175) return 0.40; // $100 -> $140 (+40%, $40 profit)
-    if (amount <= 375) return 0.40; // $250 -> $350 (+40%, $100 profit)
-    return 0.50; // $500 -> $750 (+50%, $250 profit)
-  }
-  return 0.20; // fallback
+  if (normId === 'bronze') return 0.08; // Starter: 8% yield (108% total)
+  if (normId === 'silver') return 0.12; // Growth: 12% yield (112% total)
+  if (normId === 'gold') return 0.18;   // Pro: 18% yield (118% total)
+  if (normId === 'diamond') return 0.24; // Elite: 24% yield (124% total)
+  return 0.10; // Default 10%
 }
 
 
@@ -175,7 +159,7 @@ export default function App() {
     smtpPort: 465,
     smtpUser: "",
     smtpPass: "",
-    senderName: "MoneyMind Space"
+    senderName: "Apex Capital"
   });
 
   // Load and manage simulated days offset
@@ -488,7 +472,7 @@ export default function App() {
           smtpPort: data.smtpPort ? Number(data.smtpPort) : 465,
           smtpUser: data.smtpUser ? String(data.smtpUser) : "",
           smtpPass: data.smtpPass ? String(data.smtpPass) : "",
-          senderName: data.senderName ? String(data.senderName) : "MoneyMind Space"
+          senderName: data.senderName ? String(data.senderName) : "Apex Capital"
         });
       }
     }, (error) => {
@@ -1372,8 +1356,8 @@ export default function App() {
     }
 
     if (target === 'helpline') {
-      window.open('https://t.me/MoneyMindSpaceSupport', '_blank');
-      addToast('Opening MoneyMind Space Support on Telegram...', 'success');
+      window.open('https://t.me/ApexCapitalSupport', '_blank');
+      addToast('Opening Apex Capital Support on Telegram...', 'success');
       return;
     }
 
@@ -1474,7 +1458,7 @@ export default function App() {
     (userProfile?.email && [
       "admin@gmail.com", 
       "danishrehmani72@gmail.com", 
-      "superadmin@moneymindspace.com", 
+      "superadmin@apexcapital.test", 
       "superadmin@earnhub.com"
     ].includes(userProfile.email.toLowerCase().trim())) || 
     userProfile?.userId === 'danish' || 
@@ -1609,13 +1593,13 @@ export default function App() {
             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Profile Integrity Breach / Compliance Flag</p>
           </div>
           <p className="text-xs text-white/70 leading-relaxed">
-            Your MoneyMind Space account <strong className="text-white">#{userProfile.userId}</strong> has been suspended by our Compliance Desk under compliance guidelines of multiple accounts or suspicious ledger deposits.
+            Your Apex Capital account <strong className="text-white">#{userProfile.userId}</strong> has been suspended by our Compliance Desk under compliance guidelines of multiple accounts or suspicious ledger deposits.
           </p>
           <div className="p-3 bg-red-500/5 rounded-2xl border border-red-500/10 text-[10px] leading-relaxed text-red-400">
             If you believe this is a false block, contact our 24/7 compliance desk on Telegram to submit identification credentials.
           </div>
           <button
-            onClick={() => window.open('https://t.me/MoneyMindSpaceSupport', '_blank')}
+            onClick={() => window.open('https://t.me/ApexCapitalSupport', '_blank')}
             className="w-full py-3 bg-red-500 hover:bg-red-600 text-black text-[10px] uppercase tracking-[0.15em] font-black rounded-xl transition-all shadow-md shadow-red-500/10 cursor-pointer"
           >
             Contact Live Support Desk 💬
@@ -1745,7 +1729,7 @@ export default function App() {
         <div className="flex items-center gap-3">
           <img 
             src={earnhubLogo} 
-            alt="MoneyMind Space Logo" 
+            alt="Apex Capital Logo" 
             onClick={handleLogoClick}
             className="w-10 h-10 object-contain rounded-lg border border-blue-500/15 shadow-[0_0_15px_rgba(59,130,246,0.15)] bg-slate-950 cursor-pointer active:scale-95 transition-transform"
             referrerPolicy="no-referrer"
@@ -1754,7 +1738,7 @@ export default function App() {
             onClick={() => handleNavClick('dashboard')} 
             className="text-lg font-bold tracking-[0.25em] uppercase font-serif text-white hover:brightness-110 transition-all text-left bg-transparent border-0 cursor-pointer"
           >
-            MONEYMIND SPACE
+            Apex Capital
           </button>
         </div>
 
@@ -2018,24 +2002,24 @@ export default function App() {
                 {/* Marketing Content Column with Premium Hero Banner (Requested Theme) */}
                 <div className="lg:col-span-7 space-y-6 text-left animate-fade-in">
                   {/* 💸 High Impact Premium Banner card */}
-                  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F0F0F] to-black border-2 border-[#10B981]/25 hover:border-blue-500/50 shadow-[0_0_40px_rgba(16,185,129,0.08)] hover:shadow-[0_0_50px_rgba(59,130,246,0.12)] transition-all duration-500 p-6 md:p-8 space-y-6">
+                  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 to-slate-900 border border-white/10 hover:border-blue-500/50 shadow-[0_0_40px_rgba(16,185,129,0.08)] hover:shadow-[0_0_50px_rgba(59,130,246,0.12)] transition-all duration-500 p-6 md:p-8 space-y-6">
                     {/* Glowing background matrix effect */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#10B981]/10 via-[#D4AF37]/5 to-transparent blur-3xl pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent blur-3xl pointer-events-none" />
                     
                     <div className="flex items-center gap-2.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-ping"></span>
                       <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#10B981] bg-[#10B981]/10 px-3 py-1 rounded-full border border-[#10B981]/20">
-                        Multi-Protocol Vault Live
+                        Secure Infrastructure
                       </span>
                     </div>
 
                     {/* 💸 MAIN HIGHLIGHT */}
                     <div className="space-y-3">
                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-black font-serif text-white tracking-tight leading-none text-balance">
-                        💸 Earn Daily Online
+                        Wealth Management Platform
                       </h1>
                       <p className="text-sm md:text-base text-white/70 leading-relaxed font-sans font-medium max-w-xl">
-                        Join MoneyMind Space to claim yields, build automated income, and secure high-rate cryptographic earnings in Pakistan & globally.
+                        Access algorithmic investment strategies and institutional-grade portfolio management tailored for long-term growth.
                       </p>
                     </div>
 
@@ -2061,9 +2045,9 @@ export default function App() {
                         onClick={() => {
                           document.getElementById('registration-container')?.scrollIntoView({ behavior: 'smooth' });
                         }}
-                        className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#10B981] via-[#D4AF37] to-[#10B981] bg-[length:200%_auto] hover:bg-right text-black font-black text-xs uppercase tracking-widest hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-500 cursor-pointer border-0 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                        className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600 bg-[length:200%_auto] hover:bg-right text-white font-bold text-xs uppercase tracking-widest hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-500 cursor-pointer border-0 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
                       >
-                        Start Earning
+                        Open an Account
                       </button>
                     </div>
                   </div>
@@ -2119,7 +2103,7 @@ export default function App() {
                     🔒 Professional Trust & Security Pillars
                   </h2>
                   <p className="text-xs text-zinc-400 font-sans max-w-md mx-auto leading-relaxed">
-                    MoneyMind Space coordinates rigorous secure protocols to protect physical stake balances and guarantee rapid payout verification times.
+                    Apex Capital coordinates rigorous secure protocols to protect physical stake balances and guarantee rapid payout verification times.
                   </p>
                 </div>
 
@@ -2202,12 +2186,12 @@ export default function App() {
                     <h3 className="text-3xl font-bold font-mono text-blue-400 leading-none py-1">
                       {isStatsLoading ? "..." : publicStats.totalRegisteredUsers}
                     </h3>
-                    <p className="text-[9px] text-blue-400/65 font-bold font-sans">Active Profiles on Ledger</p>
+                    <p className="text-[9px] text-blue-400/65 font-bold font-sans">Registered Users</p>
                   </div>
 
                   {/* Active Users */}
                   <div className="bg-[#121212]/30 border border-white/5 rounded-2xl p-5 space-y-2 relative overflow-hidden text-center transition-all hover:bg-[#121212]/60">
-                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-sans block">Active Yield Earners</span>
+                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-sans block">Active Portfolios</span>
                     <h3 className="text-3xl font-bold font-mono text-[#10B981] leading-none py-1 flex items-center justify-center gap-1">
                       {isStatsLoading ? "..." : publicStats.activeUsers}
                     </h3>
@@ -2219,29 +2203,29 @@ export default function App() {
 
                   {/* Total Deposits */}
                   <div className="bg-[#121212]/30 border border-white/5 rounded-2xl p-5 space-y-2 relative overflow-hidden text-center transition-all hover:bg-[#121212]/60">
-                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-sans block">Total Secured Deposits</span>
+                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-sans block">Total Deposits</span>
                     <h3 className="text-2xl font-bold font-mono text-white leading-none py-1.5">
                       {isStatsLoading ? "..." : `$${publicStats.totalDeposits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     </h3>
-                    <p className="text-[9px] text-zinc-400 font-bold font-sans">PKR & USDT Stake Capital</p>
+                    <p className="text-[9px] text-zinc-400 font-bold font-sans">Platform Assets under Management</p>
                   </div>
 
                   {/* Total Withdrawals */}
                   <div className="bg-[#121212]/30 border border-white/5 rounded-2xl p-5 space-y-2 relative overflow-hidden text-center transition-all hover:bg-[#121212]/60">
-                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-sans block">Total Verified Withdrawals</span>
+                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-sans block">Total Withdrawals</span>
                     <h3 className="text-2xl font-bold font-mono text-[#E5E7EB] leading-none py-1.5">
                       {isStatsLoading ? "..." : `$${publicStats.totalWithdrawals.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     </h3>
-                    <p className="text-[9px] text-zinc-400 font-bold font-sans">Total Disbursed Funds</p>
+                    <p className="text-[9px] text-zinc-400 font-bold font-sans">Processed Transactions</p>
                   </div>
 
                   {/* Pending Audits Queue */}
                   <div className="bg-[#121212]/30 border border-white/5 rounded-2xl p-5 space-y-2 relative overflow-hidden text-center transition-all hover:bg-[#121212]/60">
-                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-sans block">Pending Requests Queue</span>
+                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-sans block">Pending Transactions</span>
                     <h3 className="text-3xl font-bold font-mono text-amber-500 leading-none py-1">
                       {isStatsLoading ? "..." : publicStats.pendingRequests}
                     </h3>
-                    <p className="text-[9px] text-zinc-400 font-bold font-sans">Audit Verification Queue</p>
+                    <p className="text-[9px] text-zinc-400 font-bold font-sans">Currently Processing</p>
                   </div>
                 </div>
               </div>
@@ -2311,15 +2295,15 @@ export default function App() {
                   <div className="space-y-3">
                     <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400">About Platform</h4>
                     <p className="text-[11px] leading-relaxed font-sans font-medium">
-                      MoneyMind Space is Pakistan's premium automated dynamic staking platform. We empower individuals to secure stable cryptocurrency yields and easy PKR-based investments.
+                      Apex Capital is Pakistan's premium automated dynamic staking platform. We empower individuals to secure stable cryptocurrency yields and easy PKR-based investments.
                     </p>
                   </div>
 
                   <div className="space-y-3">
                     <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#10B981]">Support Contact</h4>
                     <div className="flex flex-col gap-2 text-xs font-semibold">
-                      <a href="mailto:support@moneymindspace.online" className="text-zinc-300 hover:text-[#10B981] transition-all flex items-center gap-1 bg-transparent border-0">
-                        ✉️ support@moneymindspace.online
+                      <a href="mailto:support@apexcapital.test" className="text-zinc-300 hover:text-[#10B981] transition-all flex items-center gap-1 bg-transparent border-0">
+                        ✉️ support@apexcapital.test
                       </a>
                       <a href="https://t.me/moneymindspace" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-sky-400 transition-all flex items-center gap-1 bg-transparent border-0">
                         ✈️ Telegram Official Helpline
@@ -2331,7 +2315,7 @@ export default function App() {
                     <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Company Information</h4>
                     <div className="flex flex-col gap-2 text-xs font-semibold">
                       <button onClick={() => setOpenedFooterDoc('about')} className="text-left text-zinc-300 hover:text-blue-400 transition-all bg-transparent border-0 cursor-pointer outline-none">
-                        About MoneyMind Space
+                        About Apex Capital
                       </button>
                       <button onClick={() => setOpenedFooterDoc('contact')} className="text-left text-zinc-300 hover:text-blue-400 transition-all bg-transparent border-0 cursor-pointer outline-none">
                         Support Helplines Overview
@@ -2392,7 +2376,7 @@ export default function App() {
 
       {/* Footer Bar */}
       <footer className="border-t border-white/5 bg-slate-950 flex flex-col md:flex-row items-center justify-between px-6 md:px-10 py-6 md:py-4 text-[10px] text-[#E5E7EB]/20 uppercase tracking-[0.25em] space-y-3 md:space-y-0">
-        <div className="text-center md:text-left">&copy; {new Date().getFullYear()} MoneyMind Space</div>
+        <div className="text-center md:text-left">&copy; {new Date().getFullYear()} Apex Capital</div>
         
         {/* AdSense policy and branding links */}
         <div className="flex flex-wrap justify-center gap-3.5 text-blue-400 font-sans text-[9px] font-bold tracking-wider uppercase">
@@ -2427,7 +2411,7 @@ export default function App() {
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0F0F0F]">
                 <div>
                   <h2 className="text-xs uppercase font-extrabold tracking-[0.2em] text-blue-400 font-sans">
-                    {openedFooterDoc === 'about' && 'About MoneyMind Space'}
+                    {openedFooterDoc === 'about' && 'About Apex Capital'}
                     {openedFooterDoc === 'contact' && 'Contact Support Center'}
                     {openedFooterDoc === 'privacy' && 'Official Privacy Policy'}
                     {openedFooterDoc === 'terms' && 'Core Terms & Conditions'}
@@ -2446,9 +2430,9 @@ export default function App() {
               <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4 font-sans text-xs text-white/70 leading-relaxed text-left">
                 {openedFooterDoc === 'about' && (
                   <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Welcome to MoneyMind Space</h3>
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Welcome to Apex Capital</h3>
                     <p>
-                      MoneyMind Space is a modern financial platform designed to help users manage their accounts, track activity, monitor earnings, and access financial tools through a secure and user-friendly dashboard.
+                      Apex Capital is a modern financial platform designed to help users manage their accounts, track activity, monitor earnings, and access financial tools through a secure and user-friendly dashboard.
                     </p>
                     <p>
                       Our mission is to provide a simple, transparent, and reliable digital experience for users who want to stay informed and organized in their financial journey.
@@ -2464,7 +2448,7 @@ export default function App() {
                       </ul>
                     </div>
                     <p className="text-[11px] text-white/40 italic">
-                      At MoneyMind Space, we continuously improve our platform to provide a better experience for all members.
+                      At Apex Capital, we continuously improve our platform to provide a better experience for all members.
                     </p>
                   </div>
                 )}
@@ -2478,11 +2462,11 @@ export default function App() {
                     <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2.5 font-mono text-[11px]">
                       <div>
                         <span className="text-white/30 block uppercase text-[9px] tracking-wider font-sans font-bold">Official Support Email</span>
-                        <a href="mailto:support@moneymindspace.online" className="text-blue-400 hover:underline">support@moneymindspace.online</a>
+                        <a href="mailto:support@apexcapital.test" className="text-blue-400 hover:underline">support@apexcapital.test</a>
                       </div>
                       <div>
                         <span className="text-white/30 block uppercase text-[9px] tracking-wider font-sans font-bold">Corporate Website</span>
-                        <span className="text-white font-bold">moneymindspace.online</span>
+                        <span className="text-white font-bold">apexcapital.test</span>
                       </div>
                       <div>
                         <span className="text-white/30 block uppercase text-[9px] tracking-wider font-sans font-bold">Support Hours</span>
@@ -2499,7 +2483,7 @@ export default function App() {
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-white uppercase tracking-wider">Privacy Policy</h3>
                     <p>
-                      At MoneyMind Space, we value your privacy and are committed to protecting your personal information.
+                      At Apex Capital, we value your privacy and are committed to protecting your personal information.
                     </p>
                     
                     <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
@@ -2535,7 +2519,7 @@ export default function App() {
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-white uppercase tracking-wider">Terms and Conditions</h3>
                     <p>
-                      By accessing and using MoneyMind Space, you agree to comply with these terms and conditions.
+                      By accessing and using Apex Capital, you agree to comply with these terms and conditions.
                     </p>
 
                     <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
@@ -2549,7 +2533,7 @@ export default function App() {
                     </div>
 
                     <p>
-                      MoneyMind Space reserves the right to modify services, update policies, or suspend accounts that violate these terms. Continued use of the platform constitutes acceptance of any updated terms.
+                      Apex Capital reserves the right to modify services, update policies, or suspend accounts that violate these terms. Continued use of the platform constitutes acceptance of any updated terms.
                     </p>
                     <p className="text-[10px] font-bold uppercase text-white/30 tracking-widest pt-2">
                       Last Updated: June 2026
@@ -2618,7 +2602,7 @@ export default function App() {
 
               {/* Admin Footer Banner info */}
               <div className="px-6 py-3 border-t border-white/5 bg-[#050505] text-[8px] text-center text-white/20 uppercase tracking-[0.2em] font-sans flex flex-col sm:flex-row items-center justify-between gap-2">
-                <span>MoneyMind Space Audit Log: Enabled</span>
+                <span>Apex Capital Audit Log: Enabled</span>
                 <span className="text-blue-400/35 font-mono">Operator ID: {currentUid ? currentUid.slice(0, 16) : 'anonymous'}</span>
                 <span>SECURE SESSION TYPE: TLS 1.3 AES-256</span>
               </div>

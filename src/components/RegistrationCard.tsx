@@ -974,15 +974,15 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       <div className="text-center space-y-2 relative z-10">
         <img 
           src={earnhubLogo}
-          alt="MoneyMind Space Gold Premium Logo"
+          alt="Apex Capital Logo"
           className="w-16 h-16 mx-auto object-contain rounded-2xl border-2 border-blue-500/40 ring-1 ring-blue-500/15 shadow-[0_0_20px_rgba(59,130,246,0.15)] bg-slate-950 mb-3"
           referrerPolicy="no-referrer"
         />
         <h2 className="text-base font-black uppercase tracking-[0.14em] text-white font-serif leading-none">
           {mode === 'signup' ? (
-            <>Join <span className="text-blue-400 animate-pulse">MoneyMind Space</span></>
+            <>Join <span className="text-blue-400 animate-pulse">Apex Capital</span></>
           ) : mode === 'login' ? (
-            <>Welcome to <span className="text-blue-400 animate-pulse">MoneyMind Space</span></>
+            <>Welcome to <span className="text-blue-400 animate-pulse">Apex Capital</span></>
           ) : (
             <>Account <span className="text-blue-400 animate-pulse">Security Recovery</span></>
           )}
@@ -1269,7 +1269,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             </div>
             
             <p className="text-[10.5px] text-white/70 leading-relaxed font-sans">
-              Did you register before the PIN update, or forgot your Recovery PIN/Code? Please reach out to our official help center at <span className="text-blue-400 font-semibold text-xs leading-none">support@moneymindspace.online</span>. Our compliance and support team will verify your balance logs and securely reset your credentials.
+              If you forgot your PIN or need help recovering your account, please contact support for verification and reset assistance.
             </p>
 
             <div className="space-y-2 text-[10px] bg-slate-950/40 p-3 rounded-xl border border-white/5 font-mono">
@@ -1290,11 +1290,11 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
             <div className="pt-1 select-none">
               <a
-                href="mailto:support@moneymindspace.online"
+                href="mailto:support@apexcapital.test"
                 className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all text-center shadow-[0_0_15px_rgba(59,130,246,0.25)] cursor-pointer"
               >
                 <span>Email Secure Support Desk</span>
-                <span className="bg-slate-950/10 px-1.5 py-0.5 rounded text-[8.5px] text-black/85">support@moneymindspace.online</span>
+                <span className="bg-slate-950/10 px-1.5 py-0.5 rounded text-[8.5px] text-black/85">support@apexcapital.test</span>
               </a>
             </div>
           </motion.div>
@@ -1582,7 +1582,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               <span className="text-[7.5px] bg-[#24A1DE]/15 text-[#24A1DE] font-bold px-1.5 py-0.5 rounded border border-[#24A1DE]/30 uppercase tracking-wider">Join Group</span>
             </h4>
             <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
-              Join our public channel at <a href="https://t.me/moneymindonlineearningspace" target="_blank" rel="noopener noreferrer" className="text-[#24A1DE] font-extrabold hover:underline">t.me/moneymindonlineearningspace</a> representing <span className="text-blue-400 font-semibold">Moneymindspace.online</span> today! Exchange payment receipts and claim staking updates.
+              Join our official community channel for market insights, announcements, and support.
             </p>
           </div>
         </div>
@@ -1596,7 +1596,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               <span className="text-[7.5px] bg-blue-600/15 text-blue-400 font-bold px-1.5 py-0.5 rounded border border-blue-500/35 uppercase tracking-wider">Email Help Desk</span>
             </h4>
             <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
-              Have persistent queries, setup issues, or login failures? Email our security team directly at <a href="mailto:support@moneymindspace.online" className="text-blue-400 font-extrabold hover:underline">support@moneymindspace.online</a> for priority assistance.
+              Need help? Contact our support team directly for assistance.
             </p>
           </div>
         </div>

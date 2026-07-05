@@ -13,7 +13,7 @@ const getClientFallbackReply = (msg: string): string => {
 2. **Review Time**: Hamara security audit system automatic checks ke baad **10 se 30 minutes** (maximum 1 se 2 ghante) me withdrawals approve kar deta hai, jo direct aapke account me transfer ho jata hai.
 3. **Minimum Limit**: Minimum withdrawal limit PKR 100 ya $1 hai. 
 
-🛡️ MoneyMind Governance Core live review ensures absolute financial security! Let us know if you need any other help.`;
+Our platform employs institutional-grade security measures. Let us know if you need any other help.`;
   }
   
   if (norm.includes("deposit") || norm.includes("paisa") || norm.includes("jazz") || norm.includes("sada") || norm.includes("naya") || norm.includes("bank") || norm.includes("add money") || norm.includes("pese kese") || norm.includes("pese kaise") || norm.includes("invest") || norm.includes("payment")) {
@@ -23,13 +23,13 @@ const getClientFallbackReply = (msg: string): string => {
 2. Select your channel: **Easypaisa, JazzCash, SadaPay, NayaPay, Bank Transfer, or USDT (TRC-20)**.
 3. Diye gaye Account Number / details par payment transfer karen.
 4. Us ke baad, Sender Name, Sender Account, aur **TxID / Receipt Reference** form me likhain aur submit karen.
-5. MoneyMind automatic ledger verification system check karke balances direct update kar deta hai!
+5. Our automated systems securely process and verify deposits to reflect in your balance.
 
 Daily staking profits is ke baad automatically collect hote rehte hain! 🚀`;
   }
 
   if (norm.includes("ia feature") || norm.includes("ai feature") || norm.includes("ai help") || norm.includes("artificial") || norm.includes("kon kon") || norm.includes("features")) {
-    return `**MoneyMind Space Premium AI & Ledger Features:** 🤖
+    return `**Platform Features & Capabilities:**
 
 1. **MindBuddy AI Assistant** (This Chatbot!): Instant Roman Urdu, English, aur Urdu me queries answers karke support provide karta hai.
 2. **Intelligent Security Ledger**: Automatic fraud detection, IP matching, aur fast unbanning checks handle karta hai.
@@ -65,7 +65,7 @@ Aap mujh se ye pooch sakte hain:
 Hum humesha aapko 24/7 live guide karne ke liye hazir hain! Custom plan choose karen aur stakings start karen! 💰`;
   }
 
-  return `Shukriya hum se rabta karne ka! 🌟 MoneyMind Space high-yield staking aur referral networks me sab se secure aur fast service provide karta hai.
+  return `Thank you for reaching out! We offer comprehensive wealth management and portfolio growth solutions.
 
 - Agar aap **deposit/pese add** karna chahte hain, dashboard me 'Deposit Panel' click karen.
 - Agar aap **withdrawal/payout** poochna chahte hain, 'Withdraw Panel' click karen (System reviews and verifies this under 10-30 mins).
@@ -89,7 +89,7 @@ export default function LiveChatBot() {
     {
       id: "welcome",
       sender: "bot",
-      text: "Asalam-o-Alaikum! 💰 Main aapka **MindBuddy AI Companion** hoon. Main real-time Roman Urdu, Urdu aur English me MoneyMind Space ke sawalat ke jawab de sakta hoon. Mujh se poochain: \n- *Paise kese kamaen?*\n- *AI features kon konsey hain?*\n- *Deposit aur withdrawal ka aasan tarika kya hai?*",
+      text: "Hello! I am your AI Support Assistant. I can help answer questions regarding your account in English, Urdu, and Roman Urdu. Ask me about:\n- *Portfolio options*\n- *Platform features*\n- *Deposits and withdrawals*",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -219,7 +219,7 @@ export default function LiveChatBot() {
                   <h3 className="text-xs font-black uppercase tracking-[0.15em] text-blue-400 flex items-center gap-1">
                     MindBuddy AI
                   </h3>
-                  <p className="text-[8px] text-white/35 uppercase tracking-wider font-mono">Live MoneyMind Support</p>
+                  <p className="text-[8px] text-white/35 uppercase tracking-wider font-mono">Live Support</p>
                 </div>
               </div>
               <button

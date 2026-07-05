@@ -198,7 +198,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   const [formSmtpPort, setFormSmtpPort] = useState(465);
   const [formSmtpUser, setFormSmtpUser] = useState('');
   const [formSmtpPass, setFormSmtpPass] = useState('');
-  const [formSenderName, setFormSenderName] = useState('MoneyMind Space');
+  const [formSenderName, setFormSenderName] = useState('Apex Capital');
   const [showSmtpPass, setShowSmtpPass] = useState(false);
   const [isSavingSmtpSettings, setIsSavingSmtpSettings] = useState(false);
 
@@ -213,7 +213,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       setFormSmtpPort(globalSettings.smtpPort || 465);
       setFormSmtpUser(globalSettings.smtpUser || '');
       setFormSmtpPass(globalSettings.smtpPass || '');
-      setFormSenderName(globalSettings.senderName || 'MoneyMind Space');
+      setFormSenderName(globalSettings.senderName || 'Apex Capital');
     }
   }, [globalSettings]);
 
@@ -267,7 +267,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
   };
 
   // Supported administrators
-  const ADMIN_EMAILS = ["admin@gmail.com", "danishrehmani72@gmail.com", "superadmin@moneymindspace.com", "superadmin@earnhub.com"];
+  const ADMIN_EMAILS = ["admin@gmail.com", "danishrehmani72@gmail.com", "superadmin@apexcapital.test", "superadmin@earnhub.com"];
 
   // Push mock Telegram webhook notification
   const logTelegramNotify = (message: string) => {
@@ -1128,7 +1128,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             <ShieldCheck className="w-6 h-6 animate-pulse" />
           </div>
           <h2 className="text-lg font-bold font-serif tracking-widest text-blue-400 uppercase">Secure Admin Login 🔐</h2>
-          <p className="text-[10px] text-white/40 uppercase tracking-[0.1em]">MoneyMind Space Governance Protocol Console</p>
+          <p className="text-[10px] text-white/40 uppercase tracking-[0.1em]">Apex Capital Governance Protocol Console</p>
         </div>
 
         {authError && (
@@ -1187,7 +1187,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
-            <h1 className="text-sm font-black uppercase tracking-[0.25em] text-white">MoneyMind Governance Core</h1>
+            <h1 className="text-sm font-black uppercase tracking-[0.25em] text-white">Admin Governance Core</h1>
           </div>
           <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold">Chief Administrator Dashboard: Danish</p>
         </div>
@@ -1749,7 +1749,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               required
               value={formSenderName}
               onChange={(e) => setFormSenderName(e.target.value)}
-              placeholder="e.g. MoneyMind Space"
+              placeholder="e.g. Apex Capital"
               className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-blue-500/35 font-medium placeholder-white/20"
             />
           </div>
@@ -2142,7 +2142,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                         </div>
                         <div className="text-left leading-tight">
                           <p className="text-xs font-bold text-white leading-none">{user.name}</p>
-                          <p className="text-[9px] text-blue-400 font-mono mt-0.5 leading-none break-all max-w-[150px] sm:max-w-xs">{user.email || 'no-email@moneymindspace.com'}</p>
+                          <p className="text-[9px] text-blue-400 font-mono mt-0.5 leading-none break-all max-w-[150px] sm:max-w-xs">{user.email || 'no-email@apexcapital.test'}</p>
                           <p className="text-[8px] text-white/45 font-mono leading-none mt-1">ID: #{user.userId}</p>
                         </div>
                       </div>

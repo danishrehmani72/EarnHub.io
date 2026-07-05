@@ -31,7 +31,11 @@ import {
   Zap,
   ExternalLink,
   Settings,
-  Upload
+  Upload,
+  Bell,
+  ToggleRight,
+  ToggleLeft,
+  Mail
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { 
@@ -55,27 +59,11 @@ import { playSound } from '../lib/sounds';
 
 export function getPlanCapPercent(planId: string, amount: number): number {
   const normId = (planId || '').toLowerCase().trim();
-  if (normId === 'bronze') {
-    if (amount <= 7.5) return 1.00; // $5 -> $10 (+100%, $5 profit)
-    if (amount <= 12.5) return 0.70; // $10 -> $17 (+70%, $7 profit)
-    return 0.666667; // $15 -> $25 (+66.67%, $10 profit)
-  }
-  if (normId === 'silver') {
-    if (amount <= 25) return 0.60; // $20 -> $32 (+60%, $12 profit)
-    if (amount <= 40) return 0.633333; // $30 -> $49 (+63.33%, $19 profit)
-    return 0.66; // $50 -> $83 (+66%, $33 profit)
-  }
-  if (normId === 'gold') {
-    if (amount <= 62.5) return 0.50; // $50 -> $75 (+50%, $25 profit)
-    if (amount <= 87.5) return 0.533333; // $75 -> $115 (+53.33%, $40 profit)
-    return 0.40; // $100 -> $140 (+40%, $40 profit)
-  }
-  if (normId === 'diamond') {
-    if (amount <= 175) return 0.40; // $100 -> $140 (+40%, $40 profit)
-    if (amount <= 375) return 0.40; // $250 -> $350 (+40%, $100 profit)
-    return 0.50; // $500 -> $750 (+50%, $250 profit)
-  }
-  return 0.20; // fallback
+  if (normId === 'bronze') return 0.08; // Starter: 8% yield (108% total)
+  if (normId === 'silver') return 0.12; // Growth: 12% yield (112% total)
+  if (normId === 'gold') return 0.18;   // Pro: 18% yield (118% total)
+  if (normId === 'diamond') return 0.24; // Elite: 24% yield (124% total)
+  return 0.10; // Default 10%
 }
 
 interface DashboardCardProps {
@@ -245,6 +233,7 @@ export default function DashboardCard({
   const [profileName, setProfileName] = useState(userProfile?.name || '');
   const [profileAvatar, setProfileAvatar] = useState(userProfile?.avatar || 'star');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
 
   // Sync state when userProfile changes
   useEffect(() => {
@@ -471,7 +460,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
   // Construct referral link using current origin or a beautiful fallback
   const referralLink = typeof window !== 'undefined' 
     ? `${window.location.origin}/?ref=${userId}` 
-    : `https://moneymindspace.com/?ref=${userId}`;
+    : `https://apexcapital.test/?ref=${userId}`;
 
   const handleCopy = async () => {
     try {
@@ -1116,7 +1105,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       >
 
         <div className="mb-6 z-10 relative">
-          <h1 className="text-3xl font-bold font-serif text-white">MoneyMind Space</h1>
+          <h1 className="text-3xl font-bold font-serif text-white">Apex Capital</h1>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
@@ -2017,7 +2006,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         💬 Public Group B
                       </span>
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-600/15 border border-blue-500/25 text-blue-400 text-[8.5px] uppercase font-black tracking-wider">
-                        💎 Moneymindspace.online Official
+                        Official Community
                       </span>
                     </div>
 
@@ -2026,7 +2015,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </h3>
                     
                     <p className="text-xs text-white/70 leading-relaxed">
-                      Become part of our professional community to receive secure insights and daily updates regarding <strong className="text-blue-400 hover:underline cursor-pointer">Moneymindspace.online</strong> performance.
+                      Join our official community for daily market insights and platform updates.
                     </p>
 
                     {/* Highly convincing community benefits checklist */}
@@ -2052,7 +2041,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                   <div className="flex flex-col gap-2.5 shrink-0 w-full lg:w-auto">
                     <a
-                      href="https://t.me/moneymindonlineearningspace"
+                      href="https://t.me/apexcapital_official"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#24A1DE] via-[#229ED9] to-[#24A1DE] text-white font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-200 shadow-md shadow-[#24A1DE]/20 text-center cursor-pointer"
@@ -2062,7 +2051,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </a>
                     
                     <p className="text-[8.5px] text-white/35 font-mono text-center">
-                      Protected by Moneymindspace.online
+                      Secure Communication Channel
                     </p>
                   </div>
                 </div>
@@ -2083,25 +2072,25 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       Need help regarding your deposits, account ledger, or security reset?
                     </h3>
                     <p className="text-xs text-white/50 leading-relaxed">
-                      Our official customer care desk and compliance department verify transactions and support members around the clock. Connect with us via our official channel <strong className="text-sky-400">@MoneyMindSpaceSupport</strong> for updates, or email <strong className="text-blue-400">support@moneymindspace.online</strong> for direct security and ledger assistance.
+                      Our support team is available 24/7 to assist with your account. Connect with us via Telegram or email for assistance.
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 shrink-0 relative z-10">
                     <a
-                      href="https://t.me/MoneyMindSpaceSupport"
+                      href="https://t.me/ApexCapitalSupport"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-sky-500 text-white font-bold text-xs uppercase tracking-wider hover:bg-sky-400 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20"
                     >
                       <span>Support Chat</span>
-                      <span className="font-mono text-[9px] bg-slate-950/20 px-1 py-0.5 rounded">@MoneyMindSpaceSupport</span>
+                      <span className="font-mono text-[9px] bg-slate-950/20 px-1 py-0.5 rounded">@ApexCapitalSupport</span>
                     </a>
                     <a
-                      href="mailto:support@moneymindspace.online"
+                      href="mailto:support@apexcapital.test"
                       className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-[#8A6D3B] text-black font-extrabold text-xs uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-blue-500/10"
                     >
                       <span>Email Support</span>
-                      <span className="font-mono text-[9px] bg-slate-950/15 px-1 py-0.5 rounded">support@moneymindspace.online</span>
+                      <span className="font-mono text-[9px] bg-slate-950/15 px-1 py-0.5 rounded">support@apexcapital.test</span>
                     </a>
                   </div>
                 </div>
@@ -3497,7 +3486,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       Profile Settings
                     </h2>
                     <p className="text-xs text-zinc-400">
-                      Customize your identity in the MoneyMind Space. Update your public display name and select an avatar representative of your profile status.
+                      Manage your profile identity. Update your display name and avatar.
                     </p>
                   </div>
 
@@ -3638,6 +3627,49 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       </div>
                     </div>
                   </form>
+                </div>
+              </div>
+
+              {/* Notification Settings Section */}
+              <div className="bg-slate-900/90 border border-white/5 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl mt-6">
+                <div className="absolute top-0 left-0 w-80 h-80 bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
+                <div className="relative space-y-6">
+                  {/* Title & Description */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-black text-emerald-400 tracking-[0.2em] uppercase font-sans">
+                      Preferences
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-bold font-serif text-white tracking-tight flex items-center gap-2">
+                      <Bell className="w-6 h-6 text-emerald-400" />
+                      Notification Settings
+                    </h2>
+                    <p className="text-xs text-zinc-400">
+                      Manage how and when you receive updates regarding your account activity.
+                    </p>
+                  </div>
+
+                  <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 flex items-center justify-between transition-colors hover:bg-white/[0.03]">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-slate-950 border border-white/10 shadow-inner shadow-black">
+                        <Mail className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-white tracking-wide">Email Alerts</h4>
+                        <p className="text-xs text-zinc-500 font-sans max-w-[250px]">Receive notifications for deposit and withdrawal status changes.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEmailAlertsEnabled(!emailAlertsEnabled)}
+                      className="text-emerald-400 hover:text-emerald-300 transition-colors focus:outline-none cursor-pointer bg-transparent border-0"
+                    >
+                      {emailAlertsEnabled ? (
+                        <ToggleRight className="w-10 h-10" />
+                      ) : (
+                        <ToggleLeft className="w-10 h-10 text-zinc-600 hover:text-zinc-500" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>

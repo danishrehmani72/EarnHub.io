@@ -41,19 +41,19 @@ const faqs: FaqItemConfig[] = [
       <span>
         We offer elite 24/7 customer support. For transactions, deposit confirmations, or withdrawal inquiries, contact our live Telegram representative at{' '}
         <a 
-          href="https://t.me/MoneyMindSpaceSupport" 
+          href="https://t.me/ApexCapitalSupport" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="text-sky-400 hover:underline font-bold"
         >
-          @MoneyMindSpaceSupport
+          @ApexCapitalSupport
         </a>
         . For any secure administration questions or compliance inquiries, you can reach out directly to our help desk via email at{' '}
         <a 
-          href="mailto:support@moneymindspace.online" 
+          href="mailto:support@apexcapital.test" 
           className="text-blue-400 hover:underline font-bold"
         >
-          support@moneymindspace.online
+          support@apexcapital.test
         </a>
         .
       </span>

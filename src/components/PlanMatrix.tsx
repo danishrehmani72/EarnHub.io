@@ -13,10 +13,10 @@ interface PlanMatrixProps {
 }
 
 const PLANS = [
-  { id: 'bronze', name: 'Bronze', min: 5, max: 14.99, targetPercent: 200, color: 'text-amber-600', border: 'border-amber-600/30' },
-  { id: 'silver', name: 'Silver', min: 15, max: 49.99, targetPercent: 125, color: 'text-slate-400', border: 'border-slate-400/30' },
-  { id: 'gold', name: 'Gold', min: 50, max: 99.99, targetPercent: 130, color: 'text-yellow-400', border: 'border-yellow-400/50' },
-  { id: 'diamond', name: 'Diamond', min: 100, max: Infinity, targetPercent: 140, color: 'text-blue-400', border: 'border-blue-500/50' },
+  { id: 'bronze', name: 'Starter Portfolio', min: 100, max: 999.99, targetPercent: 8, color: 'text-emerald-500', border: 'border-emerald-500/30' },
+  { id: 'silver', name: 'Growth Portfolio', min: 1000, max: 4999.99, targetPercent: 12, color: 'text-indigo-400', border: 'border-indigo-400/30' },
+  { id: 'gold', name: 'Pro Portfolio', min: 5000, max: 24999.99, targetPercent: 18, color: 'text-purple-400', border: 'border-purple-400/50' },
+  { id: 'diamond', name: 'Elite Portfolio', min: 25000, max: Infinity, targetPercent: 24, color: 'text-blue-400', border: 'border-blue-500/50' },
 ];
 
 export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, currencySymbol, conversionRate }: PlanMatrixProps) {
@@ -139,7 +139,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                   <div key={inv.id} className="flex flex-col sm:flex-row justify-between sm:items-center bg-slate-950/40 border border-emerald-500/10 rounded-xl p-4 gap-4">
                     <div>
                       <p className={`text-sm font-bold capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
-                      <p className="text-xs text-white/40 mt-0.5">Matured Return: {currencySymbol}{(inv.amount * (planInfo ? planInfo.targetPercent / 100 : 1.20) * conversionRate).toFixed(2)} (Principal & Yield Credited)</p>
+                      <p className="text-xs text-white/40 mt-0.5">Matured Return: {currencySymbol}{(inv.amount * (planInfo ? 1 + (planInfo.targetPercent / 100) : 1.20) * conversionRate).toFixed(2)} (Principal & Yield Credited)</p>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded select-none cursor-default">
@@ -166,7 +166,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
               <div className="flex justify-between items-center mb-6">
                  <div>
                    <h2 className={`text-xl font-bold font-serif ${selectedPlan.color}`}>Activate {selectedPlan.name}</h2>
-                   <p className="text-xs text-white/40 mt-1 uppercase tracking-wider">Target Return: {selectedPlan.targetPercent}%</p>
+                   <p className="text-xs text-white/40 mt-1 uppercase tracking-wider">Estimated APY: {selectedPlan.targetPercent}%</p>
                  </div>
                  <button onClick={() => { setSelectedPlan(null); setError(''); }} className="p-2 bg-white/5 rounded-full text-white/50 hover:text-white">
                    <XCircle className="w-5 h-5" />
@@ -195,7 +195,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                  )}
 
                  <p className="text-[10px] text-white/30 leading-relaxed px-1">
-                   Note: The investment principal will be locked to generate yields. The portfolio automatically matures once the Target Return of {selectedPlan.targetPercent}% is reached, or after a maximum of 30 days. No manual cancellation or auto-renewal is permitted. 
+                   Note: The investment principal will be locked to generate yields. The portfolio automatically matures once the Estimated Yield of {selectedPlan.targetPercent}% is reached, or after a maximum of 30 days. No manual cancellation or auto-renewal is permitted. 
                    Once completed, your matured principal and profit will be credited to your Matured Balance, ready for reinvestment or withdrawal.
                  </p>
 
