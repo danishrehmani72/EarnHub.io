@@ -1078,7 +1078,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     >
       {/* Pull down refresh indicator */}
       <div 
-        className="overflow-hidden transition-all duration-200 flex items-center justify-center bg-[#070707] border-b border-white/5 relative z-50 text-[#D4AF37]"
+        className="overflow-hidden transition-all duration-200 flex items-center justify-center bg-[#070707] border-b border-white/5 relative z-50 text-blue-400"
         style={{ height: pullDistance > 0 || pullStatus === 'refreshing' ? `${Math.max(pullDistance, pullStatus === 'refreshing' ? 50 : 0)}px` : '0px' }}
       >
         <div className="flex items-center gap-2.5 py-2.5">
@@ -1094,14 +1094,14 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       {/* SECURITY / SYSTEM LIVE BROADCAST ANNOUNCEMENT LEVEL 1 MARQUEE */}
       {globalSettings?.isAnnouncementActive && globalSettings?.systemAnnouncement && (
         <div className="bg-[#1a140b] border-b border-amber-500/10 px-4 py-2.5 flex items-center gap-3 relative overflow-hidden z-20 shrink-0 font-sans">
-          <div className="absolute top-0 left-0 w-1 md:w-1.5 h-full bg-[#D4AF37]" />
-          <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0 animate-pulse" />
+          <div className="absolute top-0 left-0 w-1 md:w-1.5 h-full bg-blue-600" />
+          <Sparkles className="w-4 h-4 text-blue-400 shrink-0 animate-pulse" />
           <div className="flex-1 overflow-hidden relative">
             <div className="animate-marquee whitespace-nowrap text-[10px] font-bold text-amber-200 tracking-wider">
               {globalSettings.systemAnnouncement}
             </div>
           </div>
-          <span className="text-[7.5px] font-mono font-black text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/25 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 select-none">
+          <span className="text-[7.5px] font-mono font-black text-blue-400 bg-blue-600/10 border border-blue-500/25 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 select-none">
             Live Promo {globalSettings.yieldMultiplier > 1.0 ? `x${globalSettings.yieldMultiplier}` : "Broadcast"}
           </span>
         </div>
@@ -1109,7 +1109,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
       {/* Header with User summary */}
       <div 
-        className="bg-[#0C0C0C] border-b border-white/5 p-6 md:p-8 relative overflow-hidden"
+        className="bg-slate-900 border-b border-white/5 p-6 md:p-8 relative overflow-hidden"
         style={{
           backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(212, 175, 55, 0.05) 0%, rgba(0, 0, 0, 0) 70%), radial-gradient(circle at 30% 100%, rgba(138, 109, 59, 0.03) 0%, rgba(0, 0, 0, 0) 60%)'
         }}
@@ -1121,14 +1121,14 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.05)]">
+            <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.05)]">
               <User className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] text-white/40 font-semibold tracking-[0.25em] uppercase">Premium Member</p>
+              <p className="text-[10px] text-white/40 font-semibold tracking-[0.25em] uppercase">Verified Member</p>
               <h2 className="text-xl font-bold font-serif text-white/95 flex items-center gap-2">
                 {name} 
-                <span className="text-[9px] font-sans font-medium tracking-widest bg-white/5 text-[#D4AF37] px-2 py-0.5 rounded border border-white/5 uppercase">
+                <span className="text-[9px] font-sans font-medium tracking-widest bg-white/5 text-blue-400 px-2 py-0.5 rounded border border-white/5 uppercase">
                   ID: {userId.slice(0, 8)}
                 </span>
               </h2>
@@ -1137,8 +1137,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
           <div className="flex items-center gap-3 self-start sm:self-center">
             {/* Currency Selector */}
-            <div className="flex items-center gap-1.5 bg-black/50 border border-white/10 rounded-xl px-2.5 h-8 text-[9px] font-extrabold select-none shadow-inner relative hover:border-[#D4AF37]/35 active:border-[#D4AF37]/50 transition-all text-white/80">
-              <span className="text-[#D4AF37]">🌐</span>
+            <div className="flex items-center gap-1.5 bg-slate-950/50 border border-white/10 rounded-xl px-2.5 h-8 text-[9px] font-extrabold select-none shadow-inner relative hover:border-blue-500/35 active:border-blue-500/50 transition-all text-white/80">
+              <span className="text-blue-400">🌐</span>
               <select
                 value={currency}
                 onChange={(e) => changeCurrency(e.target.value as CurrencyCode)}
@@ -1181,7 +1181,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               <button
                 onClick={handleManualRefresh}
                 disabled={isRefreshing}
-                className="px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/10 hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/5 text-white/60 hover:text-[#D4AF37] transition-all cursor-pointer flex items-center gap-1.5 bg-black/40 h-8 disabled:opacity-50"
+                className="px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/10 hover:border-blue-500/25 hover:bg-blue-600/5 text-white/60 hover:text-blue-400 transition-all cursor-pointer flex items-center gap-1.5 bg-slate-950/40 h-8 disabled:opacity-50"
                 title="Force sync stats from database"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -1192,7 +1192,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
             {onSignOut && (
               <button
                 onClick={onSignOut}
-                className="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-white/60 hover:text-red-400 transition-all cursor-pointer flex items-center gap-1.5 bg-black/40 h-8"
+                className="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-white/60 hover:text-red-400 transition-all cursor-pointer flex items-center gap-1.5 bg-slate-950/40 h-8"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 Sign Out
@@ -1203,12 +1203,12 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       </div>
 
       {/* Navigation Tabs */}
-      <div className="grid grid-cols-3 border-b border-white/5 bg-[#080808] p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
+      <div className="grid grid-cols-3 border-b border-white/5 bg-slate-950 p-1.5 rounded-2xl mx-4 sm:mx-6 md:mx-8 mt-5 gap-1.5">
         <button
           onClick={() => setActiveTab('overview')}
           className={`py-4 px-1.5 sm:py-5 sm:px-3 rounded-xl text-[8px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
             activeTab === 'overview'
-              ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
+              ? 'bg-blue-600/15 text-blue-400 border border-blue-500/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
@@ -1220,7 +1220,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           onClick={() => setActiveTab('funding')}
           className={`py-4 px-1.5 sm:py-5 sm:px-3 rounded-xl text-[8px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
             activeTab === 'funding'
-              ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
+              ? 'bg-blue-600/15 text-blue-400 border border-blue-500/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
@@ -1232,7 +1232,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
           onClick={() => setActiveTab('faq')}
           className={`py-4 px-1.5 sm:py-5 sm:px-3 rounded-xl text-[8px] xs:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-all duration-150 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
             activeTab === 'faq'
-              ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 shadow-md shadow-black/10'
+              ? 'bg-blue-600/15 text-blue-400 border border-blue-500/20 shadow-md shadow-black/10'
               : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/5'
           }`}
         >
@@ -1289,7 +1289,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       ? 'text-emerald-500/10'
                       : flashType === 'down'
                       ? 'text-rose-500/10'
-                      : 'text-[#D4AF37]/5'
+                      : 'text-blue-400/5'
                   }`}>
                     <DollarSign className="w-20 h-20" />
                   </div>
@@ -1300,7 +1300,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
                         : flashType === 'down'
                         ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
-                        : 'bg-[#D4AF37]/10 border-[#D4AF37]/20 text-[#D4AF37]'
+                        : 'bg-blue-600/10 border-blue-500/20 text-blue-400'
                     }`}>
                       <DollarSign className="w-3 h-3" />
                     </div>
@@ -1312,7 +1312,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         ? 'text-emerald-400 drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]'
                         : flashType === 'down'
                         ? 'text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-                        : 'text-[#D4AF37]'
+                        : 'text-blue-400'
                     }`}
                   >
                     <span>{currencySymbol}</span>
@@ -1393,13 +1393,13 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   }}
                   className="bg-[#161616] border border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden cursor-pointer hover:border-white/10 transition-colors"
                 >
-                  <div className="absolute -top-4 -right-4 text-[#D4AF37]/5 pointer-events-none">
+                  <div className="absolute -top-4 -right-4 text-blue-400/5 pointer-events-none">
                     <TrendingUp className="w-20 h-20" />
                   </div>
                   <div className="flex items-center justify-between z-10">
-                    <span className="text-[10px] uppercase tracking-[0.12em] text-[#D4AF37] font-bold font-sans">Matured Balance</span>
-                    <div className="w-6 h-6 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] flex items-center justify-center">
-                      <CheckCircle className="w-3 h-3 text-[#D4AF37]" />
+                    <span className="text-[10px] uppercase tracking-[0.12em] text-blue-400 font-bold font-sans">Matured Balance</span>
+                    <div className="w-6 h-6 rounded bg-blue-600/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                      <CheckCircle className="w-3 h-3 text-blue-400" />
                     </div>
                   </div>
                   <div className="my-1 font-serif text-emerald-400 text-2xl tracking-tight z-10 flex items-center gap-1">
@@ -1472,8 +1472,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   <div className="my-1 font-serif text-white/90 text-2xl tracking-tight z-10">
                     {referralCount}
                   </div>
-                  <div className="text-[8.5px] text-[#D4AF37] font-medium flex items-center gap-1 z-10 leading-normal font-sans">
-                    <Award className="w-2.5 h-2.5 text-[#D4AF37] shrink-0" /> Target progress: {progressPercent.toFixed(0)}%
+                  <div className="text-[8.5px] text-blue-400 font-medium flex items-center gap-1 z-10 leading-normal font-sans">
+                    <Award className="w-2.5 h-2.5 text-blue-400 shrink-0" /> Target progress: {progressPercent.toFixed(0)}%
                   </div>
                 </motion.div>
 
@@ -1490,11 +1490,11 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
               {/* LIVE STAKING PROJECTOR & INTEREST ESTIMATOR */}
               <div className="bg-[#121212]/50 border border-white/5 rounded-3xl p-5 md:p-6 space-y-4 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="flex items-center justify-between border-b border-white/5 pb-3">
                   <div className="space-y-0.5 text-left">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] animate-pulse" />
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
                       Dynamic Staking Yield Estimator
                     </h4>
                     <p className="text-[8.5px] text-white/40 font-sans">Simulate and project your future earnings in real-time</p>
@@ -1511,7 +1511,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   <div className="space-y-1.5 text-left">
                     <div className="flex items-center justify-between text-[9px] font-bold text-white/50 uppercase tracking-wider font-sans">
                       <span>Staking Capital Amount</span>
-                      <span className="text-[#D4AF37] font-mono text-[11px] font-black">
+                      <span className="text-blue-400 font-mono text-[11px] font-black">
                         {currencySymbol}{(calcAmount * conversionRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
@@ -1522,7 +1522,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       step="5"
                       value={calcAmount}
                       onChange={(e) => setCalcAmount(Number(e.target.value))}
-                      className="w-full accent-[#D4AF37] bg-black/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
+                      className="w-full accent-[#D4AF37] bg-slate-950/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
                     />
                     <div className="flex justify-between text-[7px] font-mono text-white/30">
                       <span>Min: {currencySymbol}{(5 * conversionRate).toFixed(2)}</span>
@@ -1535,7 +1535,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   <div className="space-y-1.5 text-left">
                     <div className="flex items-center justify-between text-[9px] font-bold text-white/50 uppercase tracking-wider font-sans">
                       <span>Lock-in Duration (Days)</span>
-                      <span className="text-[#D4AF37] font-mono text-[11px] font-black">
+                      <span className="text-blue-400 font-mono text-[11px] font-black">
                         {calcDays} Days
                       </span>
                     </div>
@@ -1546,7 +1546,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       step="1"
                       value={calcDays}
                       onChange={(e) => setCalcDays(Number(e.target.value))}
-                      className="w-full accent-[#D4AF37] bg-black/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
+                      className="w-full accent-[#D4AF37] bg-slate-950/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
                     />
                     <div className="flex justify-between text-[7px] font-mono text-white/30">
                       <span>1 Day</span>
@@ -1557,18 +1557,18 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                   {/* Summary output table cards */}
                   <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="bg-black/40 border border-white/5 rounded-2xl p-3 text-left space-y-1">
+                    <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-3 text-left space-y-1">
                       <span className="text-[7.5px] uppercase tracking-widest font-black text-white/40 font-sans block">Dynamic Daily Yield</span>
                       <p className="text-[12px] font-serif font-bold text-white leading-tight">
                         {currencySymbol}{(( (calcAmount >= 100 ? 0.07 : calcAmount >= 50 ? 0.05 : calcAmount >= 15 ? 0.04 : 0.03) * calcAmount * (globalSettings?.yieldMultiplier || 1.0) ) * conversionRate).toFixed(2)}
                       </p>
-                      <span className="text-[6.5px] font-mono text-[#D4AF37]/85 block">
+                      <span className="text-[6.5px] font-mono text-blue-400/85 block">
                         Based on {calcAmount >= 100 ? "7%" : calcAmount >= 50 ? "5%" : calcAmount >= 15 ? "4%" : "3%"} Plan tier rate
                       </span>
                     </div>
 
                     <div className="bg-[#1c160c]/35 border border-amber-500/10 rounded-2xl p-3 text-left space-y-1">
-                      <span className="text-[7.5px] uppercase tracking-widest font-black text-[#D4AF37]/65 font-sans block">Total Est. Staking Gains</span>
+                      <span className="text-[7.5px] uppercase tracking-widest font-black text-blue-400/65 font-sans block">Total Est. Staking Gains</span>
                       <p className="text-[13px] font-serif font-black text-amber-400 leading-tight">
                         {currencySymbol}{(calculatedProjProfit * conversionRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
@@ -1584,7 +1584,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               <div className="bg-white/[0.02] rounded-2xl border border-white/5 p-5 space-y-4">
                 <div className="flex items-center justify-between text-[11px] uppercase tracking-wider font-sans">
                   <span className="font-semibold text-white/40">Earnings Progression Timeline</span>
-                  <span className="font-bold text-[#D4AF37] flex items-center gap-1.5">
+                  <span className="font-bold text-blue-400 flex items-center gap-1.5">
                     <TrendingUp className="w-3.5 h-3.5" />
                     Growth Curve
                   </span>
@@ -1617,7 +1617,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                 <p className="text-white/40 font-semibold mb-1 uppercase tracking-widest text-[8px]">
                                   {payload[0].payload.label}
                                 </p>
-                                <p className="text-[#D4AF37] font-bold font-mono text-xs">
+                                <p className="text-blue-400 font-bold font-mono text-xs">
                                   Balance: {currencySymbol}{Number(Number(payload[0].value) * conversionRate).toFixed(2)}
                                 </p>
                               </div>
@@ -1658,8 +1658,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     <p className="text-[10px] text-white/30 leading-none">Daily check-in bonuses vs. active staking dividends over time</p>
                   </div>
                   <div className="flex items-center gap-3 self-start sm:self-center">
-                    <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-[#D4AF37]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+                    <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-blue-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
                       Bonus Trend
                     </span>
                     <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-emerald-400">
@@ -1702,9 +1702,9 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                 </p>
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-white/60 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" /> Daily Bonus:
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Daily Bonus:
                                   </span>
-                                  <span className="text-[#D4AF37] font-mono font-bold">
+                                  <span className="text-blue-400 font-mono font-bold">
                                     {currencySymbol}{(d.bonus * conversionRate).toFixed(2)}
                                   </span>
                                 </div>
@@ -1719,7 +1719,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                 <div className="border-t border-white/5 pt-1.5 space-y-1">
                                   <div className="flex items-center justify-between gap-4 text-[10px]">
                                     <span className="text-white/40 font-semibold">Bonus Total:</span>
-                                    <span className="text-[#D4AF37] font-bold font-mono">
+                                    <span className="text-blue-400 font-bold font-mono">
                                       {currencySymbol}{(bonusAccum * conversionRate).toFixed(2)}
                                     </span>
                                   </div>
@@ -1833,7 +1833,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       ? 'text-emerald-400'
                       : flashType === 'down'
                       ? 'text-rose-400'
-                      : 'text-[#D4AF37]'
+                      : 'text-blue-400'
                   }`}>{currencySymbol}<motion.span key={currency}>{animatedBalanceDisplay}</motion.span> / {currencySymbol}{(nextMilestone * conversionRate).toFixed(2)}</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
@@ -1843,7 +1843,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         ? 'bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
                         : flashType === 'down'
                         ? 'bg-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.5)]'
-                        : 'bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.4)]'
+                        : 'bg-blue-600 shadow-[0_0_8px_rgba(59,130,246,0.4)]'
                     }`}
                     style={{ width: `${progressPercent}%` }}
                   />
@@ -1855,48 +1855,48 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               </div>
 
               {/* Premium Daily Active Yield Claim Matrix */}
-              <div className="bg-gradient-to-br from-[#1c1c16] to-[#121212] border border-[#D4AF37]/20 rounded-2xl p-5 relative overflow-hidden space-y-4">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="bg-gradient-to-br from-[#1c1c16] to-[#121212] border border-blue-500/20 rounded-2xl p-5 relative overflow-hidden space-y-4">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/5 rounded-full blur-2xl pointer-events-none" />
                 
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-[#D4AF37]">
-                      <Sparkles className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+                    <div className="flex items-center gap-1.5 text-blue-400">
+                      <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
                       <span className="text-[9px] uppercase font-bold tracking-[0.2em] font-sans">Active Dividends Portal</span>
                     </div>
                     <h3 className="text-sm font-bold text-white tracking-wide">
                       Daily Staking Check-In Rewards
                     </h3>
                     <p className="text-xs text-white/50 leading-relaxed max-w-md">
-                      Onboard daily to claim active mining yield boosts! Maintain your daily streak to access higher premium dividend tiers. (Streak: <strong className="text-[#D4AF37]">{userProfile?.claimStreak || 0} days</strong>)
+                      Onboard daily to claim active mining yield boosts! Maintain your daily streak to access higher premium dividend tiers. (Streak: <strong className="text-blue-400">{userProfile?.claimStreak || 0} days</strong>)
                     </p>
                     {/* Streak Progress Bar */}
                     <div className="pt-2 max-w-md">
                       <div className="flex justify-between items-center mb-1.5 mt-2">
                         <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">Streak Milestone Progress</span>
-                        <span className="text-[10px] text-[#D4AF37] font-black">{userProfile?.claimStreak || 0} / {Math.floor((userProfile?.claimStreak || 0) / 5) * 5 + 5} Days</span>
+                        <span className="text-[10px] text-blue-400 font-black">{userProfile?.claimStreak || 0} / {Math.floor((userProfile?.claimStreak || 0) / 5) * 5 + 5} Days</span>
                       </div>
-                      <div className="w-full bg-black/50 rounded-full h-2 overflow-hidden border border-white/10 relative">
+                      <div className="w-full bg-slate-950/50 rounded-full h-2 overflow-hidden border border-white/10 relative">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${(((userProfile?.claimStreak || 0) % 5) / 5) * 100}%` }}
                           transition={{ duration: 1, ease: "easeOut" }}
-                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#D4AF37]/40 to-[#D4AF37] rounded-full shadow-[0_0_10px_rgba(212,175,55,0.7)]"
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600/40 to-blue-400 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.7)]"
                         />
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-lg py-1 px-3 text-right">
+                  <div className="bg-blue-600/10 border border-blue-500/25 rounded-lg py-1 px-3 text-right">
                     <span className="text-[8px] text-white/45 uppercase block">Total Dividends</span>
-                    <span className="text-xs font-mono font-bold text-[#D4AF37]">+{currencySymbol}{((userProfile?.dailyBonusEarnings || 0) * conversionRate).toFixed(2)}</span>
+                    <span className="text-xs font-mono font-bold text-blue-400">+{currencySymbol}{((userProfile?.dailyBonusEarnings || 0) * conversionRate).toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 justify-between pt-2 border-t border-white/[0.03]">
                   {/* Cooldown Timer */}
                   <div className="text-left flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${claimCooldown ? 'bg-[#D4AF37]/40' : 'bg-emerald-400 animate-ping'}`} />
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${claimCooldown ? 'bg-blue-600/40' : 'bg-emerald-400 animate-ping'}`} />
                     <div>
                       <span className="text-[8px] uppercase tracking-wider text-white/30 block leading-none mb-1">Claim Status</span>
                       <span className="text-[11px] font-mono text-white/70">
@@ -1922,7 +1922,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     className={`px-5 py-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-200 outline-none cursor-pointer w-full sm:w-auto ${
                       claimCooldown 
                         ? 'bg-white/5 border-white/5 text-white/30 cursor-not-allowed' 
-                        : 'bg-gradient-to-r from-[#D4AF37] to-[#B29430] hover:brightness-110 active:scale-[0.98] border-transparent text-black shadow-lg shadow-[#D4AF37]/10'
+                        : 'bg-gradient-to-r from-blue-600 to-[#B29430] hover:brightness-110 active:scale-[0.98] border-transparent text-black shadow-lg shadow-blue-500/10'
                     }`}
                   >
                     <span>{claimCooldown ? 'Claimed Today' : 'Claim Daily Yield'}</span>
@@ -1937,7 +1937,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 </label>
                 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div className="flex-1 bg-[#0A0A0A] border border-white/10 rounded-2xl px-5 py-3.5 text-sm text-[#D4AF37] font-mono tracking-wider overflow-x-auto whitespace-nowrap scrollbar-none flex items-center justify-between gap-3">
+                  <div className="flex-1 bg-[#0A0A0A] border border-white/10 rounded-2xl px-5 py-3.5 text-sm text-blue-400 font-mono tracking-wider overflow-x-auto whitespace-nowrap scrollbar-none flex items-center justify-between gap-3">
                     <span>{referralLink}</span>
                     <AnimatePresence>
                       {copied && (
@@ -1958,7 +1958,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     onClick={handleCopy}
                     className={`px-5 py-3.5 rounded-2xl border flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider transition-all duration-200 outline-none cursor-pointer shrink-0 ${
                       copied 
-                        ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30 text-[#D4AF37]' 
+                        ? 'bg-blue-600/10 border-blue-500/30 text-blue-400' 
                         : 'bg-white/5 border-white/10 hover:bg-white/10 text-white hover:border-white/20 active:scale-[0.98]'
                     }`}
                     title="Copy referral link to clipboard"
@@ -2003,9 +2003,9 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               </div>
 
               {/* Premium Official Telegram Community & Public Group Card */}
-              <div className="bg-[#0D0D0C] border-2 border-[#D4AF37]/35 rounded-2xl p-6 relative overflow-hidden mt-6 transition-all hover:border-[#D4AF37]/65 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+              <div className="bg-[#0D0D0C] border-2 border-blue-500/35 rounded-2xl p-6 relative overflow-hidden mt-6 transition-all hover:border-blue-500/65 shadow-[0_0_20px_rgba(59,130,246,0.05)]">
                 {/* Premium gold & telegram blue decorative gradients */}
-                <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-br from-[#24A1DE]/15 to-[#D4AF37]/10 blur-3xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-br from-[#24A1DE]/15 to-blue-400/10 blur-3xl pointer-events-none" />
                 <div className="absolute top-2 right-2 text-[#24A1DE]/5 font-black text-6xl select-none uppercase tracking-widest font-serif">
                   TG
                 </div>
@@ -2016,7 +2016,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#24A1DE]/10 border border-[#24A1DE]/25 text-[#24A1DE] text-[8.5px] uppercase font-black tracking-wider">
                         💬 Public Group B
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[#D4AF37] text-[8.5px] uppercase font-black tracking-wider">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-600/15 border border-blue-500/25 text-blue-400 text-[8.5px] uppercase font-black tracking-wider">
                         💎 Moneymindspace.online Official
                       </span>
                     </div>
@@ -2026,7 +2026,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </h3>
                     
                     <p className="text-xs text-white/70 leading-relaxed">
-                      Become part of our professional community to receive secure insights and daily updates regarding <strong className="text-[#D4AF37] hover:underline cursor-pointer">Moneymindspace.online</strong> performance.
+                      Become part of our professional community to receive secure insights and daily updates regarding <strong className="text-blue-400 hover:underline cursor-pointer">Moneymindspace.online</strong> performance.
                     </p>
 
                     {/* Highly convincing community benefits checklist */}
@@ -2058,7 +2058,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#24A1DE] via-[#229ED9] to-[#24A1DE] text-white font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-200 shadow-md shadow-[#24A1DE]/20 text-center cursor-pointer"
                     >
                       <span>Join Official Group</span>
-                      <span className="font-mono text-[9px] bg-black/20 px-1.5 py-0.5 rounded">Group B</span>
+                      <span className="font-mono text-[9px] bg-slate-950/20 px-1.5 py-0.5 rounded">Group B</span>
                     </a>
                     
                     <p className="text-[8.5px] text-white/35 font-mono text-center">
@@ -2083,7 +2083,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       Need help regarding your deposits, account ledger, or security reset?
                     </h3>
                     <p className="text-xs text-white/50 leading-relaxed">
-                      Our official customer care desk and compliance department verify transactions and support members around the clock. Connect with us via our official channel <strong className="text-sky-400">@MoneyMindSpaceSupport</strong> for updates, or email <strong className="text-[#D4AF37]">support@moneymindspace.online</strong> for direct security and ledger assistance.
+                      Our official customer care desk and compliance department verify transactions and support members around the clock. Connect with us via our official channel <strong className="text-sky-400">@MoneyMindSpaceSupport</strong> for updates, or email <strong className="text-blue-400">support@moneymindspace.online</strong> for direct security and ledger assistance.
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 shrink-0 relative z-10">
@@ -2094,14 +2094,14 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-sky-500 text-white font-bold text-xs uppercase tracking-wider hover:bg-sky-400 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20"
                     >
                       <span>Support Chat</span>
-                      <span className="font-mono text-[9px] bg-black/20 px-1 py-0.5 rounded">@MoneyMindSpaceSupport</span>
+                      <span className="font-mono text-[9px] bg-slate-950/20 px-1 py-0.5 rounded">@MoneyMindSpaceSupport</span>
                     </a>
                     <a
                       href="mailto:support@moneymindspace.online"
-                      className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#8A6D3B] text-black font-extrabold text-xs uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-[#D4AF37]/10"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-[#8A6D3B] text-black font-extrabold text-xs uppercase tracking-wider hover:brightness-110 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-blue-500/10"
                     >
                       <span>Email Support</span>
-                      <span className="font-mono text-[9px] bg-black/15 px-1 py-0.5 rounded">support@moneymindspace.online</span>
+                      <span className="font-mono text-[9px] bg-slate-950/15 px-1 py-0.5 rounded">support@moneymindspace.online</span>
                     </a>
                   </div>
                 </div>
@@ -2122,23 +2122,23 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 {/* 1. DEPOSIT PORTAL - UPGRADED GLASSMORPHISM CARD WITH MULTI-RAIL PAKISTAN & CRYPTO SUPPORT */}
                 <div 
                   id="deposit-section" 
-                  className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ${depositMethodTab === 'pakistan' ? 'from-[#031d10] via-[#010905] to-black border-2 border-emerald-500/40 hover:border-emerald-500/70 shadow-[0_0_40px_rgba(16,185,129,0.15)] shadow-emerald-500/10' : 'from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-emerald-500/60 shadow-[0_0_40px_rgba(212,175,55,0.12)]'} hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl`}
+                  className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ${depositMethodTab === 'pakistan' ? 'from-[#031d10] via-[#010905] to-black border-2 border-emerald-500/40 hover:border-emerald-500/70 shadow-[0_0_40px_rgba(16,185,129,0.15)] shadow-emerald-500/10' : 'from-[#0B0B0B] via-[#050505] to-black border-2 border-blue-500/45 hover:border-emerald-500/60 shadow-[0_0_40px_rgba(59,130,246,0.12)]'} hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl`}
                 >
                   {/* Premium color overlay gradients */}
-                  <div className={`absolute top-0 right-0 w-72 h-72 bg-gradient-to-br ${depositMethodTab === 'pakistan' ? 'from-emerald-500/10 to-transparent' : 'from-[#D4AF37]/6 via-[#10B981]/3 to-transparent'} blur-3xl pointer-events-none`} />
+                  <div className={`absolute top-0 right-0 w-72 h-72 bg-gradient-to-br ${depositMethodTab === 'pakistan' ? 'from-emerald-500/10 to-transparent' : 'from-blue-600/6 via-[#10B981]/3 to-transparent'} blur-3xl pointer-events-none`} />
                   <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
                   {/* Portal Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${depositMethodTab === 'pakistan' ? 'from-emerald-500/25 to-black border border-emerald-500/40' : 'from-[#D4AF37]/20 to-black border border-[#D4AF37]/40'} flex items-center justify-center ring-1 ring-white/5`}>
+                      <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${depositMethodTab === 'pakistan' ? 'from-emerald-500/25 to-black border border-emerald-500/40' : 'from-blue-600/20 to-black border border-blue-500/40'} flex items-center justify-center ring-1 ring-white/5`}>
                         <span className="text-xl">{depositMethodTab === 'pakistan' ? '🇵🇰' : '💳'}</span>
                       </div>
                       <div>
                         <h3 className="text-sm font-black uppercase tracking-widest text-white leading-none">
                           {depositMethodTab === 'pakistan' ? 'Pakistan Deposit Center' : 'Deposit Portal'}
                         </h3>
-                        <p className={`text-[8.5px] ${depositMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-[#D4AF37]'} uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse`}>
+                        <p className={`text-[8.5px] ${depositMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-blue-400'} uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse`}>
                           {depositMethodTab === 'pakistan' ? 'PKR local rails active' : 'Crypto protocol active'}
                         </p>
                       </div>
@@ -2163,9 +2163,9 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </div>
                   ) : (
                     <div className="bg-gradient-to-r from-white/[0.01] via-white/[0.02] to-transparent p-5 rounded-2xl border border-white/5 relative">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-2 flex items-center gap-1.5">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mb-2 flex items-center gap-1.5">
                         <span>💎 Official Smart Contract Node</span>
-                        <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full"></span>
+                        <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
                       </p>
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-mono font-black text-white tracking-tight">
@@ -2182,7 +2182,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   )}
 
                   {/* Custom Navigation Tab Toggle Bar */}
-                  <div className="bg-black/60 border border-white/5 p-1 rounded-xl grid grid-cols-2 gap-1.5 shadow-inner shadow-black">
+                  <div className="bg-slate-950/60 border border-white/5 p-1 rounded-xl grid grid-cols-2 gap-1.5 shadow-inner shadow-black">
                     <button
                       type="button"
                       onClick={() => {
@@ -2207,7 +2207,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       }}
                       className={`py-2 px-3 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
                         depositMethodTab === 'crypto'
-                          ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/25 shadow-sm'
+                          ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 shadow-sm'
                           : 'text-white/40 hover:text-white/70 border border-transparent'
                       }`}
                     >
@@ -2245,7 +2245,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                           </div>
 
                           {/* JazzCash */}
-                          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 opacity-60 select-none text-left flex items-center justify-between">
+                          <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 opacity-60 select-none text-left flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="text-lg">🚧</span>
                               <div>
@@ -2257,7 +2257,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                           </div>
 
                           {/* SadaPay */}
-                          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 opacity-60 select-none text-left flex items-center justify-between">
+                          <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 opacity-60 select-none text-left flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="text-lg">🚧</span>
                               <div>
@@ -2269,7 +2269,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                           </div>
 
                           {/* NayaPay */}
-                          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 opacity-60 select-none text-left flex items-center justify-between">
+                          <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 opacity-60 select-none text-left flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="text-lg">🚧</span>
                               <div>
@@ -2281,7 +2281,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                           </div>
 
                           {/* Bank Transfer */}
-                          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 col-span-2 opacity-60 select-none text-left flex items-center justify-between">
+                          <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 col-span-2 opacity-60 select-none text-left flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="text-lg">🚧</span>
                               <div>
@@ -2295,7 +2295,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       </div>
 
                       {/* Display platform Easypaisa account number */}
-                      <div className="bg-black/60 border border-emerald-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-left relative overflow-hidden">
+                      <div className="bg-slate-950/60 border border-emerald-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-left relative overflow-hidden">
                         <div className="space-y-1 z-10">
                           <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Easypaisa Number</p>
                           <h5 className="text-[15px] font-mono font-black text-white tracking-widest">03435319202</h5>
@@ -2327,7 +2327,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder={`Minimum ${currencySymbol}${Math.ceil(5 * conversionRate)}`}
                             value={pkDepAmount}
                             onChange={(e) => setPkDepAmount(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
                             min="1"
                             step="any"
                           />
@@ -2351,7 +2351,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder="e.g. 03123456789"
                             value={pkDepSenderNumber}
                             onChange={(e) => setPkDepSenderNumber(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
                           />
                         </div>
 
@@ -2366,7 +2366,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder="e.g. your name here"
                             value={pkDepSenderName}
                             onChange={(e) => setPkDepSenderName(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
                           />
                         </div>
 
@@ -2394,7 +2394,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                </button>
                             </div>
                           ) : (
-                            <label className="flex flex-col items-center justify-center w-full h-24 bg-black/80 border border-white/10 border-dashed rounded-xl cursor-pointer hover:bg-white/5 hover:border-emerald-500/50 transition-all group shadow-inner shadow-black">
+                            <label className="flex flex-col items-center justify-center w-full h-24 bg-slate-950/80 border border-white/10 border-dashed rounded-xl cursor-pointer hover:bg-white/5 hover:border-emerald-500/50 transition-all group shadow-inner shadow-black">
                               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                 <Upload className="w-5 h-5 text-white/40 mb-2 group-hover:text-emerald-500/70 transition-colors" />
                                 <p className="text-[10px] text-white/50 uppercase tracking-wider font-bold">
@@ -2483,7 +2483,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                               setDepError('');
                               setDepSuccess('');
                             }}
-                            className="w-full bg-black/80 border border-[#D4AF37]/30 hover:border-[#10B981]/60 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-blue-500/30 hover:border-[#10B981]/60 focus:border-blue-500/30 rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
                           >
                             <option value="BNB">BNB (BEP20)</option>
                             <option value="TRX">USDT TRON (TRC20)</option>
@@ -2492,10 +2492,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         </div>
 
                         {/* Display Transfer Address block */}
-                        <div className="space-y-1.5 bg-black/80 border border-[#D4AF37]/25 rounded-2xl p-4 relative overflow-hidden shadow-inner shadow-black">
+                        <div className="space-y-1.5 bg-slate-950/80 border border-blue-500/25 rounded-2xl p-4 relative overflow-hidden shadow-inner shadow-black">
                           <div className="flex items-center gap-1 md:gap-1.5 mb-1.5">
                             <span className="text-xs">🔑</span>
-                            <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.15em]">Official Safe Receiver Address</p>
+                            <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.15em]">Official Safe Receiver Address</p>
                           </div>
                           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                             <span className="text-[11px] font-mono text-white/90 select-all break-all tracking-wider font-semibold">
@@ -2504,7 +2504,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             <button
                               type="button"
                               onClick={() => handleCopyAddr(depNetwork, depositAddresses[depNetwork])}
-                              className="px-4 py-2 shrink-0 text-[10px] tracking-widest uppercase font-black text-black bg-[#D4AF37] hover:brightness-110 border-0 rounded-xl transition-all cursor-pointer font-sans"
+                              className="px-4 py-2 shrink-0 text-[10px] tracking-widest uppercase font-black text-black bg-blue-600 hover:brightness-110 border-0 rounded-xl transition-all cursor-pointer font-sans"
                             >
                               {copiedAddr === depNetwork ? 'COPIED ✅' : 'COPY ADDR 📋'}
                             </button>
@@ -2522,7 +2522,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder={`Enter amount eg: ${(100 * conversionRate).toFixed(0)}`}
                             value={depAmount}
                             onChange={(e) => setDepAmount(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl shadow-inner shadow-black"
                             min="1"
                             step="any"
                           />
@@ -2535,10 +2535,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             <label className="block text-[9px] font-black text-white/70 uppercase tracking-widest">Transaction Receipt Screenshot</label>
                           </div>
                           {depTxHash && depTxHash.startsWith('data:image/') ? (
-                            <div className="relative rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-2 flex flex-col items-center justify-center gap-3">
+                            <div className="relative rounded-xl border border-blue-500/30 bg-blue-600/5 p-2 flex flex-col items-center justify-center gap-3">
                                <div className="relative inline-block">
                                  <img src={depTxHash} alt="Screenshot" className="max-h-32 object-contain rounded-lg border border-white/10" />
-                                 <div className="absolute top-2 right-2 bg-[#D4AF37] text-black text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-md border border-amber-300 flex items-center gap-1">
+                                 <div className="absolute top-2 right-2 bg-blue-600 text-black text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-md border border-amber-300 flex items-center gap-1">
                                    <CheckCircle className="w-3 h-3" />
                                    Attached
                                  </div>
@@ -2552,9 +2552,9 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                </button>
                             </div>
                           ) : (
-                            <label className="flex flex-col items-center justify-center w-full h-24 bg-black/80 border border-white/10 border-dashed rounded-xl cursor-pointer hover:bg-white/5 hover:border-[#D4AF37]/50 transition-all group shadow-inner shadow-black">
+                            <label className="flex flex-col items-center justify-center w-full h-24 bg-slate-950/80 border border-white/10 border-dashed rounded-xl cursor-pointer hover:bg-white/5 hover:border-blue-500/50 transition-all group shadow-inner shadow-black">
                               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                <Upload className="w-5 h-5 text-white/40 mb-2 group-hover:text-[#D4AF37]/70 transition-colors" />
+                                <Upload className="w-5 h-5 text-white/40 mb-2 group-hover:text-blue-400/70 transition-colors" />
                                 <p className="text-[10px] text-white/50 uppercase tracking-wider font-bold">
                                   Click to upload receipt
                                 </p>
@@ -2584,7 +2584,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
                               <span>🔒</span> Core Safety
                             </p>
-                            <p className="text-[10px] font-black text-[#D4AF37] font-mono">🔒 SSL Direct Escrow</p>
+                            <p className="text-[10px] font-black text-blue-400 font-mono">🔒 SSL Direct Escrow</p>
                           </div>
                         </div>
 
@@ -2605,7 +2605,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         <button
                           type="submit"
                           disabled={submitting}
-                          className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
+                          className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(59,130,246,0.35)] hover:shadow-[0_0_45px_rgba(59,130,246,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
                         >
                           {submitting ? (
                             <>
@@ -2626,21 +2626,21 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 {/* 2. WITHDRAW PORTAL - UPGRADED WITH MULTI-RAIL PAKISTAN & CRYPTO SUPPORT */}
                 <div 
                   id="withdraw-section" 
-                  className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ${withdrawMethodTab === 'pakistan' ? 'from-[#031d10] via-[#010905] to-black border-2 border-emerald-500/40 hover:border-emerald-500/70 shadow-[0_0_40px_rgba(16,185,129,0.15)]' : 'from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-emerald-500/60 shadow-[0_0_40px_rgba(212,175,55,0.12)]'} hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl`}
+                  className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ${withdrawMethodTab === 'pakistan' ? 'from-[#031d10] via-[#010905] to-black border-2 border-emerald-500/40 hover:border-emerald-500/70 shadow-[0_0_40px_rgba(16,185,129,0.15)]' : 'from-[#0B0B0B] via-[#050505] to-black border-2 border-blue-500/45 hover:border-emerald-500/60 shadow-[0_0_40px_rgba(59,130,246,0.12)]'} hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl`}
                 >
                   {/* Premium color overlay gradients */}
-                  <div className={`absolute top-0 right-0 w-72 h-72 bg-gradient-to-br ${withdrawMethodTab === 'pakistan' ? 'from-emerald-500/10 to-transparent' : 'from-[#D4AF37]/6 via-[#10B981]/3 to-transparent'} blur-3xl pointer-events-none`} />
+                  <div className={`absolute top-0 right-0 w-72 h-72 bg-gradient-to-br ${withdrawMethodTab === 'pakistan' ? 'from-emerald-500/10 to-transparent' : 'from-blue-600/6 via-[#10B981]/3 to-transparent'} blur-3xl pointer-events-none`} />
                   <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
                   {/* Portal Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${withdrawMethodTab === 'pakistan' ? 'from-emerald-500/25 to-black border border-emerald-500/40' : 'from-[#D4AF37]/20 to-black border border-[#D4AF37]/40'} flex items-center justify-center ring-1 ring-white/5`}>
+                      <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${withdrawMethodTab === 'pakistan' ? 'from-emerald-500/25 to-black border border-emerald-500/40' : 'from-blue-600/20 to-black border border-blue-500/40'} flex items-center justify-center ring-1 ring-white/5`}>
                         <span className="text-xl">{withdrawMethodTab === 'pakistan' ? '🇵🇰' : '💰'}</span>
                       </div>
                       <div>
                         <h3 className="text-sm font-black uppercase tracking-widest text-white leading-none">Withdrawal Gateway</h3>
-                        <p className={`text-[8.5px] ${withdrawMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-[#D4AF37]'} uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse`}>
+                        <p className={`text-[8.5px] ${withdrawMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-blue-400'} uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse`}>
                           {withdrawMethodTab === 'pakistan' ? 'PKR local rails active' : 'Crypto protocol active'}
                         </p>
                       </div>
@@ -2654,7 +2654,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                   {/* 💰 Live Available Balance Block */}
                   <div className={`bg-gradient-to-r ${withdrawMethodTab === 'pakistan' ? 'from-emerald-950/20 via-white/[0.01]' : 'from-white/[0.01] via-white/[0.02]'} to-transparent p-5 rounded-2xl border border-white/5 relative`}>
-                    <p className={`text-[9.5px] font-black uppercase tracking-[0.2em] ${withdrawMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-[#D4AF37]'} mb-2 flex items-center gap-1.5`}>
+                    <p className={`text-[9.5px] font-black uppercase tracking-[0.2em] ${withdrawMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-blue-400'} mb-2 flex items-center gap-1.5`}>
                       <span>💰 Available balance</span>
                       <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
                     </p>
@@ -2672,7 +2672,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   </div>
 
                   {/* Custom Navigation Tab Toggle Bar */}
-                  <div className="bg-black/60 border border-white/5 p-1 rounded-xl grid grid-cols-2 gap-1.5 shadow-inner shadow-black">
+                  <div className="bg-slate-950/60 border border-white/5 p-1 rounded-xl grid grid-cols-2 gap-1.5 shadow-inner shadow-black">
                     <button
                       type="button"
                       onClick={() => {
@@ -2697,7 +2697,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       }}
                       className={`py-2 px-3 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
                         withdrawMethodTab === 'crypto'
-                          ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/25 shadow-sm'
+                          ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 shadow-sm'
                           : 'text-white/40 hover:text-white/70 border border-transparent'
                       }`}
                     >
@@ -2741,7 +2741,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             className={`p-3.5 rounded-xl flex items-center justify-between select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
                               pkMethod === 'EASYPAISA' 
                                 ? 'bg-emerald-950/25 border-emerald-500' 
-                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                                : 'bg-slate-950/40 border-white/5 hover:border-white/20'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -2765,7 +2765,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             className={`p-3.5 rounded-xl flex items-center justify-between select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
                               pkMethod === 'JAZZCASH' 
                                 ? 'bg-emerald-950/25 border-emerald-500' 
-                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                                : 'bg-slate-950/40 border-white/5 hover:border-white/20'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -2789,7 +2789,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             className={`p-3.5 rounded-xl flex items-center justify-between select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
                               pkMethod === 'SADAPAY' 
                                 ? 'bg-emerald-950/25 border-emerald-500' 
-                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                                : 'bg-slate-950/40 border-white/5 hover:border-white/20'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -2813,7 +2813,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             className={`p-3.5 rounded-xl flex items-center justify-between select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
                               pkMethod === 'NAYAPAY' 
                                 ? 'bg-emerald-950/25 border-emerald-500' 
-                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                                : 'bg-slate-950/40 border-white/5 hover:border-white/20'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -2837,7 +2837,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             className={`p-3.5 rounded-xl flex items-center justify-between col-span-2 select-none hover:bg-emerald-950/20 transition-all cursor-pointer text-left border-2 ${
                               pkMethod === 'BANK' 
                                 ? 'bg-emerald-950/25 border-emerald-500' 
-                                : 'bg-black/40 border-white/5 hover:border-white/20'
+                                : 'bg-slate-950/40 border-white/5 hover:border-white/20'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -2867,7 +2867,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder={pkMethod === 'BANK' ? 'e.g. PK00UNTY0000000000000000' : 'e.g. 03123456789'}
                             value={pkWithdrawNumber}
                             onChange={(e) => setPkWithdrawNumber(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
                           />
                         </div>
 
@@ -2884,7 +2884,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder="e.g. your name here"
                             value={pkWithdrawName}
                             onChange={(e) => setPkWithdrawName(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
                           />
                         </div>
 
@@ -2908,7 +2908,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder={`Min ${currencySymbol}${Math.ceil(10 * conversionRate)}`}
                             value={pkWithdrawAmount}
                             onChange={(e) => setPkWithdrawAmount(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20 transition-all shadow-inner shadow-black"
                             step="any"
                           />
                           {parseFloat(pkWithdrawAmount) > 0 && (
@@ -2929,7 +2929,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         </div>
 
                         {/* Withdrawal Rules */}
-                        <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-left text-xs space-y-1 text-white/75 font-sans leading-relaxed">
+                        <div className="p-4 rounded-xl bg-slate-950/40 border border-white/5 text-left text-xs space-y-1 text-white/75 font-sans leading-relaxed">
                           <p className="font-bold text-white text-[10px] uppercase tracking-widest mb-1 font-sans">Withdrawal Rules:</p>
                           <p className="flex items-center gap-2">• Minimum Withdrawal: {currencySymbol}{Math.ceil(10 * conversionRate)}</p>
                           <p className="flex items-center gap-2">• Processing Time: 2–24 Hours</p>
@@ -2992,7 +2992,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                               setWithdrawError('');
                               setWithdrawSuccess('');
                             }}
-                            className="w-full bg-black/80 border border-[#D4AF37]/30 hover:border-[#10B981]/60 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-blue-500/30 hover:border-[#10B981]/60 focus:border-blue-500/30 rounded-xl p-3.5 text-xs text-white uppercase font-black tracking-wider outline-none transition-all cursor-pointer shadow-inner shadow-black"
                           >
                             <option value="BNB">Binance BNB (BEP20)</option>
                             <option value="TRX">Binance USDT (TRC20)</option>
@@ -3013,7 +3013,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder="e.g., Binance Pay ID or BEP20 Wallet Address"
                             value={withdrawWallet}
                             onChange={(e) => setWithdrawWallet(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-mono placeholder-white/25 select-all outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl shadow-inner shadow-black"
                           />
                         </div>
 
@@ -3027,7 +3027,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             <button
                               type="button"
                               onClick={() => setWithdrawAmount((balance * conversionRate).toFixed(2))}
-                              className="text-[9px] font-extrabold text-[#D4AF37] uppercase tracking-wider hover:underline hover:text-[#10B981] transition-all"
+                              className="text-[9px] font-extrabold text-blue-400 uppercase tracking-wider hover:underline hover:text-[#10B981] transition-all"
                             >
                               Max Avail: {currencySymbol}{(balance * conversionRate).toFixed(2)}
                             </button>
@@ -3037,7 +3037,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder="$0.00 equivalent value"
                             value={withdrawAmount}
                             onChange={(e) => setWithdrawAmount(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl shadow-inner shadow-black"
                             step="any"
                           />
                         </div>
@@ -3057,7 +3057,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             <p className="text-[7.5px] text-white/40 uppercase tracking-widest font-black flex items-center gap-1">
                               <span>🔒</span> Secure Gateway
                             </p>
-                            <p className="text-[10px] font-black text-[#D4AF37] font-mono">✅ Min Withdraw: $1.00</p>
+                            <p className="text-[10px] font-black text-blue-400 font-mono">✅ Min Withdraw: $1.00</p>
                           </div>
                         </div>
 
@@ -3079,7 +3079,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         <button
                           type="submit"
                           disabled={submitting}
-                          className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
+                          className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(59,130,246,0.35)] hover:shadow-[0_0_45px_rgba(59,130,246,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
                         >
                           {submitting ? (
                             <>
@@ -3099,23 +3099,23 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                 {/* 🔒 CERTIFIED TRUST SECTION */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-[#D4AF37]/15 text-left space-y-1">
-                    <span className="text-[#D4AF37] text-md">⚡</span>
+                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-blue-500/15 text-left space-y-1">
+                    <span className="text-blue-400 text-md">⚡</span>
                     <h5 className="text-[9px] font-black uppercase text-white tracking-widest">Fast Automated</h5>
                     <p className="text-[7.5px] text-white/50 uppercase tracking-widest leading-none font-bold">Direct Withdrawals</p>
                   </div>
-                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-[#D4AF37]/15 text-left space-y-1">
+                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-blue-500/15 text-left space-y-1">
                     <span className="text-emerald-400 text-md">💸</span>
                     <h5 className="text-[9px] font-black uppercase text-white tracking-widest">24/7 Processing</h5>
                     <p className="text-[7.5px] text-white/50 uppercase tracking-widest leading-none font-bold">Uninterrupted Yields</p>
                   </div>
-                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-[#D4AF37]/15 text-left space-y-1">
+                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-blue-500/15 text-left space-y-1">
                     <span className="text-emerald-500 text-md">🔒</span>
                     <h5 className="text-[9px] font-black uppercase text-white tracking-widest">100% Secure</h5>
                     <p className="text-[7.5px] text-white/50 uppercase tracking-widest leading-none font-bold">Encrypted Ledger</p>
                   </div>
-                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-[#D4AF37]/15 text-left space-y-1">
-                    <span className="text-[#D4AF37] text-md">📱</span>
+                  <div className="p-3.5 rounded-2xl bg-[#090909] border border-blue-500/15 text-left space-y-1">
+                    <span className="text-blue-400 text-md">📱</span>
                     <h5 className="text-[9px] font-black uppercase text-white tracking-widest">Easy/Jazz/Binance</h5>
                     <p className="text-[7.5px] text-white/50 uppercase tracking-widest leading-none font-bold">Standard Channels</p>
                   </div>
@@ -3128,7 +3128,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   <div className="flex items-center gap-2">
                     <span className="text-sm">🏆</span>
                     <div>
-                      <h4 className="text-xs font-black uppercase tracking-widest text-[#D4AF37]">Latest Withdrawals</h4>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-blue-400">Latest Withdrawals</h4>
                       <p className="text-[8px] text-[#10B981] uppercase tracking-wider font-bold animate-pulse mt-0.5">Real-time Platform Payouts</p>
                     </div>
                   </div>
@@ -3170,7 +3170,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                               <span className="text-[7px] text-white/30 uppercase px-1.5 py-0.5 rounded border border-white/5 bg-white/[0.01]">{item.method}</span>
                             </div>
                           </td>
-                          <td className="py-3 px-4 font-mono font-bold text-[#D4AF37]">{item.amount}</td>
+                          <td className="py-3 px-4 font-mono font-bold text-blue-400">{item.amount}</td>
                           <td className="py-3 px-4 text-right">
                             <span className="inline-flex items-center gap-1 text-[8.5px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/10 border border-[#10B981]/20 px-2.5 py-1 rounded">
                               ✅ Paid
@@ -3185,7 +3185,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
               {/* 3. FUNDING STATEMENT LEDGER */}
               <div className="bg-[#0B0B0B] border border-white/5 rounded-2xl p-6 space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-[#D4AF37] mb-2">My Funding Statement History</h4>
+                <h4 className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2">My Funding Statement History</h4>
 
                 
                 {/* Deposits History list */}
@@ -3220,7 +3220,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                               >
                                 <td className="py-2.5 text-[10px] font-mono text-white/40">{dep.timestamp}</td>
                                 <td className="py-2.5 font-bold uppercase text-white">{dep.network}</td>
-                                <td className="py-2.5 font-medium text-[#D4AF37]">{currencySymbol}{(dep.amount * conversionRate).toFixed(2)}</td>
+                                <td className="py-2.5 font-medium text-blue-400">{currencySymbol}{(dep.amount * conversionRate).toFixed(2)}</td>
                                 <td className="py-2.5 font-mono text-white/40 text-[9px] truncate max-w-[120px]" title={dep.txHash}>{dep.txHash}</td>
                                 <td className="py-2.5 text-right">
                                   <div className="flex flex-col items-end gap-1.5">
@@ -3247,7 +3247,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                     {dep.status === 'pending' && (
                                       <div className="w-24 sm:w-28 bg-white/5 h-1 rounded-full overflow-hidden relative">
                                         <motion.div 
-                                          className="bg-[#D4AF37] h-full rounded-full"
+                                          className="bg-blue-600 h-full rounded-full"
                                           initial={{ x: '-100%' }}
                                           animate={{ x: '100%' }}
                                           transition={{ 
@@ -3297,7 +3297,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <span className="text-sm">📥</span>
-                        <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest leading-none">My Payout Records (Chronological Cards)</p>
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none">My Payout Records (Chronological Cards)</p>
                       </div>
                       <span className="text-[7.5px] font-black text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
                         Secure SSL Gateway Live
@@ -3319,7 +3319,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                               whileInView={{ opacity: 1, y: 0 }}
                               viewport={{ once: true, margin: "-20px" }}
                               transition={{ duration: 0.5, delay: Math.min(idx * 0.05, 0.3) }}
-                              whileHover={{ scale: 1.015, borderColor: isApproved ? 'rgba(16,185,129,0.3)' : 'rgba(212,175,55,0.2)' }}
+                              whileHover={{ scale: 1.015, borderColor: isApproved ? 'rgba(16,185,129,0.3)' : 'rgba(59,130,246,0.2)' }}
                               key={wit.id} 
                               className={`p-4 rounded-xl border transition-all duration-300 backdrop-blur-md relative overflow-hidden ${
                                 isApproved 
@@ -3331,7 +3331,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             >
                               {/* Glowing success or pending corner flare */}
                               <div className={`absolute top-0 right-0 w-24 h-24 blur-2xl pointer-events-none opacity-40 ${
-                                isApproved ? 'bg-[#10B981]/20' : 'bg-[#D4AF37]/10'
+                                isApproved ? 'bg-[#10B981]/20' : 'bg-blue-600/10'
                               }`} />
 
                               <div className="flex flex-col justify-between h-full space-y-3 relative z-10 text-left">
@@ -3354,7 +3354,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                       {currencySymbol}{(wit.amount * conversionRate).toFixed(2)}
                                     </span>
                                     <span className="text-white/30 text-xs">→</span>
-                                    <span className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">
+                                    <span className="text-xs font-black uppercase text-blue-400 tracking-wider">
                                       {wit.network}
                                     </span>
                                   </div>
@@ -3482,15 +3482,15 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               className="space-y-6 scroll-mt-24"
               id="settings-section"
             >
-              <div className="bg-[#0c0c0c]/90 border border-white/5 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+              <div className="bg-slate-900/90 border border-white/5 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
                 {/* Visual gradient backdrop decor */}
-                <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/5 blur-[120px] rounded-full pointer-events-none" />
+                <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
 
                 <div className="relative space-y-6">
                   {/* Title & Description */}
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-black text-[#D4AF37] tracking-[0.2em] uppercase font-sans">
+                    <span className="text-[10px] font-black text-blue-400 tracking-[0.2em] uppercase font-sans">
                       Account Hub
                     </span>
                     <h2 className="text-xl sm:text-2xl font-bold font-serif text-white tracking-tight">
@@ -3543,7 +3543,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                             placeholder="Enter display name"
                             value={profileName}
                             onChange={(e) => setProfileName(e.target.value)}
-                            className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-sans placeholder-white/25 outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all shadow-inner shadow-black"
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white font-sans placeholder-white/25 outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all shadow-inner shadow-black"
                           />
                         </div>
 
@@ -3551,8 +3551,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-3">
                           <div className="flex items-center justify-between text-[11px]">
                             <span className="text-zinc-500 uppercase font-black tracking-widest">Status:</span>
-                            <span className="text-[#D4AF37] font-bold uppercase tracking-widest bg-[#D4AF37]/10 px-2.5 py-0.5 rounded-md border border-[#D4AF37]/20">
-                              Premium Member
+                            <span className="text-blue-400 font-bold uppercase tracking-widest bg-blue-600/10 px-2.5 py-0.5 rounded-md border border-blue-500/20">
+                              Verified Member
                             </span>
                           </div>
                           
@@ -3576,7 +3576,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         <button
                           type="submit"
                           disabled={isSavingProfile}
-                          className="w-full py-4 bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-xl hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-lg shadow-[#D4AF37]/10 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                          className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-xl hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-lg shadow-blue-500/10 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                         >
                           {isSavingProfile ? (
                             <>
@@ -3597,12 +3597,12 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       </label>
 
                       {/* Selected Badge Preview */}
-                      <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex items-center gap-4">
+                      <div className="bg-slate-950/60 border border-white/5 rounded-2xl p-4 flex items-center gap-4">
                         <div className={`w-14 h-14 rounded-xl border flex items-center justify-center shadow-lg transition-all duration-300 ${getAvatarConfig(profileAvatar).color}`}>
                           <AvatarIcon id={profileAvatar} className="w-8 h-8" />
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest font-sans">Active Emblem</p>
+                          <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest font-sans">Active Emblem</p>
                           <h4 className="text-sm font-bold text-white tracking-wide">{getAvatarConfig(profileAvatar).label}</h4>
                           <p className="text-[10px] text-zinc-500 font-sans">Click on any avatar below to assign to your name.</p>
                         </div>
@@ -3619,7 +3619,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                               onClick={() => setProfileAvatar(preset.id)}
                               className={`p-3.5 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer text-center relative group bg-transparent ${
                                 isSelected
-                                  ? 'bg-[#D4AF37]/10 border-[#D4AF37]/80 text-[#D4AF37] scale-105 shadow-md shadow-black/40 ring-1 ring-[#D4AF37]/30'
+                                  ? 'bg-blue-600/10 border-blue-500/80 text-blue-400 scale-105 shadow-md shadow-black/40 ring-1 ring-blue-500/30'
                                   : 'border-white/5 hover:border-white/20 bg-white/[0.01] hover:bg-white/[0.03] text-white/60 hover:text-white'
                               }`}
                             >
@@ -3630,7 +3630,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                                 {preset.label}
                               </span>
                               {isSelected && (
-                                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-600" />
                               )}
                             </button>
                           );
@@ -3652,19 +3652,19 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-b from-[#111111] to-black border-2 border-[#10B981]/40 hover:border-[#D4AF37]/50 shadow-[0_0_80px_rgba(16,185,129,0.25)] p-6 md:p-8 space-y-6 text-center"
+              className="relative w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-b from-[#111111] to-black border-2 border-[#10B981]/40 hover:border-blue-500/50 shadow-[0_0_80px_rgba(16,185,129,0.25)] p-6 md:p-8 space-y-6 text-center"
             >
               {/* Golden circular glow background effect */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#10B981]/15 to-[#D4AF37]/5 blur-3xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#10B981]/15 to-blue-400/5 blur-3xl pointer-events-none" />
               
               <div className="space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-[#10B981]/20 to-[#D4AF37]/15 flex items-center justify-center border-2 border-[#10B981]/50 relative">
+                <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-[#10B981]/20 to-blue-400/15 flex items-center justify-center border-2 border-[#10B981]/50 relative">
                   {successStep === 'completed' ? (
                     <motion.span 
                       initial={{ scale: 0.5, rotate: -45 }}
@@ -3694,7 +3694,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               </div>
 
               {/* Glassmorphic payout confirmation values */}
-              <div className="p-5 rounded-2xl bg-[#080808]/80 border border-white/5 space-y-3">
+              <div className="p-5 rounded-2xl bg-slate-950/80 border border-white/5 space-y-3">
                 <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">Transaction Value Dispatched</p>
                 <h4 className="text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-[#D4AF37] to-emerald-400 bg-size-[200%_auto] tracking-tight">
                   {currencySymbol}{(recentSuccessWithdraw.amount * conversionRate).toFixed(2)}
@@ -3707,7 +3707,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   </div>
                   <div>
                     <span className="text-[8px] text-white/30 uppercase tracking-widest block font-bold">Payout Target</span>
-                    <span className="text-[11px] font-mono font-medium text-[#D4AF37] block mt-0.5 truncate select-all" title={recentSuccessWithdraw.wallet}>
+                    <span className="text-[11px] font-mono font-medium text-blue-400 block mt-0.5 truncate select-all" title={recentSuccessWithdraw.wallet}>
                       {recentSuccessWithdraw.wallet}
                     </span>
                   </div>

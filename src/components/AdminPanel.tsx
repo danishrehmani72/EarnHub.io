@@ -544,7 +544,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         const userId = userDoc.id;
         return {
           userId,
-          name: userData.name || 'Anonymous VIP',
+          name: userData.name || 'User',
           email: userData.email || 'no-email@wealthhub.com',
           avatar: userData.avatar,
           blocked: userData.blocked || false,
@@ -1124,10 +1124,10 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       >
         
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-2xl flex items-center justify-center mx-auto text-[#D4AF37] shadow-xl">
+          <div className="w-12 h-12 bg-blue-600/10 border border-blue-500/25 rounded-2xl flex items-center justify-center mx-auto text-blue-400 shadow-xl">
             <ShieldCheck className="w-6 h-6 animate-pulse" />
           </div>
-          <h2 className="text-lg font-bold font-serif tracking-widest text-[#D4AF37] uppercase">Secure Admin Login 🔐</h2>
+          <h2 className="text-lg font-bold font-serif tracking-widest text-blue-400 uppercase">Secure Admin Login 🔐</h2>
           <p className="text-[10px] text-white/40 uppercase tracking-[0.1em]">MoneyMind Space Governance Protocol Console</p>
         </div>
 
@@ -1145,7 +1145,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               value={adminUserId} 
               onChange={e => setAdminUserId(e.target.value)}
               placeholder="e.g. danish"
-              className="w-full bg-[#070707] border border-white/5 focus:border-[#D4AF37]/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all"
+              className="w-full bg-[#070707] border border-white/5 focus:border-blue-500/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all"
             />
           </div>
 
@@ -1156,13 +1156,13 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               value={adminCode} 
               onChange={e => setAdminCode(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-[#070707] border border-white/5 focus:border-[#D4AF37]/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all"
+              className="w-full bg-[#070707] border border-white/5 focus:border-blue-500/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all"
             />
           </div>
 
           <button 
             type="submit"
-            className="w-full mt-2 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-black shadow-lg shadow-[#D4AF37]/10 cursor-pointer text-center"
+            className="w-full mt-2 py-3 bg-gradient-to-r from-blue-600 to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-black shadow-lg shadow-blue-500/10 cursor-pointer text-center"
           >
             Authenticate Security Session
           </button>
@@ -1186,7 +1186,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         
         <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#D4AF37] animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
             <h1 className="text-sm font-black uppercase tracking-[0.25em] text-white">MoneyMind Governance Core</h1>
           </div>
           <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold">Chief Administrator Dashboard: Danish</p>
@@ -1195,7 +1195,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         <div className="flex items-center gap-3 relative z-10 w-full md:w-auto justify-end">
           {/* Real-time Ticking Countdown Indicator */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5 text-[9px] text-white/50 uppercase tracking-wider font-bold">
-            <Clock className="w-3.5 h-3.5 text-[#D4AF37] animate-pulse" />
+            <Clock className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
             <span>Sync in {secondsToRefresh}s</span>
           </div>
 
@@ -1209,7 +1209,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             disabled={isDataLoading}
             className="p-2 py-1.5 rounded-xl border border-white/5 bg-gradient-to-r from-zinc-900 to-black hover:brightness-110 text-white/80 hover:text-white transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-extrabold shadow-md shadow-black/45"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#D4AF37] ${isDataLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-blue-400 ${isDataLoading ? 'animate-spin' : ''}`} />
             <span>Force Sync</span>
           </button>
 
@@ -1236,7 +1236,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
               className="p-2.5 rounded-xl border border-white/5 bg-zinc-900 hover:bg-zinc-850 hover:border-white/10 text-white/80 hover:text-white transition-all cursor-pointer relative shadow-lg"
             >
-              <Bell className="w-4 h-4 text-[#D4AF37]" />
+              <Bell className="w-4 h-4 text-blue-400" />
               {adminNotificationList.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 font-mono text-[8.5px] font-black text-white flex items-center justify-center animate-bounce shadow-md">
                   {adminNotificationList.length}
@@ -1248,8 +1248,8 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             {isNotificationOpen && (
               <div className="absolute right-0 mt-3 w-80 max-w-[calc(100vw-2.5rem)] xs:w-80 sm:w-96 max-h-96 overflow-y-auto bg-[#141414] border border-white/10 rounded-2xl shadow-2xl p-4 space-y-3 z-50 animate-slide-in">
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-[#D4AF37]">Urgent Actions Required</span>
-                  <span className="text-[8.5px] bg-[#D4AF37]/10 text-[#D4AF37] font-bold px-1.5 py-0.5 rounded-full">{adminNotificationList.length} Pending</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-400">Urgent Actions Required</span>
+                  <span className="text-[8.5px] bg-blue-600/10 text-blue-400 font-bold px-1.5 py-0.5 rounded-full">{adminNotificationList.length} Pending</span>
                 </div>
 
                 <div className="space-y-2 max-h-72 overflow-y-auto scrollbar-thin">
@@ -1275,12 +1275,12 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                           }
                           setIsNotificationOpen(false);
                         }}
-                        className="w-full text-left p-2.5 rounded-xl bg-white/[0.01] hover:bg-white/[0.04] border border-white/5 hover:border-[#D4AF37]/20 transition-all block space-y-1"
+                        className="w-full text-left p-2.5 rounded-xl bg-white/[0.01] hover:bg-white/[0.04] border border-white/5 hover:border-blue-500/20 transition-all block space-y-1"
                       >
                         <p className="text-[9.5px] leading-snug text-white/85 font-medium">{notify.text}</p>
                         <div className="flex items-center justify-between text-[8px] font-mono text-white/35">
                           <span>{notify.time}</span>
-                          <span className="text-[#D4AF37] hover:underline uppercase font-extrabold tracking-wider">Fast Route →</span>
+                          <span className="text-blue-400 hover:underline uppercase font-extrabold tracking-wider">Fast Route →</span>
                         </div>
                       </button>
                     ))
@@ -1325,14 +1325,14 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         </div>
 
         {/* Total Approved Deposits */}
-        <div className="bg-[#121212] border border-white/5 hover:border-[#D4AF37]/20 rounded-2xl p-4 space-y-2 relative overflow-hidden transition-all duration-150 group shadow-md">
-          <div className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-[#D4AF37]/5 group-hover:bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] transition-all">
+        <div className="bg-[#121212] border border-white/5 hover:border-blue-500/20 rounded-2xl p-4 space-y-2 relative overflow-hidden transition-all duration-150 group shadow-md">
+          <div className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-blue-600/5 group-hover:bg-blue-600/10 flex items-center justify-center text-blue-400 transition-all">
             <DollarSign className="w-3.5 h-3.5" />
           </div>
           <p className="text-[8px] font-black text-white/40 uppercase tracking-widest font-sans">Total Deposits</p>
           <div className="space-y-0.5">
-            <h3 className="text-xl font-bold font-mono text-[#D4AF37]">${globalAggregates.totalDepositsSum.toFixed(2)}</h3>
-            <p className="text-[8px] text-[#D4AF37]/65 font-medium">Approved stake ledger</p>
+            <h3 className="text-xl font-bold font-mono text-blue-400">${globalAggregates.totalDepositsSum.toFixed(2)}</h3>
+            <p className="text-[8px] text-blue-400/65 font-medium">Approved stake ledger</p>
           </div>
         </div>
 
@@ -1404,30 +1404,30 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2 border-b border-white/5">
             <div className="space-y-1">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">Dynamic Performance Graph Desk</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400">Dynamic Performance Graph Desk</h4>
               <p className="text-[9px] text-white/45 font-medium leading-relaxed">Toggle different performance curves calculated from Firestore database records</p>
             </div>
             
             {/* Quick Chart View Selection Tabs */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/60 border border-white/5 text-[9px] uppercase font-bold">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950/60 border border-white/5 text-[9px] uppercase font-bold">
               <button
                 type="button"
                 onClick={() => setActiveChartTab('revenue')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${activeChartTab === 'revenue' ? 'bg-[#D4AF37] text-black font-extrabold' : 'text-white/45 hover:text-white'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${activeChartTab === 'revenue' ? 'bg-blue-600 text-black font-extrabold' : 'text-white/45 hover:text-white'}`}
               >
                 Capital Stream
               </button>
               <button
                 type="button"
                 onClick={() => setActiveChartTab('registrations')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${activeChartTab === 'registrations' ? 'bg-[#D4AF37] text-black font-extrabold' : 'text-white/45 hover:text-white'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${activeChartTab === 'registrations' ? 'bg-blue-600 text-black font-extrabold' : 'text-white/45 hover:text-white'}`}
               >
                 Signups
               </button>
               <button
                 type="button"
                 onClick={() => setActiveChartTab('netflow')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${activeChartTab === 'netflow' ? 'bg-[#D4AF37] text-black font-extrabold' : 'text-white/45 hover:text-white'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${activeChartTab === 'netflow' ? 'bg-blue-600 text-black font-extrabold' : 'text-white/45 hover:text-white'}`}
               >
                 Net Ledger
               </button>
@@ -1488,7 +1488,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
           {/* Header Switcher Tabs */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 System Live Feeds
               </span>
@@ -1496,7 +1496,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             </div>
 
             {/* Selection Toggles */}
-            <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-black/60 border border-white/5 text-[9px] uppercase font-bold text-center">
+            <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-950/60 border border-white/5 text-[9px] uppercase font-bold text-center">
               <button
                 type="button"
                 onClick={() => {
@@ -1512,7 +1512,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                   // Showing both in elegant subpanels is even more supreme and professional because the admin can view BOTH
                   // live activity feed and telegram triggers at the same time on desktop! Let's do exactly this.
                 }}
-                className="py-1 rounded-lg bg-[#D4AF37] text-black font-extrabold"
+                className="py-1 rounded-lg bg-blue-600 text-black font-extrabold"
               >
                 Live Activity
               </button>
@@ -1529,7 +1529,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             {/* 1. Live platform action stream */}
             <div className="space-y-2">
               <p className="text-[8.5px] uppercase tracking-widest font-extrabold text-white/40">Recent Ledger Activity Feed</p>
-              <div className="bg-[#080808] border border-white/5 rounded-xl p-3 h-[140px] overflow-y-auto font-sans text-[9px] leading-relaxed text-indigo-300 space-y-1.5 select-all scrollbar-thin">
+              <div className="bg-slate-950 border border-white/5 rounded-xl p-3 h-[140px] overflow-y-auto font-sans text-[9px] leading-relaxed text-indigo-300 space-y-1.5 select-all scrollbar-thin">
                 {liveActivityFeed.length === 0 ? (
                   <div className="p-4 text-center text-white/20 uppercase tracking-widest text-[8px] italic flex items-center justify-center h-full">
                     Waiting for platform activity...
@@ -1547,8 +1547,8 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
             {/* 2. Telegram webhook dispatcher log stream */}
             <div className="space-y-2">
-              <p className="text-[8.5px] uppercase tracking-widest font-extrabold text-[#D4AF37]/80">Telegram Webhook Broadcasts</p>
-              <div className="bg-[#080808] border border-white/5 rounded-xl p-3 h-[100px] overflow-y-auto font-mono text-[9px] leading-relaxed text-emerald-400 space-y-1.5 select-all scrollbar-thin">
+              <p className="text-[8.5px] uppercase tracking-widest font-extrabold text-blue-400/80">Telegram Webhook Broadcasts</p>
+              <div className="bg-slate-950 border border-white/5 rounded-xl p-3 h-[100px] overflow-y-auto font-mono text-[9px] leading-relaxed text-emerald-400 space-y-1.5 select-all scrollbar-thin">
                 {telegramLogs.length === 0 ? (
                   <div className="p-3 text-center text-white/20 uppercase tracking-widest text-[8px] italic flex items-center justify-center h-full">
                     Logs queue empty...
@@ -1582,7 +1582,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
           </div>
           <div className="space-y-2">
             {antiFraudFlags.map((flag, idx) => (
-              <div key={idx} className="bg-black/40 border border-white/5 rounded-xl p-3 flex items-center gap-3 text-xs font-sans text-white/80">
+              <div key={idx} className="bg-slate-950/40 border border-white/5 rounded-xl p-3 flex items-center gap-3 text-xs font-sans text-white/80">
                 <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
                 <div className="flex-1 space-y-0.5">
                   <p className="text-[8px] font-bold tracking-widest uppercase text-rose-500">{flag.type}</p>
@@ -1596,11 +1596,11 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
       {/* GLOBAL GOVERNANCE & LIVE BROADCAST HUB */}
       <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 space-y-6 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
           <div className="space-y-1">
-            <h4 className="text-[11px] font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-400 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-400 animate-pulse" />
               Global Governance & Promo Broadcast Hub
             </h4>
             <p className="text-[9px] text-white/45 leading-relaxed">
@@ -1608,7 +1608,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[7.5px] font-mono font-black text-[#D4AF37] bg-[#D4AF37]/5 border border-[#D4AF37]/20 px-2.5 py-1 rounded-lg uppercase tracking-widest animate-pulse">
+            <span className="text-[7.5px] font-mono font-black text-blue-400 bg-blue-600/5 border border-blue-500/20 px-2.5 py-1 rounded-lg uppercase tracking-widest animate-pulse">
               Sync Active (x{globalSettings?.yieldMultiplier || "1.0"})
             </span>
           </div>
@@ -1617,7 +1617,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         <form onSubmit={handleSaveGlobalSettings} className="grid grid-cols-1 md:grid-cols-12 gap-5 text-left">
           {/* Admin Email Configuration */}
           <div className="md:col-span-12 border-b border-white/5 pb-5 space-y-2">
-            <label className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-widest block font-sans">
+            <label className="text-[9px] font-bold text-blue-400 uppercase tracking-widest block font-sans">
               System Admin Notifications Email
             </label>
             <div className="relative">
@@ -1627,7 +1627,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                 value={formAdminEmail}
                 onChange={(e) => setFormAdminEmail(e.target.value)}
                 placeholder="Enter administrator email address to receive live notifications..."
-                className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+                className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-blue-500/35 font-medium placeholder-white/20"
               />
             </div>
             <p className="text-[7.5px] text-white/35 font-mono leading-relaxed">
@@ -1642,7 +1642,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               <select
                 value={formYieldMultiplier}
                 onChange={(e) => setFormYieldMultiplier(Number(e.target.value))}
-                className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white uppercase outline-none focus:border-[#D4AF37]/35 cursor-pointer font-extrabold tracking-widest"
+                className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs text-white uppercase outline-none focus:border-blue-500/35 cursor-pointer font-extrabold tracking-widest"
               >
                 <option value="1.0">1.0x (Standard Earnings)</option>
                 <option value="1.25">1.25x (Starter Promo Boost)</option>
@@ -1651,7 +1651,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                 <option value="3.0">3.0x (Triple Profit Flash Boost)</option>
               </select>
             </div>
-            <p className="text-[7.5px] text-[#D4AF37]/75 font-mono italic mt-1 leading-relaxed">
+            <p className="text-[7.5px] text-blue-400/75 font-mono italic mt-1 leading-relaxed">
               Mutates daily interest accruals of active plans instantly across all users.
             </p>
           </div>
@@ -1665,7 +1665,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                   type="checkbox"
                   checked={formIsBannerActive}
                   onChange={(e) => setFormIsBannerActive(e.target.checked)}
-                  className="rounded bg-black border-white/10 text-[#D4AF37] focus:ring-0 w-3.5 h-3.5 cursor-pointer"
+                  className="rounded bg-slate-950 border-white/10 text-blue-400 focus:ring-0 w-3.5 h-3.5 cursor-pointer"
                 />
                 Enable Marquee Alert
               </label>
@@ -1676,7 +1676,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                 value={formAnnouncementText}
                 onChange={(e) => setFormAnnouncementText(e.target.value)}
                 placeholder="Enter alert message to broadcast to all dashboards..."
-                className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+                className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-blue-500/35 font-medium placeholder-white/20"
               />
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-1 text-[7.5px] text-white/35 font-mono">
@@ -1684,7 +1684,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               <button
                 type="submit"
                 disabled={isSavingSettings}
-                className="px-4 py-2 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-xl uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 text-[8px] self-end md:self-auto shadow-md shadow-amber-500/10"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-600/90 text-black font-black rounded-xl uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 text-[8px] self-end md:self-auto shadow-md shadow-amber-500/10"
               >
                 {isSavingSettings ? "Saving Settings..." : "Apply Broadcast changes 🚀"}
               </button>
@@ -1695,11 +1695,11 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
       {/* Dynamic SMTP Configuration Form */}
       <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 space-y-6 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
           <div className="space-y-1 text-left">
-            <h4 className="text-[11px] font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-2">
-              <Mail className="w-4 h-4 text-[#D4AF37]" />
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-400 flex items-center gap-2">
+              <Mail className="w-4 h-4 text-blue-400" />
               Secure SMTP Mailer Server Settings
             </h4>
             <p className="text-[9px] text-white/45 leading-relaxed">
@@ -1720,7 +1720,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               value={formSmtpHost}
               onChange={(e) => setFormSmtpHost(e.target.value)}
               placeholder="e.g. smtp.gmail.com"
-              className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+              className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-blue-500/35 font-medium placeholder-white/20"
             />
           </div>
 
@@ -1735,7 +1735,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               value={formSmtpPort}
               onChange={(e) => setFormSmtpPort(Number(e.target.value))}
               placeholder="e.g. 465"
-              className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-mono placeholder-white/20"
+              className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-blue-500/35 font-mono placeholder-white/20"
             />
           </div>
 
@@ -1750,7 +1750,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               value={formSenderName}
               onChange={(e) => setFormSenderName(e.target.value)}
               placeholder="e.g. MoneyMind Space"
-              className="w-full bg-[#080808] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+              className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-blue-500/35 font-medium placeholder-white/20"
             />
           </div>
 
@@ -1765,7 +1765,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               value={formSmtpUser}
               onChange={(e) => setFormSmtpUser(e.target.value)}
               placeholder="Enter server mailing username..."
-              className="w-full bg-[#080808] border border-[#D4AF37]/15 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+              className="w-full bg-slate-950 border border-blue-500/15 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-blue-500/35 font-medium placeholder-white/20"
             />
           </div>
 
@@ -1778,7 +1778,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               <button
                 type="button"
                 onClick={() => setShowSmtpPass(!showSmtpPass)}
-                className="text-[8px] uppercase tracking-wider text-[#D4AF37] font-bold hover:underline"
+                className="text-[8px] uppercase tracking-wider text-blue-400 font-bold hover:underline"
               >
                 {showSmtpPass ? "Hide Code" : "Show Code"}
               </button>
@@ -1789,7 +1789,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               value={formSmtpPass}
               onChange={(e) => setFormSmtpPass(e.target.value)}
               placeholder="••••••••••••••••"
-              className="w-full bg-[#080808] border border-[#D4AF37]/15 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37]/35 font-medium placeholder-white/20"
+              className="w-full bg-slate-950 border border-blue-500/15 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-blue-500/35 font-medium placeholder-white/20"
             />
           </div>
 
@@ -1798,7 +1798,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             <button
               type="submit"
               disabled={isSavingSmtpSettings}
-              className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-xl uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 text-[8px] self-end md:self-auto shadow-md shadow-amber-500/10"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-600/90 text-black font-black rounded-xl uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 text-[8px] self-end md:self-auto shadow-md shadow-amber-500/10"
             >
               {isSavingSmtpSettings ? "Storing Credentials..." : "Apply Dynamic SMTP settings ✉️"}
             </button>
@@ -1810,7 +1810,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
           <div className="space-y-0.5">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-2">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-2">
               <Cpu className="w-4 h-4" />
               Administrative Verification Desk
             </h4>
@@ -1821,7 +1821,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             <select 
               value={filterType} 
               onChange={e => setFilterType(e.target.value as any)}
-              className="bg-[#0A0A0A] border border-white/5 rounded-xl px-3 py-1.5 text-[10px] text-white uppercase outline-none focus:border-[#D4AF37]/35 cursor-pointer font-bold tracking-wider"
+              className="bg-[#0A0A0A] border border-white/5 rounded-xl px-3 py-1.5 text-[10px] text-white uppercase outline-none focus:border-blue-500/35 cursor-pointer font-bold tracking-wider"
             >
               <option value="all">All Ledgers</option>
               <option value="deposits">Deposit Proofs</option>
@@ -1831,7 +1831,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
             <select 
               value={filterWStatus} 
               onChange={e => setFilterWStatus(e.target.value as any)}
-              className="bg-[#0A0A0A] border border-white/5 rounded-xl px-3 py-1.5 text-[10px] text-white uppercase outline-none focus:border-[#D4AF37]/35 cursor-pointer font-bold tracking-wider"
+              className="bg-[#0A0A0A] border border-white/5 rounded-xl px-3 py-1.5 text-[10px] text-white uppercase outline-none focus:border-blue-500/35 cursor-pointer font-bold tracking-wider"
             >
               <option value="all">All Statuses</option>
               <option value="pending">Pending Verifications</option>
@@ -1851,7 +1851,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               placeholder="Search TX by Name, ID, hash, network..." 
               value={txSearchText}
               onChange={e => setTxSearchText(e.target.value)}
-              className="w-full bg-[#070707] border border-white/5 rounded-xl pl-9 pr-4 py-2 text-[10px] text-white placeholder-white/30 outline-none focus:border-[#D4AF37]/30 transition-all font-medium font-sans"
+              className="w-full bg-[#070707] border border-white/5 rounded-xl pl-9 pr-4 py-2 text-[10px] text-white placeholder-white/30 outline-none focus:border-blue-500/30 transition-all font-medium font-sans"
             />
           </div>
 
@@ -1862,7 +1862,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               type="date"
               value={txStartDate}
               onChange={e => setTxStartDate(e.target.value)}
-              className="w-full bg-[#070707] border border-white/5 rounded-xl px-2 py-1.5 text-[9px] text-white outline-none focus:border-[#D4AF37]/30 transition-all font-mono"
+              className="w-full bg-[#070707] border border-white/5 rounded-xl px-2 py-1.5 text-[9px] text-white outline-none focus:border-blue-500/30 transition-all font-mono"
             />
           </div>
 
@@ -1873,7 +1873,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               type="date"
               value={txEndDate}
               onChange={e => setTxEndDate(e.target.value)}
-              className="w-full bg-[#070707] border border-white/5 rounded-xl px-2 py-1.5 text-[9px] text-white outline-none focus:border-[#D4AF37]/30 transition-all font-mono"
+              className="w-full bg-[#070707] border border-white/5 rounded-xl px-2 py-1.5 text-[9px] text-white outline-none focus:border-blue-500/30 transition-all font-mono"
             />
           </div>
 
@@ -1928,7 +1928,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                       <span className="text-[10px] text-white/30 uppercase font-bold text-sans">via {tx.network} Cryptosphere</span>
                       <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-widest font-mono ${
                         tx.status === 'approved' 
-                          ? 'bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20' 
+                          ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' 
                           : tx.status === 'rejected' 
                           ? 'bg-rose-500/15 text-rose-400 border border-rose-500/25' 
                           : 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
@@ -1943,9 +1943,9 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                           <span className="block text-[8px] font-black text-emerald-400 uppercase tracking-widest font-sans">
                             📸 Attached Receipt Screenshot:
                           </span>
-                          <div className="relative group max-w-xs overflow-hidden rounded-xl border border-white/10 bg-black/40 p-1 cursor-pointer" onClick={() => setActiveScreenshotModal(tx.txHash)}>
+                          <div className="relative group max-w-xs overflow-hidden rounded-xl border border-white/10 bg-slate-950/40 p-1 cursor-pointer" onClick={() => setActiveScreenshotModal(tx.txHash)}>
                             <img src={tx.txHash} alt="Receipt Screenshot" className="max-h-24 w-auto object-contain rounded-lg group-hover:scale-105 transition-all" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg">
+                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg">
                               <span className="text-[9px] font-black uppercase text-white tracking-widest">🔍 Zoom Image</span>
                             </div>
                           </div>
@@ -1963,7 +1963,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
                     {tx.status === 'pending' && (
                       <div className="mt-2 space-y-2">
-                        <label className="text-[8px] font-black text-[#D4AF37]/80 uppercase tracking-widest block font-sans">
+                        <label className="text-[8px] font-black text-blue-400/80 uppercase tracking-widest block font-sans">
                           Attach optional custom notification email short note / custom remark:
                         </label>
                         <input
@@ -1971,12 +1971,12 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                           value={customNotes[tx.id] || ''}
                           onChange={(e) => setCustomNotes(prev => ({ ...prev, [tx.id]: e.target.value }))}
                           placeholder={isDeposit ? "e.g. Block hash verified, or Please attach visible receipt..." : "e.g. Disbursement processed, check ledger explorer..."}
-                          className="w-full bg-[#0a0a0a] border border-white/5 focus:border-[#D4AF37]/35 rounded-lg px-3 py-1.5 text-[9.5px] text-white/90 placeholder-white/25 outline-none font-sans"
+                          className="w-full bg-[#0a0a0a] border border-white/5 focus:border-blue-500/35 rounded-lg px-3 py-1.5 text-[9.5px] text-white/90 placeholder-white/25 outline-none font-sans"
                         />
                         
                         {/* Quick Selection Professional Templates */}
                         <div className="flex flex-wrap gap-1.5 items-center">
-                          <span className="text-[7px] font-black text-[#D4AF37] uppercase tracking-wider mr-1">
+                          <span className="text-[7px] font-black text-blue-400 uppercase tracking-wider mr-1">
                             🎯 Quick Shortcuts:
                           </span>
                           {(isDeposit 
@@ -1998,7 +1998,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                               type="button"
                               onClick={() => setCustomNotes(prev => ({ ...prev, [tx.id]: tmpl }))}
                               title={tmpl}
-                              className="text-[7.5px] bg-white/5 hover:bg-[#D4AF37]/10 active:scale-95 text-white/60 hover:text-[#D4AF37] px-2 py-0.5 rounded border border-white/5 hover:border-[#D4AF37]/20 transition-all font-sans cursor-pointer whitespace-nowrap"
+                              className="text-[7.5px] bg-white/5 hover:bg-blue-600/10 active:scale-95 text-white/60 hover:text-blue-400 px-2 py-0.5 rounded border border-white/5 hover:border-blue-500/20 transition-all font-sans cursor-pointer whitespace-nowrap"
                             >
                               {tmpl.length > 28 ? tmpl.slice(0, 25) + '...' : tmpl}
                             </button>
@@ -2054,7 +2054,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
       <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">Global User Directories Panel</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400">Global User Directories Panel</h4>
             <p className="text-[9px] text-white/40">Audit profiles, trace transaction histories, and enforce site blockings</p>
           </div>
 
@@ -2065,7 +2065,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
               placeholder="Search by ID or Username..."
-              className="w-full bg-[#0A0A0A] border border-white/5 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/35 transition-all font-sans"
+              className="w-full bg-[#0A0A0A] border border-white/5 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-white/20 outline-none focus:border-blue-500/35 transition-all font-sans"
             />
           </div>
         </div>
@@ -2137,12 +2137,12 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 text-[#D4AF37] font-serif font-black text-xs">
+                        <div className="w-8 h-8 rounded-lg bg-blue-600/10 flex items-center justify-center border border-blue-500/20 text-blue-400 font-serif font-black text-xs">
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="text-left leading-tight">
                           <p className="text-xs font-bold text-white leading-none">{user.name}</p>
-                          <p className="text-[9px] text-[#D4AF37] font-mono mt-0.5 leading-none break-all max-w-[150px] sm:max-w-xs">{user.email || 'no-email@moneymindspace.com'}</p>
+                          <p className="text-[9px] text-blue-400 font-mono mt-0.5 leading-none break-all max-w-[150px] sm:max-w-xs">{user.email || 'no-email@moneymindspace.com'}</p>
                           <p className="text-[8px] text-white/45 font-mono leading-none mt-1">ID: #{user.userId}</p>
                         </div>
                       </div>
@@ -2211,7 +2211,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="space-y-1">
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-2">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 animate-pulse" />
               Advanced Anti-Fraud & Account Integrity Officer
             </h4>
@@ -2225,7 +2225,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         </div>
 
         {/* Override unban actions panel */}
-        <div className="p-4 bg-black/65 border border-white/5 rounded-xl space-y-3">
+        <div className="p-4 bg-slate-950/65 border border-white/5 rounded-xl space-y-3">
           <div className="space-y-0.5">
             <h5 className="text-[10px] font-black uppercase tracking-wide text-white">
               Command Center: Manual Unban Override (انتظامیہ کے لیے شناختی بحالی)
@@ -2240,7 +2240,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
               placeholder="e.g. USER102, 192.168.1.1, or hash fingerprint..."
               value={overrideTarget}
               onChange={(e) => setOverrideTarget(e.target.value)}
-              className="flex-1 bg-black/95 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 font-mono tracking-wide outline-none focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all shadow-inner"
+              className="flex-1 bg-slate-950/95 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 font-mono tracking-wide outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 transition-all shadow-inner"
             />
             <button
               onClick={() => handleManualOverrideUnban(overrideTarget)}
@@ -2257,7 +2257,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
           
           {/* List Suspicious accounts & Banned */}
           <div className="bg-[#090909] border border-white/5 rounded-xl p-4 space-y-3">
-            <h5 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] border-b border-white/5 pb-1.5 flex items-center justify-between">
+            <h5 className="text-[10px] font-black uppercase tracking-widest text-blue-400 border-b border-white/5 pb-1.5 flex items-center justify-between">
               <span>Suspicious / Flagged User ID</span>
               <span className="bg-amber-500/10 px-1.5 py-0.5 rounded text-[8px] font-mono text-amber-400 font-bold">
                 {allUsers.filter(u => u.isSuspicious).length} cases
@@ -2273,7 +2273,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                   <div key={u.userId} className="p-2.5 bg-white/[0.02] border border-white/5 rounded-lg flex flex-col gap-1 text-[9.5px]">
                     <div className="flex justify-between items-center bg-white/5 px-2 py-1 rounded">
                       <span className="font-bold text-white tracking-wide">{u.name} ({u.userId})</span>
-                      <span className="text-[7.5px] font-bold bg-[#D4AF37]/15 text-[#D4AF37] rounded px-1 uppercase tracking-wide">Suspicious</span>
+                      <span className="text-[7.5px] font-bold bg-blue-600/15 text-blue-400 rounded px-1 uppercase tracking-wide">Suspicious</span>
                     </div>
                     <div className="text-white/50 text-[8.5px] font-mono space-y-0.5 px-1 pt-1">
                       <div>IP: {u.ipAddress || 'None'}</div>
@@ -2300,7 +2300,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
           {/* Duplicate Devices groups */}
           <div className="bg-[#090909] border border-white/5 rounded-xl p-4 space-y-3">
-            <h5 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] border-b border-white/5 pb-1.5 flex items-center justify-between">
+            <h5 className="text-[10px] font-black uppercase tracking-widest text-blue-400 border-b border-white/5 pb-1.5 flex items-center justify-between">
               <span>Duplicate Device Fingerprints</span>
               <span className="bg-amber-500/10 px-1.5 py-0.5 rounded text-[8px] font-mono text-amber-400 font-bold">
                 Linked Phones
@@ -2353,7 +2353,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
           {/* Duplicate IP address trackers */}
           <div className="bg-[#090909] border border-white/5 rounded-xl p-4 space-y-3">
-            <h5 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] border-b border-white/5 pb-1.5 flex items-center justify-between">
+            <h5 className="text-[10px] font-black uppercase tracking-widest text-blue-400 border-b border-white/5 pb-1.5 flex items-center justify-between">
               <span>Duplicate Registers / IP Address</span>
               <span className="bg-amber-500/10 px-1.5 py-0.5 rounded text-[8px] font-mono text-amber-400 font-bold">
                 IP Collisions
@@ -2458,7 +2458,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         {/* AUDIT LOG PERSISTENT LEDGER */}
         <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
           <div className="space-y-0.5">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-1.5">
               <Terminal className="w-4 h-4" />
               Persistent Platform Audit Log Ledger
             </h4>
@@ -2475,7 +2475,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                 <div key={log.id} className="p-3 flex items-center justify-between gap-4 font-mono text-[9.5px] leading-relaxed">
                   <div className="flex items-center gap-2.5">
                     <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${
-                      log.type === 'auth' ? 'bg-[#D4AF37]' :
+                      log.type === 'auth' ? 'bg-blue-600' :
                       log.type === 'financial' ? 'bg-emerald-400' :
                       log.type === 'security' ? 'bg-rose-500' : 'bg-sky-400'
                     }`} />
@@ -2492,8 +2492,8 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
         {/* EMAIL TRANSMISSION DISPATCH LOGS */}
         <div id="email-logs-section" className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
           <div className="space-y-0.5">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5">
-              <Mail className="w-4 h-4 text-[#D4AF37]" />
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-1.5">
+              <Mail className="w-4 h-4 text-blue-400" />
               System Email Dispatch Logs (Resend)
             </h4>
             <p className="text-[9px] text-white/40">Real-time status tracking for welcome messages, transactions alerts, and system OTP runs</p>
@@ -2524,7 +2524,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                   </div>
                   
                   <div className="text-zinc-300 font-sans pl-3.5 text-left">
-                    Subject: <span className="text-[#D4AF37] font-semibold">"{log.subject}"</span>
+                    Subject: <span className="text-blue-400 font-semibold">"{log.subject}"</span>
                   </div>
 
                   {log.error && (
@@ -2547,11 +2547,11 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
 
       {/* Zoomable Screenshot Modal */}
       {activeScreenshotModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md transition-all">
-          <div className="relative max-w-4xl max-h-[90vh] bg-[#0c0c0c] border border-white/10 rounded-2xl p-3 flex flex-col items-center shadow-2xl">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md transition-all">
+          <div className="relative max-w-4xl max-h-[90vh] bg-slate-900 border border-white/10 rounded-2xl p-3 flex flex-col items-center shadow-2xl">
             <button 
               onClick={() => setActiveScreenshotModal(null)}
-              className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[#D4AF37] hover:bg-yellow-500 text-black font-black text-sm flex items-center justify-center border border-black cursor-pointer shadow-lg transition-transform hover:scale-110"
+              className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-blue-600 hover:bg-yellow-500 text-black font-black text-sm flex items-center justify-center border border-black cursor-pointer shadow-lg transition-transform hover:scale-110"
               title="Close"
             >
               ✕
@@ -2572,7 +2572,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                   link.download = `receipt_screenshot_${Date.now()}.jpg`;
                   link.click();
                 }}
-                className="px-3 py-1 bg-white/5 hover:bg-[#D4AF37] hover:text-black rounded border border-white/10 text-[9px] font-bold transition-all cursor-pointer"
+                className="px-3 py-1 bg-white/5 hover:bg-blue-600 hover:text-black rounded border border-white/10 text-[9px] font-bold transition-all cursor-pointer"
               >
                 📥 Download Original
               </button>

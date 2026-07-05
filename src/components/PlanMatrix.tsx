@@ -16,7 +16,7 @@ const PLANS = [
   { id: 'bronze', name: 'Bronze', min: 5, max: 14.99, targetPercent: 200, color: 'text-amber-600', border: 'border-amber-600/30' },
   { id: 'silver', name: 'Silver', min: 15, max: 49.99, targetPercent: 125, color: 'text-slate-400', border: 'border-slate-400/30' },
   { id: 'gold', name: 'Gold', min: 50, max: 99.99, targetPercent: 130, color: 'text-yellow-400', border: 'border-yellow-400/50' },
-  { id: 'diamond', name: 'Diamond', min: 100, max: Infinity, targetPercent: 140, color: 'text-[#D4AF37]', border: 'border-[#D4AF37]/50' },
+  { id: 'diamond', name: 'Diamond', min: 100, max: Infinity, targetPercent: 140, color: 'text-blue-400', border: 'border-blue-500/50' },
 ];
 
 export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, currencySymbol, conversionRate }: PlanMatrixProps) {
@@ -65,7 +65,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
           const hasActive = activePlans.some(inv => inv.planId === plan.id);
           
           return (
-            <div key={plan.id} className={`bg-[#0A0A0A] rounded-2xl border ${plan.border} p-5 relative overflow-hidden flex flex-col justify-between hover:scale-[1.02] transition-all duration-300 cursor-pointer shadow-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:border-[#D4AF37]/60 group`} onClick={() => setSelectedPlan(plan)}>
+            <div key={plan.id} className={`bg-[#0A0A0A] rounded-2xl border ${plan.border} p-5 relative overflow-hidden flex flex-col justify-between hover:scale-[1.02] transition-all duration-300 cursor-pointer shadow-lg hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:border-blue-500/60 group`} onClick={() => setSelectedPlan(plan)}>
                <div className="space-y-2 relative z-10 mb-4">
                  <h4 className={`text-xl font-bold font-serif ${plan.color}`}>{plan.name} Plan</h4>
                  <div className="flex flex-col gap-1.5 mt-2 text-white/80 text-sm">
@@ -76,7 +76,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                </div>
                
                <div className="relative z-10 w-full mt-2">
-                  <button className={`w-full py-2.5 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all ${hasActive ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'bg-[#1A1A1A] text-white/60 group-hover:bg-[#D4AF37] group-hover:text-black group-hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] border border-white/5 group-hover:border-[#D4AF37]'}`}>
+                  <button className={`w-full py-2.5 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all ${hasActive ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-[#1A1A1A] text-white/60 group-hover:bg-blue-600 group-hover:text-black group-hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] border border-white/5 group-hover:border-blue-500/30'}`}>
                      {hasActive ? 'Plan Active' : 'Activate Plan'}
                   </button>
                </div>
@@ -106,7 +106,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                const remainingDays = isLocked ? Math.ceil((thirtyDaysMs - elapsedMs) / (24 * 60 * 60 * 1000)) : 0;
 
                return (
-                 <div key={inv.id} className="flex flex-col sm:flex-row justify-between sm:items-center bg-black/40 border border-white/5 rounded-xl p-4 gap-4">
+                 <div key={inv.id} className="flex flex-col sm:flex-row justify-between sm:items-center bg-slate-950/40 border border-white/5 rounded-xl p-4 gap-4">
                    <div>
                      <p className={`text-sm font-bold capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
                      <p className="text-xs text-white/40 mt-0.5">Principal Locked: {currencySymbol}{(inv.amount * conversionRate).toFixed(2)}</p>
@@ -136,7 +136,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
               {completedPlans.map(inv => {
                 const planInfo = PLANS.find(p => p.id === inv.planId);
                 return (
-                  <div key={inv.id} className="flex flex-col sm:flex-row justify-between sm:items-center bg-black/40 border border-emerald-500/10 rounded-xl p-4 gap-4">
+                  <div key={inv.id} className="flex flex-col sm:flex-row justify-between sm:items-center bg-slate-950/40 border border-emerald-500/10 rounded-xl p-4 gap-4">
                     <div>
                       <p className={`text-sm font-bold capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
                       <p className="text-xs text-white/40 mt-0.5">Matured Return: {currencySymbol}{(inv.amount * (planInfo ? planInfo.targetPercent / 100 : 1.20) * conversionRate).toFixed(2)} (Principal & Yield Credited)</p>
@@ -156,12 +156,12 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
 
       {/* Deposit Modal / Plan Setup Modal */}
       {selectedPlan && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
            <motion.div 
              initial={{ opacity: 0, scale: 0.9 }}
              animate={{ opacity: 1, scale: 1 }}
              exit={{ opacity: 0, scale: 0.9 }}
-             className="w-full max-w-md bg-[#0C0C0C] border border-white/10 rounded-2xl shadow-2xl p-6"
+             className="w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl p-6"
            >
               <div className="flex justify-between items-center mb-6">
                  <div>
@@ -174,7 +174,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
               </div>
 
               <div className="space-y-4">
-                 <div className="bg-black/50 border border-white/5 rounded-xl p-4 flex justify-between items-center text-sm font-sans">
+                 <div className="bg-slate-950/50 border border-white/5 rounded-xl p-4 flex justify-between items-center text-sm font-sans">
                    <span className="text-white/50">Available Wallet</span>
                    <span className="font-mono text-white">{currencySymbol}{(balance * conversionRate).toFixed(2)}</span>
                  </div>
@@ -186,7 +186,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                       value={depositAmount} 
                       onChange={e => setDepositAmount(e.target.value)}
                       placeholder={`Min ${selectedPlan.min * conversionRate}`}
-                      className="w-full bg-[#161616] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/50 text-white font-mono"
+                      className="w-full bg-[#161616] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500/50 text-white font-mono"
                    />
                  </div>
 
@@ -202,7 +202,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                  <button 
                    onClick={handleActivate}
                    disabled={isLoading || !depositAmount}
-                   className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold uppercase tracking-widest text-xs py-3.5 rounded-xl transition-all disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
+                   className="w-full bg-blue-600 hover:bg-[#b5952f] text-black font-bold uppercase tracking-widest text-xs py-3.5 rounded-xl transition-all disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
                  >
                    {isLoading ? 'Processing...' : 'Confirm Activation'} <ArrowRight className="w-4 h-4" />
                  </button>

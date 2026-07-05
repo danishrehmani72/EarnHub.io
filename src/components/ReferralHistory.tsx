@@ -76,13 +76,13 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-5">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-white/90">
-            <Layers className="w-4.5 h-4.5 text-[#D4AF37]" id="layers-icon" />
+            <Layers className="w-4.5 h-4.5 text-blue-400" id="layers-icon" />
             <h3 className="text-sm uppercase tracking-[0.2em] font-medium font-serif">3-Level Alliance Matrix</h3>
           </div>
           <p className="text-[11px] text-white/40 font-sans leading-none">Complete decentralized direct & indirect team ledger tracking</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[9px] uppercase tracking-widest font-bold bg-[#D4AF37]/10 text-[#D4AF37] px-3 py-1 rounded-full border border-[#D4AF37]/15">
+          <span className="text-[9px] uppercase tracking-widest font-bold bg-blue-600/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/15">
             Active Hub
           </span>
         </div>
@@ -94,7 +94,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
           onClick={() => setActiveTab('overview')}
           className={`px-4 py-2 text-[10.5px] uppercase tracking-wider font-extrabold rounded-lg transition-all duration-200 border ${
             activeTab === 'overview'
-              ? 'bg-[#D4AF37]/5 border-[#D4AF37]/30 text-[#D4AF37]'
+              ? 'bg-blue-600/5 border-blue-500/30 text-blue-400'
               : 'border-transparent text-white/40 hover:text-white/65 hover:bg-white/[0.02]'
           }`}
           id="tab-overview-btn"
@@ -105,7 +105,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
           onClick={() => setActiveTab('logs')}
           className={`px-4 py-2 text-[10.5px] uppercase tracking-wider font-extrabold rounded-lg transition-all duration-200 border ${
             activeTab === 'logs'
-              ? 'bg-[#D4AF37]/5 border-[#D4AF37]/30 text-[#D4AF37]'
+              ? 'bg-blue-600/5 border-blue-500/30 text-blue-400'
               : 'border-transparent text-white/40 hover:text-white/65 hover:bg-white/[0.02]'
           }`}
           id="tab-logs-btn"
@@ -116,7 +116,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
           onClick={() => setActiveTab('tree')}
           className={`px-4 py-2 text-[10.5px] uppercase tracking-wider font-extrabold rounded-lg transition-all duration-200 border ${
             activeTab === 'tree'
-              ? 'bg-[#D4AF37]/5 border-[#D4AF37]/30 text-[#D4AF37]'
+              ? 'bg-blue-600/5 border-blue-500/30 text-blue-400'
               : 'border-transparent text-white/40 hover:text-white/65 hover:bg-white/[0.02]'
           }`}
           id="tab-tree-btn"
@@ -141,14 +141,14 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
               <div className="bg-[#161616] border border-white/5 rounded-2xl p-4 space-y-1">
                 <span className="text-[9px] text-white/30 uppercase tracking-widest font-semibold block leading-none">Wallet Balance</span>
                 <div className="flex items-center gap-1.5 pt-1">
-                  <Wallet className="w-3.5 h-3.5 text-[#D4AF37]/75" />
+                  <Wallet className="w-3.5 h-3.5 text-blue-400/75" />
                   <span className="text-sm font-semibold text-white font-mono">${walletBalance.toFixed(2)}</span>
                 </div>
               </div>
               <div className="bg-[#161616] border border-white/5 rounded-2xl p-4 space-y-1">
                 <span className="text-[9px] text-white/30 uppercase tracking-widest font-semibold block leading-none">Total Team Matrix</span>
                 <div className="flex items-center gap-1.5 pt-1">
-                  <Users className="w-3.5 h-3.5 text-[#D4AF37]/75" />
+                  <Users className="w-3.5 h-3.5 text-blue-400/75" />
                   <span className="text-sm font-semibold text-white font-mono">{totalTeam} Users</span>
                 </div>
               </div>
@@ -164,10 +164,10 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
             {/* Level Breakdown Charts */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-[#161616]/50 border border-white/5 rounded-xl p-3.5 text-center relative overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-0.5 bg-[#D4AF37]/40" />
+                <div className="absolute top-0 inset-x-0 h-0.5 bg-blue-600/40" />
                 <span className="text-[8px] text-white/30 uppercase tracking-[0.15em] font-semibold block">Level 1 (Direct)</span>
                 <span className="text-lg font-bold text-white font-mono block mt-1">{level1Logs.length}</span>
-                <span className="text-[8.5px] text-[#D4AF37] font-mono font-black mt-1 block bg-[#D4AF37]/5 py-0.5 rounded-sm uppercase">$0.055 / ref</span>
+                <span className="text-[8.5px] text-blue-400 font-mono font-black mt-1 block bg-blue-600/5 py-0.5 rounded-sm uppercase">$0.055 / ref</span>
               </div>
               <div className="bg-[#161616]/50 border border-white/5 rounded-xl p-3.5 text-center relative overflow-hidden">
                 <div className="absolute top-0 inset-x-0 h-0.5 bg-indigo-500/40" />
@@ -184,13 +184,13 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
             </div>
 
             {/* Referral Sharing Box */}
-            <div className="bg-[#161616] border border-[#D4AF37]/10 p-5 rounded-2xl space-y-4">
+            <div className="bg-[#161616] border border-blue-500/10 p-5 rounded-2xl space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Share2 className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  <Share2 className="w-3.5 h-3.5 text-blue-400" />
                   <span className="text-xs font-bold text-white/90">Your Personal Invitation Key</span>
                 </div>
-                <span className="text-[8px] tracking-widest text-[#D4AF37] uppercase font-bold px-2 py-0.5 rounded-md bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+                <span className="text-[8px] tracking-widest text-blue-400 uppercase font-bold px-2 py-0.5 rounded-md bg-blue-600/10 border border-blue-500/20">
                   Instant Payout Link
                 </span>
               </div>
@@ -202,12 +202,12 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                   type="text"
                   readOnly
                   value={referralLink}
-                  className="flex-1 bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-xs text-white/80 font-mono tracking-tight cursor-default focus:outline-none focus:border-[#D4AF37]/40 text-ellipsis overflow-hidden"
+                  className="flex-1 bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-xs text-white/80 font-mono tracking-tight cursor-default focus:outline-none focus:border-blue-500/40 text-ellipsis overflow-hidden"
                   id="referral-link-input"
                 />
                 <button
                   onClick={handleCopyLink}
-                  className="px-4 py-3 rounded-xl bg-[#D4AF37] hover:bg-[#Bfa032] text-black font-semibold text-xs active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(212,175,55,0.15)] select-none cursor-pointer"
+                  className="px-4 py-3 rounded-xl bg-blue-600 hover:bg-[#Bfa032] text-black font-semibold text-xs active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(59,130,246,0.15)] select-none cursor-pointer"
                   id="copy-referral-btn"
                 >
                   {copied ? (
@@ -227,7 +227,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
 
             {/* Anti Fraud Box Info */}
             <div className="flex gap-3 bg-white/[0.01] border border-white/5 p-4 rounded-xl text-[10.5px] text-white/40 leading-relaxed font-sans mt-2">
-              <ShieldAlert className="w-4 h-4 text-[#D4AF37]/70 shrink-0 mt-0.5" />
+              <ShieldAlert className="w-4 h-4 text-blue-400/70 shrink-0 mt-0.5" />
               <div>
                 <span className="text-white/70 font-semibold block mb-0.5">Automated Fraud Mitigation Guard</span>
                 Multiple accounts per email or hardware device index, duplicate referral self-onboarding loops, and cyclic replication is constantly analyzed. Any flagged violations block withdrawals instantly.
@@ -263,7 +263,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                   {paginatedLogs.map((log) => {
                     const levelNum = log.level || 1;
                     const levelColors = levelNum === 1 
-                      ? { text: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/5 border-[#D4AF37]/15', label: 'Level 1 (Direct)' }
+                      ? { text: 'text-blue-400', bg: 'bg-blue-600/5 border-blue-500/15', label: 'Level 1 (Direct)' }
                       : levelNum === 2 
                       ? { text: 'text-indigo-400', bg: 'bg-indigo-500/5 border-indigo-500/15', label: 'Level 2 (Indirect)' }
                       : { text: 'text-sky-400', bg: 'bg-sky-500/5 border-sky-500/15', label: 'Level 3 (Indirect)' };
@@ -271,10 +271,10 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                     return (
                       <div
                         key={log.id}
-                        className="flex items-center justify-between p-4 rounded-2xl bg-[#161616] border border-white/5 hover:border-[#D4AF37]/15 transition-all duration-150"
+                        className="flex items-center justify-between p-4 rounded-2xl bg-[#161616] border border-white/5 hover:border-blue-500/15 transition-all duration-150"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-[#D4AF37]">
+                          <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-blue-400">
                             <User className="w-4 h-4" />
                           </div>
                           <div>
@@ -336,7 +336,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
           >
             <div className="bg-[#141414] p-4 rounded-2xl border border-white/5 space-y-3">
               <div className="flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-[#D4AF37]" />
+                <GitBranch className="w-4 h-4 text-blue-400" />
                 <span className="text-xs font-bold text-white">Your Decentered Genealogy Tree</span>
               </div>
               <p className="text-[11px] text-white/40 leading-relaxed mb-4">
@@ -351,12 +351,12 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                 <div className="space-y-4 font-sans max-h-[380px] overflow-y-auto scrollbar-thin pr-1">
                   {/* Tree Core Node representing Current User */}
                   <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xl flex items-center gap-2 max-w-[200px] shadow-sm relative">
-                    <div className="w-5 h-5 rounded bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/20 text-[9px] font-black">
+                    <div className="w-5 h-5 rounded bg-blue-600/10 flex items-center justify-center text-blue-400 border border-blue-500/20 text-[9px] font-black">
                       YOU
                     </div>
                     <div>
                       <span className="text-[10px] font-bold text-white/80 uppercase block tracking-wider">Master Agent Node</span>
-                      <span className="text-[8.5px] font-mono text-[#D4AF37] block">ID: {userId || 'self'}</span>
+                      <span className="text-[8.5px] font-mono text-blue-400 block">ID: {userId || 'self'}</span>
                     </div>
                   </div>
 
@@ -370,10 +370,10 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                         <div key={lvl1.id} className="space-y-3 pt-1">
                           {/* Lvl 1 Node Card */}
                           <div className="flex items-center gap-2 relative">
-                            <CornerDownRight className="w-3.5 h-3.5 text-[#D4AF37]/30 shrink-0 absolute -left-4 top-1.5" />
-                            <div className="flex-1 bg-[#1A1A1A] border border-[#D4AF37]/15 rounded-xl p-3 flex items-center justify-between shadow-inner ml-1.5 max-w-md">
+                            <CornerDownRight className="w-3.5 h-3.5 text-blue-400/30 shrink-0 absolute -left-4 top-1.5" />
+                            <div className="flex-1 bg-[#1A1A1A] border border-blue-500/15 rounded-xl p-3 flex items-center justify-between shadow-inner ml-1.5 max-w-md">
                               <div className="flex items-center gap-2.5">
-                                <div className="w-6 h-6 rounded flex items-center justify-center border border-white/10 bg-white/5 text-[#D4AF37] text-[10px]">
+                                <div className="w-6 h-6 rounded flex items-center justify-center border border-white/10 bg-white/5 text-blue-400 text-[10px]">
                                   <User className="w-3.5 h-3.5" />
                                 </div>
                                 <div>
@@ -399,7 +399,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                                       <CornerDownRight className="w-3.5 h-3.5 text-indigo-500/30 shrink-0 absolute -left-4 top-1.5" />
                                       <div className="flex-1 bg-[#1A1A1A] border border-indigo-500/15 rounded-xl p-3 flex items-center justify-between shadow-inner ml-1.5 max-w-sm">
                                         <div className="flex items-center gap-2.5">
-                                          <div className="w-6 h-6 rounded flex items-center justify-center border border-white/10 bg-white/5 text-[#D4AF37] text-[10px]">
+                                          <div className="w-6 h-6 rounded flex items-center justify-center border border-white/10 bg-white/5 text-blue-400 text-[10px]">
                                             <User className="w-3.5 h-3.5" />
                                           </div>
                                           <div>
@@ -419,7 +419,7 @@ export default function ReferralHistory({ logs, userId = '', walletBalance = 0 }
                                             <CornerDownRight className="w-3.5 h-3.5 text-sky-500/30 shrink-0 absolute -left-4 top-1.5" />
                                             <div className="flex-1 bg-[#1A1A1A] border border-sky-400/15 rounded-xl p-2.5 flex items-center justify-between shadow-sm ml-1.5 max-w-xs">
                                               <div className="flex items-center gap-2">
-                                                <div className="w-5 h-5 rounded flex items-center justify-center border border-white/10 bg-white/5 text-[#D4AF37] text-[9px]">
+                                                <div className="w-5 h-5 rounded flex items-center justify-center border border-white/10 bg-white/5 text-blue-400 text-[9px]">
                                                   <User className="w-3 h-3" />
                                                 </div>
                                                 <div>

@@ -51,7 +51,7 @@ const faqs: FaqItemConfig[] = [
         . For any secure administration questions or compliance inquiries, you can reach out directly to our help desk via email at{' '}
         <a 
           href="mailto:support@moneymindspace.online" 
-          className="text-[#D4AF37] hover:underline font-bold"
+          className="text-blue-400 hover:underline font-bold"
         >
           support@moneymindspace.online
         </a>
@@ -71,8 +71,8 @@ export function FaqSection() {
   return (
     <div className="space-y-4 font-sans">
       <div className="flex items-center gap-2 mb-6">
-        <div className="bg-[#D4AF37]/15 p-2 rounded-lg border border-[#D4AF37]/20">
-          <HelpCircle className="w-5 h-5 text-[#D4AF37]" />
+        <div className="bg-blue-600/15 p-2 rounded-lg border border-blue-500/20">
+          <HelpCircle className="w-5 h-5 text-blue-400" />
         </div>
         <div>
           <h2 className="text-sm font-bold uppercase tracking-wider text-white">Frequently Asked Questions</h2>

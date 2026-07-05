@@ -152,7 +152,7 @@ export default function RecentWithdrawalToast({ feed = [] }: RecentWithdrawalToa
 
             <div className="flex-1 text-left min-w-0 pr-4">
               <p className="text-white text-xs font-semibold leading-relaxed leading-snug">
-                <span className="text-zinc-300 font-extrabold">{currentUser}</span> successfully withdrew <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-[#D4AF37] to-emerald-400 font-black font-mono">{currentAmount}</span> via <span className="text-[#D4AF37] font-extrabold uppercase text-[9px] tracking-wider bg-[#D4AF37]/10 px-1.5 py-0.5 rounded border border-[#D4AF37]/20 select-none">{currentMethod}</span>
+                <span className="text-zinc-300 font-extrabold">{currentUser}</span> successfully withdrew <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-[#D4AF37] to-emerald-400 font-black font-mono">{currentAmount}</span> via <span className="text-blue-400 font-extrabold uppercase text-[9px] tracking-wider bg-blue-600/10 px-1.5 py-0.5 rounded border border-blue-500/20 select-none">{currentMethod}</span>
               </p>
               <span className="text-[10px] text-zinc-500 font-medium font-sans flex items-center gap-1 mt-1 select-none">
                 ⏱ {currentTime}
@@ -174,7 +174,7 @@ export default function RecentWithdrawalToast({ feed = [] }: RecentWithdrawalToa
               initial={{ width: "100%" }}
               animate={{ width: "0%" }}
               transition={{ duration: 6, ease: "linear" }}
-              className="h-full bg-gradient-to-r from-[#10B981] to-[#D4AF37]"
+              className="h-full bg-gradient-to-r from-[#10B981] to-blue-400"
             />
           </div>
         </motion.div>

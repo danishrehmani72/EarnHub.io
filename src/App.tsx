@@ -195,11 +195,11 @@ export default function App() {
     setApprovedWithdrawalsFeed([...pendingFeedRaw, ...approvedFeedRaw]);
   }, [approvedFeedRaw, pendingFeedRaw]);
   const [publicStats, setPublicStats] = useState({
-    totalRegisteredUsers: 142,
-    activeUsers: 81,
-    totalDeposits: 5410,
-    totalWithdrawals: 2950,
-    pendingRequests: 3
+    totalRegisteredUsers: 0,
+    activeUsers: 0,
+    totalDeposits: 0,
+    totalWithdrawals: 0,
+    pendingRequests: 0
   });
   const [isStatsLoading, setIsStatsLoading] = useState(true);
 
@@ -1076,7 +1076,7 @@ export default function App() {
       setDailyRewardLogs(rewardList);
     } catch (error) {
       console.error("Force sync failed:", error);
-      addToast("Failed to refresh data. Cloud database connection busy.", "error");
+      addToast("Failed to refresh data. Network busy.", "error");
     }
   };
 
@@ -1121,7 +1121,7 @@ export default function App() {
         createdAt: serverTimestamp(),
         timestamp: timestampStr,
         userId: currentUid,
-        userName: userProfile?.name || "Anonymous VIP"
+        userName: userProfile?.name || "User"
       });
       
       // Dispatch administration email alert
@@ -1162,7 +1162,7 @@ export default function App() {
         }).catch(err => console.error("User deposit confirmation dispatch fail:", err));
       }
 
-      addToast(`Deposit of $${amount} submitted successfully! Auditing ledger verification started.`, 'success', 'deposit_submitted');
+      addToast(`Deposit of $${amount} submitted successfully! Deposit submitted for review.`, 'success', 'deposit_submitted');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${currentUid}/deposits`);
     }
@@ -1200,7 +1200,7 @@ export default function App() {
         createdAt: serverTimestamp(),
         timestamp: timestampStr,
         userId: currentUid,
-        userName: userProfile?.name || "Anonymous VIP"
+        userName: userProfile?.name || "User"
       });
 
       // Dispatch administration email alert
@@ -1388,8 +1388,8 @@ export default function App() {
       if (regEl) {
         regEl.scrollIntoView({ behavior: 'smooth' });
         // Visual indicator border glow
-        regEl.classList.add('ring-2', 'ring-[#D4AF37]/50');
-        setTimeout(() => regEl.classList.remove('ring-2', 'ring-[#D4AF37]/50'), 2500);
+        regEl.classList.add('ring-2', 'ring-blue-500/50');
+        setTimeout(() => regEl.classList.remove('ring-2', 'ring-blue-500/50'), 2500);
       }
       return;
     }
@@ -1446,8 +1446,8 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] flex items-center justify-center font-sans antialiased">
         <div className="text-center space-y-4">
-          <div className="w-10 h-10 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37] font-semibold animate-pulse">
+          <div className="w-10 h-10 border-2 border-blue-500/30 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-xs uppercase tracking-[0.2em] text-blue-400 font-semibold animate-pulse">
             Configuring Secured Connection...
           </p>
         </div>
@@ -1626,7 +1626,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans flex flex-col justify-between antialiased selection:bg-[#D4AF37]/20 selection:text-[#D4AF37]">
+    <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans flex flex-col justify-between antialiased selection:bg-blue-600/20 selection:text-blue-400">
       
       {/* Toast Notification Container */}
       <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-[340px] xs:max-w-sm w-full pointer-events-none">
@@ -1639,7 +1639,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 onClick={clearAllToasts}
-                className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider text-white/65 hover:text-white bg-black/70 hover:bg-zinc-900 border border-white/10 hover:border-white/20 rounded-xl backdrop-blur-md cursor-pointer transition-all duration-150 shadow-lg shadow-black/30"
+                className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider text-white/65 hover:text-white bg-slate-950/70 hover:bg-zinc-900 border border-white/10 hover:border-white/20 rounded-xl backdrop-blur-md cursor-pointer transition-all duration-150 shadow-lg shadow-black/30"
               >
                 <Trash2 className="w-3.5 h-3.5 text-rose-400" />
                 <span>Clear All ({toasts.length})</span>
@@ -1655,7 +1655,7 @@ export default function App() {
               >
                 <div className="flex flex-col">
                   <span className="text-[11px] font-extrabold text-white/90">Notifications Cleared</span>
-                  <span className="text-[9px] text-[#D4AF37] font-medium tracking-wide">Restorable within 8 seconds</span>
+                  <span className="text-[9px] text-blue-400 font-medium tracking-wide">Restorable within 8 seconds</span>
                 </div>
                 <button
                   onClick={undoClearToasts}
@@ -1720,18 +1720,18 @@ export default function App() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="bg-[#0C0C0C] border-b border-white/5 text-[#E5E7EB] py-3 px-4 text-center text-xs font-medium z-50 relative shadow-sm"
+            className="bg-slate-900 border-b border-white/5 text-[#E5E7EB] py-3 px-4 text-center text-xs font-medium z-50 relative shadow-sm"
           >
             <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 flex-wrap">
-              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 text-[9px] uppercase font-bold tracking-wider">
+              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded bg-blue-600/10 text-blue-400 border border-blue-500/20 text-[9px] uppercase font-bold tracking-wider">
                 Invitation Active
               </span>
               <p className="text-white/80 font-sans">
-                You were invited by Partner <span className="font-bold text-[#D4AF37]">{inviterName ? `${inviterName} (#${referredBy.slice(0, 5)})` : `#${referredBy.slice(0, 5)}`}</span>! Onboard to start earning.
+                You were invited by Partner <span className="font-bold text-blue-400">{inviterName ? `${inviterName} (#${referredBy.slice(0, 5)})` : `#${referredBy.slice(0, 5)}`}</span>! Onboard to start earning.
               </p>
               <button 
                 onClick={() => setReferredBy(null)}
-                className="text-[#D4AF37] hover:text-white transition-colors underline ml-2 cursor-pointer text-[10px]"
+                className="text-blue-400 hover:text-white transition-colors underline ml-2 cursor-pointer text-[10px]"
               >
                 Dismiss
               </button>
@@ -1741,13 +1741,13 @@ export default function App() {
       </AnimatePresence>
 
        {/* Header and Branding */}
-      <header className="sticky top-0 z-50 border-b border-white/10 flex items-center justify-between px-6 md:px-10 bg-[#0C0C0C]/95 backdrop-blur-md h-20">
+      <header className="sticky top-0 z-50 border-b border-white/10 flex items-center justify-between px-6 md:px-10 bg-slate-900/95 backdrop-blur-md h-20">
         <div className="flex items-center gap-3">
           <img 
             src={earnhubLogo} 
-            alt="MoneyMind Space Gold Logo Icon" 
+            alt="MoneyMind Space Logo" 
             onClick={handleLogoClick}
-            className="w-10 h-10 object-contain rounded-lg border border-[#D4AF37]/15 shadow-[0_0_15px_rgba(212,175,55,0.15)] bg-black cursor-pointer active:scale-95 transition-transform"
+            className="w-10 h-10 object-contain rounded-lg border border-blue-500/15 shadow-[0_0_15px_rgba(59,130,246,0.15)] bg-slate-950 cursor-pointer active:scale-95 transition-transform"
             referrerPolicy="no-referrer"
           />
           <button 
@@ -1763,7 +1763,7 @@ export default function App() {
           <button 
             type="button"
             onClick={() => handleNavClick('dashboard')}
-            className={`transition-all pb-1 cursor-pointer bg-transparent border-0 ${isRegistered && dashboardTab === 'overview' ? 'text-white border-b border-[#D4AF37]' : 'hover:text-white/90'}`}
+            className={`transition-all pb-1 cursor-pointer bg-transparent border-0 ${isRegistered && dashboardTab === 'overview' ? 'text-white border-b border-blue-500/30' : 'hover:text-white/90'}`}
           >
             Dashboard
           </button>
@@ -1780,9 +1780,9 @@ export default function App() {
           <button 
             type="button"
             onClick={() => handleNavClick('withdraw')}
-            className={`transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 ${isRegistered && dashboardTab === 'funding' ? 'text-[#D4AF37] font-extrabold' : 'hover:text-white/90'}`}
+            className={`transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 ${isRegistered && dashboardTab === 'funding' ? 'text-blue-400 font-extrabold' : 'hover:text-white/90'}`}
           >
-            <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
+            <ArrowUpRight className="w-4 h-4 text-blue-400" />
             Withdraw
           </button>
 
@@ -1798,7 +1798,7 @@ export default function App() {
           <button 
             type="button"
             onClick={() => handleNavClick('faq')}
-            className={`transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 ${isRegistered && dashboardTab === 'faq' ? 'text-white border-b border-[#D4AF37]' : 'hover:text-white/90'}`}
+            className={`transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 ${isRegistered && dashboardTab === 'faq' ? 'text-white border-b border-blue-500/30' : 'hover:text-white/90'}`}
           >
             <HelpCircle className="w-4 h-4 text-white" />
             FAQ
@@ -1808,16 +1808,16 @@ export default function App() {
             <button 
               type="button"
               onClick={() => handleNavClick('admin')}
-              className="transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 text-[#D4AF37] font-black hover:brightness-125 focus:outline-none"
+              className="transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 text-blue-400 font-black hover:brightness-125 focus:outline-none"
             >
-              <ShieldCheck className="w-4 h-4 text-[#D4AF37] animate-pulse" />
-              ADMIN CORE
+              <ShieldCheck className="w-4 h-4 text-blue-400 animate-pulse" />
+              Admin Panel
             </button>
           )}
 
-          <span className="text-[#D4AF37]/85 hover:text-white transition-all cursor-default flex items-center gap-1.5 ml-2" title="Live Google Cloud Firestore Connection Active">
+          <span className="text-blue-400/85 hover:text-white transition-all cursor-default flex items-center gap-1.5 ml-2" title="Live Google Cloud Firestore Connection Active">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Firestore Live
+            System Online
           </span>
         </div>
 
@@ -1825,16 +1825,16 @@ export default function App() {
           {isRegistered ? (
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-[9px] text-[#D4AF37] uppercase tracking-[0.2em] font-semibold">Premium Member</p>
+                <p className="text-[9px] text-blue-400 uppercase tracking-[0.2em] font-semibold">Verified Member</p>
                 <p className="text-xs font-semibold text-white/90">{userProfile.name}</p>
               </div>
-              <div className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-[#D4AF37]">
+              <div className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-blue-400">
                 <User className="w-4 h-4" />
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
               <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-semibold">Ready to Onboard</span>
             </div>
           )}
@@ -1863,7 +1863,7 @@ export default function App() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -5 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-[#0C0C0C]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 py-1"
+                      className="absolute right-0 top-full mt-2 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 py-1"
                     >
                       <button
                         onClick={() => {
@@ -1872,7 +1872,7 @@ export default function App() {
                         }}
                         className="w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-wider text-white/80 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2 cursor-pointer bg-transparent border-none outline-none"
                       >
-                        <Settings className="w-4 h-4 text-[#D4AF37]" />
+                        <Settings className="w-4 h-4 text-blue-400" />
                         Settings
                       </button>
                     </motion.div>
@@ -1889,7 +1889,7 @@ export default function App() {
             className="p-2 rounded-lg border border-white/10 md:hidden hover:bg-white/5 active:scale-95 transition-all text-white/80 cursor-pointer bg-transparent"
             aria-label="Toggle Mobile Menu"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5 text-[#D4AF37]" /> : <Menu className="w-5 h-5 text-white" />}
+            {mobileMenuOpen ? <X className="w-5 h-5 text-blue-400" /> : <Menu className="w-5 h-5 text-white" />}
           </button>
         </div>
       </header>
@@ -1904,7 +1904,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="md:hidden fixed inset-0 top-20 bg-black/60 backdrop-blur-sm z-40 cursor-pointer"
+              className="md:hidden fixed inset-0 top-20 bg-slate-950/60 backdrop-blur-sm z-40 cursor-pointer"
             />
 
             <motion.div
@@ -1912,47 +1912,44 @@ export default function App() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="md:hidden fixed left-0 right-0 top-20 bg-[#0C0C0C]/85 backdrop-blur-xl border-b border-white/10 z-45 overflow-hidden w-full shadow-2xl shadow-black/80"
+              className="md:hidden fixed left-0 right-0 top-20 bg-slate-950/70 backdrop-blur-2xl border-b border-white/10 z-45 overflow-hidden w-full shadow-2xl shadow-black/80"
             >
               <div className="px-6 py-6 flex flex-col gap-3 font-sans text-sm font-semibold tracking-wide text-white/70">
                 <motion.button 
                   variants={mobileItemVariants}
                   type="button"
                   onClick={() => handleNavClick('dashboard')}
-                  className={`py-3 px-4 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer bg-transparent ${isRegistered && dashboardTab === 'overview' ? 'text-white font-extrabold border-[#D4AF37]/35 bg-[#D4AF37]/10' : 'border-white/5 hover:border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`}
+                  className={`py-3 px-4 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer bg-transparent ${isRegistered && dashboardTab === 'overview' ? 'text-white font-extrabold border-blue-500/35 bg-blue-600/10' : 'border-white/5 hover:border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`}
                 >
                   <span className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                    <Sparkles className="w-4 h-4 text-blue-400" />
                     Dashboard Overview
                   </span>
-                  <span className="text-[10px] bg-[#D4AF37]/15 border border-[#D4AF37]/20 px-2 py-0.5 rounded text-[#D4AF37] uppercase font-bold tracking-wider">Growth</span>
+                  <span className="text-[10px] bg-blue-600/15 border border-blue-500/20 px-2 py-0.5 rounded text-blue-400 uppercase font-bold tracking-wider">Growth</span>
                 </motion.button>
 
-                <motion.button 
-                  variants={mobileItemVariants}
-                  type="button"
-                  onClick={() => handleNavClick('deposit')}
-                  className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all cursor-pointer text-emerald-400 font-extrabold hover:brightness-110 bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    <ArrowDownLeft className="w-4 h-4" />
-                    Deposit Funds
-                  </span>
-                  <span className="text-[9px] bg-emerald-500/10 px-2.5 py-0.5 rounded text-emerald-400 border border-emerald-500/20 uppercase tracking-widest font-black">Daily Yield</span>
-                </motion.button>
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 gap-3 mt-1 mb-2">
+                  <motion.button 
+                    variants={mobileItemVariants}
+                    type="button"
+                    onClick={() => handleNavClick('deposit')}
+                    className="py-3 px-3 rounded-xl flex flex-col items-center justify-center gap-1.5 border border-emerald-500/30 hover:bg-emerald-500/10 bg-emerald-500/5 transition-all cursor-pointer text-emerald-400 font-extrabold hover:brightness-110"
+                  >
+                    <ArrowDownLeft className="w-5 h-5 mb-0.5" />
+                    <span className="text-[11px] uppercase tracking-wider">Deposit</span>
+                  </motion.button>
 
-                <motion.button 
-                  variants={mobileItemVariants}
-                  type="button"
-                  onClick={() => handleNavClick('withdraw')}
-                  className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-white/5 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/5 transition-all cursor-pointer text-[#D4AF37] font-extrabold hover:brightness-110 bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    <ArrowUpRight className="w-4 h-4" />
-                    Withdraw Funds
-                  </span>
-                  <span className="text-[9px] bg-[#D4AF37]/10 px-2.5 py-0.5 rounded text-[#D4AF37] border border-[#D4AF37]/20 uppercase tracking-widest font-black">Withdraw</span>
-                </motion.button>
+                  <motion.button 
+                    variants={mobileItemVariants}
+                    type="button"
+                    onClick={() => handleNavClick('withdraw')}
+                    className="py-3 px-3 rounded-xl flex flex-col items-center justify-center gap-1.5 border border-blue-500/30 hover:bg-blue-600/10 bg-blue-600/5 transition-all cursor-pointer text-blue-400 font-extrabold hover:brightness-110"
+                  >
+                    <ArrowUpRight className="w-5 h-5 mb-0.5" />
+                    <span className="text-[11px] uppercase tracking-wider">Withdraw</span>
+                  </motion.button>
+                </div>
 
                 <motion.button 
                   variants={mobileItemVariants}
@@ -1971,7 +1968,7 @@ export default function App() {
                   variants={mobileItemVariants}
                   type="button"
                   onClick={() => handleNavClick('faq')}
-                  className={`py-3 px-4 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer bg-transparent ${isRegistered && dashboardTab === 'faq' ? 'text-white font-extrabold border-[#D4AF37]/35 bg-[#D4AF37]/10' : 'border-white/5 hover:border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`}
+                  className={`py-3 px-4 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer bg-transparent ${isRegistered && dashboardTab === 'faq' ? 'text-white font-extrabold border-blue-500/35 bg-blue-600/10' : 'border-white/5 hover:border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`}
                 >
                   <span className="flex items-center gap-2">
                     <HelpCircle className="w-4 h-4 text-white/50" />
@@ -1985,13 +1982,13 @@ export default function App() {
                     variants={mobileItemVariants}
                     type="button"
                     onClick={() => handleNavClick('admin')}
-                    className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-[#D4AF37]/30 bg-[#D4AF37]/5 transition-all cursor-pointer text-[#D4AF37] font-black hover:brightness-110"
+                    className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-blue-500/30 bg-blue-600/5 transition-all cursor-pointer text-blue-400 font-black hover:brightness-110"
                   >
                     <span className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+                      <ShieldCheck className="w-4 h-4 text-blue-400 animate-pulse" />
                       Governance Admin Console
                     </span>
-                    <span className="text-[9px] bg-[#D4AF37]/10 px-2.5 py-0.5 rounded text-[#D4AF37] border border-[#D4AF37]/20 uppercase tracking-widest font-black">Core</span>
+                    <span className="text-[9px] bg-blue-600/10 px-2.5 py-0.5 rounded text-blue-400 border border-blue-500/20 uppercase tracking-widest font-black">Core</span>
                   </motion.button>
                 )}
 
@@ -2021,7 +2018,7 @@ export default function App() {
                 {/* Marketing Content Column with Premium Hero Banner (Requested Theme) */}
                 <div className="lg:col-span-7 space-y-6 text-left animate-fade-in">
                   {/* 💸 High Impact Premium Banner card */}
-                  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F0F0F] to-black border-2 border-[#10B981]/25 hover:border-[#D4AF37]/50 shadow-[0_0_40px_rgba(16,185,129,0.08)] hover:shadow-[0_0_50px_rgba(212,175,55,0.12)] transition-all duration-500 p-6 md:p-8 space-y-6">
+                  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F0F0F] to-black border-2 border-[#10B981]/25 hover:border-blue-500/50 shadow-[0_0_40px_rgba(16,185,129,0.08)] hover:shadow-[0_0_50px_rgba(59,130,246,0.12)] transition-all duration-500 p-6 md:p-8 space-y-6">
                     {/* Glowing background matrix effect */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#10B981]/10 via-[#D4AF37]/5 to-transparent blur-3xl pointer-events-none" />
                     
@@ -2048,8 +2045,8 @@ export default function App() {
                         <span className="text-md text-[#10B981]">✅</span>
                         <span className="text-xs font-black uppercase tracking-wider text-white">Fast Withdrawals</span>
                       </div>
-                      <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-[#D4AF37]/30 transition-all">
-                        <span className="text-md text-[#D4AF37]">✅</span>
+                      <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-blue-500/30 transition-all">
+                        <span className="text-md text-blue-400">✅</span>
                         <span className="text-xs font-black uppercase tracking-wider text-white">Referral Rewards</span>
                       </div>
                       <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-emerald-400/30 transition-all">
@@ -2064,7 +2061,7 @@ export default function App() {
                         onClick={() => {
                           document.getElementById('registration-container')?.scrollIntoView({ behavior: 'smooth' });
                         }}
-                        className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#10B981] via-[#D4AF37] to-[#10B981] bg-[length:200%_auto] hover:bg-right text-black font-black text-xs uppercase tracking-widest hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-500 cursor-pointer border-0 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                        className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#10B981] via-[#D4AF37] to-[#10B981] bg-[length:200%_auto] hover:bg-right text-black font-black text-xs uppercase tracking-widest hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-500 cursor-pointer border-0 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
                       >
                         Start Earning
                       </button>
@@ -2074,7 +2071,7 @@ export default function App() {
                   {/* Premium Core Stats Section - With requested Number Counting animations */}
                   <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left border-t border-white/5">
                     <div className="space-y-1">
-                      <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-[#D4AF37]">
+                      <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-blue-400">
                         <CountUpNum value={10000} suffix="+" />
                       </p>
                       <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Active Members</p>
@@ -2093,7 +2090,7 @@ export default function App() {
                       <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Fast Withdrawals</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-[#D4AF37]">
+                      <p className="text-white text-lg md:text-2xl font-bold font-mono tracking-tight text-blue-400">
                         <CountUpNum value={100} suffix="%" />
                       </p>
                       <p className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Legit Payout Guarantee</p>
@@ -2115,7 +2112,7 @@ export default function App() {
               {/* 1. TRUST SECTION */}
               <div className="w-full max-w-6xl mx-auto space-y-8 animate-fade-in pt-4 border-t border-white/5">
                 <div className="text-center space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#D4AF37] bg-[#D4AF37]/10 px-3.5 py-1 rounded-full border border-[#D4AF37]/20 inline-block font-sans">
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400 bg-blue-600/10 px-3.5 py-1 rounded-full border border-blue-500/20 inline-block font-sans">
                     Guaranteed Protection
                   </span>
                   <h2 className="text-3xl md:text-4xl font-black font-serif text-white tracking-tight">
@@ -2139,8 +2136,8 @@ export default function App() {
                   </div>
 
                   {/* MANUAL DEPOSIT AUDITS */}
-                  <div className="bg-[#121212]/50 backdrop-blur-md border border-white/5 hover:border-[#D4AF37]/30 rounded-2xl p-5 md:p-6 space-y-3 transition-all duration-300 relative group overflow-hidden text-left">
-                    <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-xl text-[#D4AF37]">
+                  <div className="bg-[#121212]/50 backdrop-blur-md border border-white/5 hover:border-blue-500/30 rounded-2xl p-5 md:p-6 space-y-3 transition-all duration-300 relative group overflow-hidden text-left">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-xl text-blue-400">
                       🧑‍🔧
                     </div>
                     <h3 className="text-xs font-black text-white uppercase tracking-wider font-serif">Manual Verification</h3>
@@ -2161,8 +2158,8 @@ export default function App() {
                   </div>
 
                   {/* EMAIL NOTIFICATIONS */}
-                  <div className="bg-[#121212]/50 backdrop-blur-md border border-white/5 hover:border-[#D4AF37]/30 rounded-2xl p-5 md:p-6 space-y-3 transition-all duration-300 relative group overflow-hidden text-left">
-                    <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-xl text-[#D4AF37]">
+                  <div className="bg-[#121212]/50 backdrop-blur-md border border-white/5 hover:border-blue-500/30 rounded-2xl p-5 md:p-6 space-y-3 transition-all duration-300 relative group overflow-hidden text-left">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-xl text-blue-400">
                       ✉️
                     </div>
                     <h3 className="text-xs font-black text-white uppercase tracking-wider font-serif">Email Receipts</h3>
@@ -2202,10 +2199,10 @@ export default function App() {
                   {/* Total Registered Users */}
                   <div className="bg-[#121212]/30 border border-white/5 rounded-2xl p-5 space-y-2 relative overflow-hidden text-center transition-all hover:bg-[#121212]/60">
                     <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-sans block">Total Registered Users</span>
-                    <h3 className="text-3xl font-bold font-mono text-[#D4AF37] leading-none py-1">
+                    <h3 className="text-3xl font-bold font-mono text-blue-400 leading-none py-1">
                       {isStatsLoading ? "..." : publicStats.totalRegisteredUsers}
                     </h3>
-                    <p className="text-[9px] text-[#D4AF37]/65 font-bold font-sans">Active Profiles on Ledger</p>
+                    <p className="text-[9px] text-blue-400/65 font-bold font-sans">Active Profiles on Ledger</p>
                   </div>
 
                   {/* Active Users */}
@@ -2252,7 +2249,7 @@ export default function App() {
               {/* SECTION 3: RECENT APPROVED WITHDRAWALS LIVE FEED */}
               <div className="w-full max-w-6xl mx-auto space-y-8 animate-fade-in">
                 <div className="text-center space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#D4AF37] bg-[#D4AF37]/10 px-3.5 py-1 rounded-full border border-[#D4AF37]/20 inline-block font-sans">
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400 bg-blue-600/10 px-3.5 py-1 rounded-full border border-blue-500/20 inline-block font-sans">
                     Settlement & Verification System
                   </span>
                   <h2 className="text-3xl md:text-4xl font-black font-serif text-white tracking-tight">
@@ -2265,7 +2262,7 @@ export default function App() {
 
                 <div className="bg-[#0F0F0F] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
                   {/* Table Headers */}
-                  <div className="grid grid-cols-4 px-6 py-4 bg-white/[0.02] border-b border-white/5 text-[9px] font-black uppercase tracking-widest text-[#D4AF37] text-left">
+                  <div className="grid grid-cols-4 px-6 py-4 bg-white/[0.02] border-b border-white/5 text-[9px] font-black uppercase tracking-widest text-blue-400 text-left">
                     <span>VIP Member (Initials)</span>
                     <span>Payout Amount</span>
                     <span>Payout Channel</span>
@@ -2312,7 +2309,7 @@ export default function App() {
               <div className="w-full max-w-6xl mx-auto pt-6 border-t border-white/5 font-sans animate-fade-in">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-left text-zinc-400">
                   <div className="space-y-3">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#D4AF37]">About Platform</h4>
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400">About Platform</h4>
                     <p className="text-[11px] leading-relaxed font-sans font-medium">
                       MoneyMind Space is Pakistan's premium automated dynamic staking platform. We empower individuals to secure stable cryptocurrency yields and easy PKR-based investments.
                     </p>
@@ -2333,22 +2330,22 @@ export default function App() {
                   <div className="space-y-3 font-sans">
                     <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Company Information</h4>
                     <div className="flex flex-col gap-2 text-xs font-semibold">
-                      <button onClick={() => setOpenedFooterDoc('about')} className="text-left text-zinc-300 hover:text-[#D4AF37] transition-all bg-transparent border-0 cursor-pointer outline-none">
+                      <button onClick={() => setOpenedFooterDoc('about')} className="text-left text-zinc-300 hover:text-blue-400 transition-all bg-transparent border-0 cursor-pointer outline-none">
                         About MoneyMind Space
                       </button>
-                      <button onClick={() => setOpenedFooterDoc('contact')} className="text-left text-zinc-300 hover:text-[#D4AF37] transition-all bg-transparent border-0 cursor-pointer outline-none">
+                      <button onClick={() => setOpenedFooterDoc('contact')} className="text-left text-zinc-300 hover:text-blue-400 transition-all bg-transparent border-0 cursor-pointer outline-none">
                         Support Helplines Overview
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-3 font-sans">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#D4AF37]">Legal Framework</h4>
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400">Legal Framework</h4>
                     <div className="flex flex-col gap-2 text-xs font-semibold">
-                      <button onClick={() => setOpenedFooterDoc('terms')} className="text-left text-zinc-300 hover:text-[#D4AF37] transition-all bg-transparent border-0 cursor-pointer outline-none">
+                      <button onClick={() => setOpenedFooterDoc('terms')} className="text-left text-zinc-300 hover:text-blue-400 transition-all bg-transparent border-0 cursor-pointer outline-none">
                         Terms & Conditions Agreement
                       </button>
-                      <button onClick={() => setOpenedFooterDoc('privacy')} className="text-left text-zinc-300 hover:text-[#D4AF37] transition-all bg-transparent border-0 cursor-pointer outline-none">
+                      <button onClick={() => setOpenedFooterDoc('privacy')} className="text-left text-zinc-300 hover:text-blue-400 transition-all bg-transparent border-0 cursor-pointer outline-none">
                         Official Privacy Protocol
                       </button>
                     </div>
@@ -2394,11 +2391,11 @@ export default function App() {
       </main>
 
       {/* Footer Bar */}
-      <footer className="border-t border-white/5 bg-[#080808] flex flex-col md:flex-row items-center justify-between px-6 md:px-10 py-6 md:py-4 text-[10px] text-[#E5E7EB]/20 uppercase tracking-[0.25em] space-y-3 md:space-y-0">
+      <footer className="border-t border-white/5 bg-slate-950 flex flex-col md:flex-row items-center justify-between px-6 md:px-10 py-6 md:py-4 text-[10px] text-[#E5E7EB]/20 uppercase tracking-[0.25em] space-y-3 md:space-y-0">
         <div className="text-center md:text-left">&copy; {new Date().getFullYear()} MoneyMind Space</div>
         
         {/* AdSense policy and branding links */}
-        <div className="flex flex-wrap justify-center gap-3.5 text-[#D4AF37] font-sans text-[9px] font-bold tracking-wider uppercase">
+        <div className="flex flex-wrap justify-center gap-3.5 text-blue-400 font-sans text-[9px] font-bold tracking-wider uppercase">
           <button onClick={() => setOpenedFooterDoc('about')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">About Us</button>
           <span>•</span>
           <button onClick={() => setOpenedFooterDoc('contact')} className="hover:underline hover:text-white cursor-pointer bg-transparent border-0 uppercase">Contact Us</button>
@@ -2410,26 +2407,26 @@ export default function App() {
 
         <div className="flex gap-4 items-center font-sans tracking-widest justify-center">
           <span>Compliance: #MMS-992-KLR</span>
-          <span className="text-[#D4AF37]/40 font-semibold">•</span>
-          <span className="text-[#D4AF37]/50">Status: Active</span>
+          <span className="text-blue-400/40 font-semibold">•</span>
+          <span className="text-blue-400/50">Status: Active</span>
         </div>
       </footer>
 
       {/* Dynamic Static Information Pages Modal (AdSense Friendly) */}
       <AnimatePresence>
         {openedFooterDoc && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="relative w-full max-w-2xl bg-[#0C0C0C] border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.1)] flex flex-col max-h-[85vh]"
+              className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.1)] flex flex-col max-h-[85vh]"
             >
               {/* Modal Top header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0F0F0F]">
                 <div>
-                  <h2 className="text-xs uppercase font-extrabold tracking-[0.2em] text-[#D4AF37] font-sans">
+                  <h2 className="text-xs uppercase font-extrabold tracking-[0.2em] text-blue-400 font-sans">
                     {openedFooterDoc === 'about' && 'About MoneyMind Space'}
                     {openedFooterDoc === 'contact' && 'Contact Support Center'}
                     {openedFooterDoc === 'privacy' && 'Official Privacy Policy'}
@@ -2457,7 +2454,7 @@ export default function App() {
                       Our mission is to provide a simple, transparent, and reliable digital experience for users who want to stay informed and organized in their financial journey.
                     </p>
                     <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
-                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-[#D4AF37]">We focus heavily on:</p>
+                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-blue-400">We focus heavily on:</p>
                       <ul className="list-disc list-inside space-y-1 text-white/60 text-[11px]">
                         <li>User-friendly dashboard experience</li>
                         <li>Secure account management</li>
@@ -2481,7 +2478,7 @@ export default function App() {
                     <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2.5 font-mono text-[11px]">
                       <div>
                         <span className="text-white/30 block uppercase text-[9px] tracking-wider font-sans font-bold">Official Support Email</span>
-                        <a href="mailto:support@moneymindspace.online" className="text-[#D4AF37] hover:underline">support@moneymindspace.online</a>
+                        <a href="mailto:support@moneymindspace.online" className="text-blue-400 hover:underline">support@moneymindspace.online</a>
                       </div>
                       <div>
                         <span className="text-white/30 block uppercase text-[9px] tracking-wider font-sans font-bold">Corporate Website</span>
@@ -2506,7 +2503,7 @@ export default function App() {
                     </p>
                     
                     <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
-                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-[#D4AF37]">We may collect information such as:</p>
+                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-blue-400">We may collect information such as:</p>
                       <ul className="list-disc list-inside space-y-1 text-white/60 text-[11px]">
                         <li>Name & user identifiers</li>
                         <li>Email address</li>
@@ -2516,7 +2513,7 @@ export default function App() {
                     </div>
 
                     <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
-                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-[#D4AF37]">This information is used to:</p>
+                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-blue-400">This information is used to:</p>
                       <ul className="list-disc list-inside space-y-1 text-white/60 text-[11px]">
                         <li>Improve user experience and platform responsiveness</li>
                         <li>Provide high quality customer support</li>
@@ -2542,7 +2539,7 @@ export default function App() {
                     </p>
 
                     <div className="bg-[#111] border border-white/5 rounded-xl p-4 space-y-2">
-                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-[#D4AF37]">Users agree to:</p>
+                      <p className="font-bold text-white uppercase text-[10px] tracking-wider text-blue-400">Users agree to:</p>
                       <ul className="list-disc list-inside space-y-1 text-white/60 text-[11px]">
                         <li>Provide accurate and precise information</li>
                         <li>Maintain strict account credentials security</li>
@@ -2562,7 +2559,7 @@ export default function App() {
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-3 border-t border-white/5 bg-[#080808] text-right">
+              <div className="px-6 py-3 border-t border-white/5 bg-slate-950 text-right">
                 <button
                   onClick={() => setOpenedFooterDoc(null)}
                   className="px-4 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-all text-[10px] uppercase font-bold tracking-widest cursor-pointer text-white"
@@ -2578,22 +2575,22 @@ export default function App() {
       {/* Admin Access Control Console Modal Overlay */}
       <AnimatePresence>
         {showAdminModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="relative w-full max-w-6xl bg-[#090909] border border-[#D4AF37]/20 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.15)] flex flex-col my-8 max-h-[90vh]"
+              className="relative w-full max-w-6xl bg-[#090909] border border-blue-500/20 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col my-8 max-h-[90vh]"
             >
               {/* Modal Top Bar header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0C0C0C]">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-slate-900">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center justify-center text-[#D4AF37]">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/25 flex items-center justify-center text-blue-400">
                     <ShieldCheck className="w-4 h-4 animate-pulse" />
                   </div>
                   <div>
-                    <h2 className="text-xs uppercase font-bold tracking-[0.2em] text-[#D4AF37] font-serif">Governance Console</h2>
+                    <h2 className="text-xs uppercase font-bold tracking-[0.2em] text-blue-400 font-serif">Governance Console</h2>
                     <p className="text-[8px] text-white/30 uppercase tracking-widest leading-none mt-0.5">Secure Cloud Administrator Core</p>
                   </div>
                 </div>
@@ -2622,7 +2619,7 @@ export default function App() {
               {/* Admin Footer Banner info */}
               <div className="px-6 py-3 border-t border-white/5 bg-[#050505] text-[8px] text-center text-white/20 uppercase tracking-[0.2em] font-sans flex flex-col sm:flex-row items-center justify-between gap-2">
                 <span>MoneyMind Space Audit Log: Enabled</span>
-                <span className="text-[#D4AF37]/35 font-mono">Operator ID: {currentUid ? currentUid.slice(0, 16) : 'anonymous'}</span>
+                <span className="text-blue-400/35 font-mono">Operator ID: {currentUid ? currentUid.slice(0, 16) : 'anonymous'}</span>
                 <span>SECURE SESSION TYPE: TLS 1.3 AES-256</span>
               </div>
             </motion.div>
@@ -2633,18 +2630,18 @@ export default function App() {
       {/* Hidden Secret Passcode Prompt Dialog Overlay */}
       <AnimatePresence>
         {showSecretPasscodePopup && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-sm bg-[#0C0C0C] border border-[#D4AF37]/35 rounded-2xl p-6 space-y-5 shadow-[0_0_50px_rgba(212,175,55,0.15)] text-left"
+              className="relative w-full max-w-sm bg-slate-900 border border-blue-500/35 rounded-2xl p-6 space-y-5 shadow-[0_0_50px_rgba(59,130,246,0.15)] text-left"
             >
               <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-xl flex items-center justify-center mx-auto text-[#D4AF37] animate-pulse">
+                <div className="w-12 h-12 bg-blue-600/10 border border-blue-500/25 rounded-xl flex items-center justify-center mx-auto text-blue-400 animate-pulse">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h3 className="text-xs uppercase tracking-[0.22em] text-[#D4AF37] font-black">Governance Node Access</h3>
+                <h3 className="text-xs uppercase tracking-[0.22em] text-blue-400 font-black">Governance Node Access</h3>
                 <p className="text-[8px] text-white/30 uppercase tracking-[0.1em] font-sans">Authorization Security Screen</p>
               </div>
 
@@ -2676,14 +2673,14 @@ export default function App() {
                     required
                     placeholder="Enter Security Admin Passcode"
                     autoFocus
-                    className="w-full bg-[#070707] border border-white/5 focus:border-[#D4AF37]/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all text-center font-mono tracking-widest uppercase"
+                    className="w-full bg-[#070707] border border-white/5 focus:border-blue-500/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all text-center font-mono tracking-widest uppercase"
                   />
                 </div>
 
                 <div className="flex items-center gap-2 pt-2 text-[9px] uppercase font-black tracking-widest font-sans">
                   <button 
                     type="submit"
-                    className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-black shadow-lg shadow-[#D4AF37]/10 cursor-pointer border-0"
+                    className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-black shadow-lg shadow-blue-500/10 cursor-pointer border-0"
                   >
                     Authenticate
                   </button>
@@ -2704,13 +2701,13 @@ export default function App() {
       {/* Session Inactivity Auto Sign-Out Warning Overlay */}
       <AnimatePresence>
         {showInactivityWarning && (
-          <div id="inactivity-warning-overlay" className="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+          <div id="inactivity-warning-overlay" className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
             <motion.div
               id="inactivity-warning-container"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-sm bg-[#0C0C0C] border border-[#D4AF37]/35 rounded-2xl p-6 md:p-8 space-y-5 shadow-[0_0_50px_rgba(212,175,55,0.15)] text-center text-white"
+              className="relative w-full max-w-sm bg-slate-900 border border-blue-500/35 rounded-2xl p-6 md:p-8 space-y-5 shadow-[0_0_50px_rgba(59,130,246,0.15)] text-center text-white"
             >
               {/* Alert Icon */}
               <div id="inactivity-icon-box" className="w-14 h-14 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center mx-auto text-amber-400">
@@ -2719,7 +2716,7 @@ export default function App() {
 
               {/* Title Header */}
               <div id="inactivity-title-group" className="space-y-1.5">
-                <h3 id="inactivity-title" className="text-base uppercase tracking-[0.2em] text-[#D4AF37] font-black font-serif animate-pulse">Session Security Alert</h3>
+                <h3 id="inactivity-title" className="text-base uppercase tracking-[0.2em] text-blue-400 font-black font-serif animate-pulse">Session Security Alert</h3>
                 <p id="inactivity-subtitle" className="text-[9px] text-zinc-500 uppercase tracking-widest font-sans font-bold">Inactivity Protection Audit</p>
               </div>
 
@@ -2729,7 +2726,7 @@ export default function App() {
               </p>
 
               {/* Countdown Tracker Box */}
-              <div id="inactivity-countdown-box" className="bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center gap-1.5">
+              <div id="inactivity-countdown-box" className="bg-slate-950/50 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center gap-1.5">
                 <div id="inactivity-counter-row" className="flex items-center gap-2 text-amber-400">
                   <Clock className="w-4 h-4 shrink-0 animate-pulse" />
                   <span id="inactivity-countdown-seconds" className="font-mono text-2xl font-black">{inactivitySecondsLeft}s</span>
@@ -2749,7 +2746,7 @@ export default function App() {
                     setShowInactivityWarning(false);
                     addToast("Secure session extended successfully.", "success");
                   }}
-                  className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-black font-bold text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] cursor-pointer border-0"
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-black font-bold text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] cursor-pointer border-0"
                 >
                   Keep Me Logged In
                 </button>
@@ -2774,13 +2771,13 @@ export default function App() {
       {/* Gmail Link & Verification Modal Prompt */}
       <AnimatePresence>
         {showGmailModal && (
-          <div id="gmail-verification-overlay" className="fixed inset-0 z-[140] flex items-center justify-center bg-black/95 backdrop-blur-md p-4">
+          <div id="gmail-verification-overlay" className="fixed inset-0 z-[140] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
             <motion.div
               id="gmail-verification-container"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-md bg-[#0C0C0C] border border-[#D4AF37]/35 rounded-2xl p-6 md:p-8 space-y-6 shadow-[0_0_50px_rgba(212,175,55,0.15)] text-center text-white"
+              className="relative w-full max-w-md bg-slate-900 border border-blue-500/35 rounded-2xl p-6 md:p-8 space-y-6 shadow-[0_0_50px_rgba(59,130,246,0.15)] text-center text-white"
             >
               {/* Close Button */}
               <button
@@ -2796,13 +2793,13 @@ export default function App() {
               </button>
 
               {/* Header Icon */}
-              <div id="gmail-icon-box" className="w-14 h-14 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-xl flex items-center justify-center mx-auto text-[#D4AF37]">
+              <div id="gmail-icon-box" className="w-14 h-14 bg-blue-600/10 border border-blue-500/20 rounded-xl flex items-center justify-center mx-auto text-blue-400">
                 <Mail className="w-6 h-6 animate-pulse" />
               </div>
 
               {/* Title Header */}
               <div id="gmail-title-group" className="space-y-1.5">
-                <h3 id="gmail-modal-title" className="text-lg uppercase tracking-[0.2em] text-[#D4AF37] font-black font-serif">Secure Your Account</h3>
+                <h3 id="gmail-modal-title" className="text-lg uppercase tracking-[0.2em] text-blue-400 font-black font-serif">Secure Your Account</h3>
                 <p id="gmail-modal-subtitle" className="text-[9px] text-zinc-500 uppercase tracking-widest font-sans font-bold">Link & Verify Your Gmail</p>
               </div>
 
@@ -2838,7 +2835,7 @@ export default function App() {
                       placeholder="e.g. yourname@gmail.com"
                       value={gmailInput}
                       onChange={(e) => setGmailInput(e.target.value)}
-                      className="w-full bg-[#070707] border border-white/5 focus:border-[#D4AF37]/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all font-sans"
+                      className="w-full bg-[#070707] border border-white/5 focus:border-blue-500/35 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 outline-none transition-all font-sans"
                     />
                   </div>
 
@@ -2846,7 +2843,7 @@ export default function App() {
                     id="btn-send-gmail-otp"
                     type="submit"
                     disabled={isSendingGmailOtp}
-                    className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-[#B29430] hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:scale-100 transition-all rounded-xl text-black font-bold text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] cursor-pointer border-0 flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#B29430] hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:scale-100 transition-all rounded-xl text-black font-bold text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] cursor-pointer border-0 flex items-center justify-center gap-2"
                   >
                     {isSendingGmailOtp ? (
                       <>
@@ -2881,13 +2878,13 @@ export default function App() {
                       placeholder="Enter 6-digit OTP"
                       value={gmailOtp}
                       onChange={(e) => setGmailOtp(e.target.value.replace(/\D/g, ''))}
-                      className="w-full bg-[#070707] border border-white/5 focus:border-[#D4AF37]/35 rounded-xl px-4 py-3 text-center text-sm font-mono tracking-[0.4em] text-white placeholder-white/10 outline-none transition-all"
+                      className="w-full bg-[#070707] border border-white/5 focus:border-blue-500/35 rounded-xl px-4 py-3 text-center text-sm font-mono tracking-[0.4em] text-white placeholder-white/10 outline-none transition-all"
                     />
                   </div>
 
                   {gmailDemoHelperMsg && (
-                    <div id="gmail-demo-sandbox-notice" className="bg-[#D4AF37]/5 border border-[#D4AF37]/15 rounded-xl p-3 text-center">
-                      <span id="gmail-demo-sandbox-text" className="text-[11px] font-mono text-[#D4AF37] font-bold block">
+                    <div id="gmail-demo-sandbox-notice" className="bg-blue-600/5 border border-blue-500/15 rounded-xl p-3 text-center">
+                      <span id="gmail-demo-sandbox-text" className="text-[11px] font-mono text-blue-400 font-bold block">
                         ⚙️ {gmailDemoHelperMsg}
                       </span>
                     </div>
@@ -2897,7 +2894,7 @@ export default function App() {
                     <button 
                       id="btn-verify-gmail-otp"
                       type="submit"
-                      className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-black font-bold text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] cursor-pointer border-0"
+                      className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#B29430] hover:brightness-110 active:scale-[0.98] transition-all rounded-xl text-black font-bold text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] cursor-pointer border-0"
                     >
                       Verify & Bind Account
                     </button>

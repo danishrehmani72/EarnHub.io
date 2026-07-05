@@ -964,27 +964,27 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0B0B0B] via-[#050505] to-black border-2 border-[#D4AF37]/45 hover:border-[#10B981]/60 shadow-[0_0_40px_rgba(212,175,55,0.12)] hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 max-w-md w-full backdrop-blur-xl animate-fade-in"
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0B0B0B] via-[#050505] to-black border-2 border-blue-500/45 hover:border-[#10B981]/60 shadow-[0_0_40px_rgba(59,130,246,0.12)] hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 max-w-md w-full backdrop-blur-xl animate-fade-in"
     >
       {/* Premium gold particle overlay gradients */}
-      <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-[#D4AF37]/8 via-[#10B981]/4 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-blue-600/8 via-[#10B981]/4 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-blue-600/5 blur-3xl pointer-events-none" />
 
       {/* Header section with brand logo */}
       <div className="text-center space-y-2 relative z-10">
         <img 
           src={earnhubLogo}
           alt="MoneyMind Space Gold Premium Logo"
-          className="w-16 h-16 mx-auto object-contain rounded-2xl border-2 border-[#D4AF37]/40 ring-1 ring-[#D4AF37]/15 shadow-[0_0_20px_rgba(212,175,55,0.15)] bg-black mb-3"
+          className="w-16 h-16 mx-auto object-contain rounded-2xl border-2 border-blue-500/40 ring-1 ring-blue-500/15 shadow-[0_0_20px_rgba(59,130,246,0.15)] bg-slate-950 mb-3"
           referrerPolicy="no-referrer"
         />
         <h2 className="text-base font-black uppercase tracking-[0.14em] text-white font-serif leading-none">
           {mode === 'signup' ? (
-            <>Join <span className="text-[#D4AF37] animate-pulse">MoneyMind Space</span></>
+            <>Join <span className="text-blue-400 animate-pulse">MoneyMind Space</span></>
           ) : mode === 'login' ? (
-            <>Welcome to <span className="text-[#D4AF37] animate-pulse">MoneyMind Space</span></>
+            <>Welcome to <span className="text-blue-400 animate-pulse">MoneyMind Space</span></>
           ) : (
-            <>Account <span className="text-[#D4AF37] animate-pulse">Security Recovery</span></>
+            <>Account <span className="text-blue-400 animate-pulse">Security Recovery</span></>
           )}
         </h2>
         <p className="text-[11px] text-white/50 leading-relaxed font-sans max-w-xs mx-auto">
@@ -998,7 +998,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
       {/* Dynamic Tabs/Toggles with custom state styling */}
       {mode !== 'forgot' ? (
-        <div className="grid grid-cols-2 gap-1.5 bg-black/80 p-1.5 rounded-2xl border border-[#D4AF37]/30 shadow-inner shadow-black relative z-10">
+        <div className="grid grid-cols-2 gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-blue-500/30 shadow-inner shadow-black relative z-10">
           <button
             type="button"
             onClick={() => {
@@ -1008,7 +1008,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             }}
             className={`py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 cursor-pointer ${
               mode === 'signup' 
-                ? 'bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.25)] font-black' 
+                ? 'bg-blue-600 hover:bg-blue-500 text-black shadow-[0_0_15px_rgba(59,130,246,0.25)] font-black' 
                 : 'text-white/40 hover:text-white/80 hover:bg-white/[0.02]'
             }`}
           >
@@ -1023,7 +1023,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             }}
             className={`py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 cursor-pointer ${
               mode === 'login' 
-                ? 'bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.25)] font-black' 
+                ? 'bg-blue-600 hover:bg-blue-500 text-black shadow-[0_0_15px_rgba(59,130,246,0.25)] font-black' 
                 : 'text-white/40 hover:text-white/80 hover:bg-white/[0.02]'
             }`}
           >
@@ -1031,7 +1031,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-1 bg-black/80 p-1.5 rounded-2xl border border-[#D4AF37]/35 shadow-inner shadow-black relative z-10">
+        <div className="grid grid-cols-3 gap-1 bg-slate-950/80 p-1.5 rounded-2xl border border-blue-500/35 shadow-inner shadow-black relative z-10">
           <button
             type="button"
             onClick={() => {
@@ -1042,7 +1042,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             }}
             className={`py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
               forgotSubTab === 'userId' 
-                ? 'bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.25)] font-black' 
+                ? 'bg-blue-600 hover:bg-blue-500 text-black shadow-[0_0_15px_rgba(59,130,246,0.25)] font-black' 
                 : 'text-white/40 hover:text-white/80 hover:bg-white/[0.02]'
             }`}
           >
@@ -1058,7 +1058,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             }}
             className={`py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
               forgotSubTab === 'password' 
-                ? 'bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.25)] font-black' 
+                ? 'bg-blue-600 hover:bg-blue-500 text-black shadow-[0_0_15px_rgba(59,130,246,0.25)] font-black' 
                 : 'text-white/40 hover:text-white/80 hover:bg-white/[0.02]'
             }`}
           >
@@ -1074,7 +1074,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             }}
             className={`py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
               forgotSubTab === 'manual' 
-                ? 'bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.25)] font-black' 
+                ? 'bg-blue-600 hover:bg-blue-500 text-black shadow-[0_0_15px_rgba(59,130,246,0.25)] font-black' 
                 : 'text-white/40 hover:text-white/80 hover:bg-white/[0.02]'
             }`}
           >
@@ -1104,11 +1104,11 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                   setUserId(cleanVal);
                   if (cleanVal) setError('');
                 }}
-                className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl shadow-inner shadow-black"
               />
             </div>
             {mode === 'signup' && (
-              <p className="mt-1 text-[8.5px] text-white/30 font-medium tracking-wide">Your User ID is your secure login key: <span className="text-[#D4AF37]/80 font-mono font-bold">{userId ? userId : 'id'}</span></p>
+              <p className="mt-1 text-[8.5px] text-white/30 font-medium tracking-wide">Your User ID is your secure login key: <span className="text-blue-400/80 font-mono font-bold">{userId ? userId : 'id'}</span></p>
             )}
           </div>
         )}
@@ -1138,7 +1138,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                   setName(e.target.value);
                   if (e.target.value.trim()) setError('');
                 }}
-                className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl shadow-inner shadow-black"
               />
             </motion.div>
           )}
@@ -1163,7 +1163,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                   setPassword(e.target.value);
                   if (e.target.value) setError('');
                 }}
-                className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black"
+                className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 select-all outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl shadow-inner shadow-black"
               />
             </div>
           </div>
@@ -1198,7 +1198,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                       setRecoveryCode(cleaned);
                       if (cleaned) setError('');
                     }}
-                    className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 pr-20 text-xs text-white placeholder-white/25 select-all outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black font-mono tracking-widest text-center"
+                    className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 pr-20 text-xs text-white placeholder-white/25 select-all outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl shadow-inner shadow-black font-mono tracking-widest text-center"
                   />
                   {mode === 'signup' && (
                     <button
@@ -1208,7 +1208,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                         setRecoveryCode(r);
                         setError('');
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-extrabold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/35 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-extrabold text-blue-400 uppercase tracking-wider bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/35 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
                     >
                       🎲 Auto
                     </button>
@@ -1235,11 +1235,11 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                       setConfirmPin(cleaned);
                       if (cleaned) setError('');
                     }}
-                    className="w-full bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-[#D4AF37]/60 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all rounded-xl shadow-inner shadow-black font-mono tracking-widest text-center"
+                    className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl shadow-inner shadow-black font-mono tracking-widest text-center"
                   />
 
                   {/* Gorgeous golden English informational warning note */}
-                  <div className="mt-2.5 p-3.5 bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/30 rounded-2xl text-left animate-fade-in">
+                  <div className="mt-2.5 p-3.5 bg-gradient-to-r from-blue-500/10 to-transparent border border-amber-500/30 rounded-2xl text-left animate-fade-in">
                     <p className="text-[10.5px] text-amber-400 font-bold flex items-center gap-1.5">
                       <span className="text-sm select-none">⚠️</span>
                       <span>Remember your 4-Digit Security PIN.</span>
@@ -1269,21 +1269,21 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             </div>
             
             <p className="text-[10.5px] text-white/70 leading-relaxed font-sans">
-              Did you register before the PIN update, or forgot your Recovery PIN/Code? Please reach out to our official help center at <span className="text-[#D4AF37] font-semibold text-xs leading-none">support@moneymindspace.online</span>. Our compliance and support team will verify your balance logs and securely reset your credentials.
+              Did you register before the PIN update, or forgot your Recovery PIN/Code? Please reach out to our official help center at <span className="text-blue-400 font-semibold text-xs leading-none">support@moneymindspace.online</span>. Our compliance and support team will verify your balance logs and securely reset your credentials.
             </p>
 
-            <div className="space-y-2 text-[10px] bg-black/40 p-3 rounded-xl border border-white/5 font-mono">
+            <div className="space-y-2 text-[10px] bg-slate-950/40 p-3 rounded-xl border border-white/5 font-mono">
               <p className="text-white/40 uppercase text-[8.5px] font-black tracking-widest">📋 Verification Requirements:</p>
               <div className="flex gap-2 text-white/70">
-                <span className="text-[#D4AF37] font-bold">1.</span>
+                <span className="text-blue-400 font-bold">1.</span>
                 <span>The exact **Full Name** registered to your profile</span>
               </div>
               <div className="flex gap-2 text-white/70">
-                <span className="text-[#D4AF37] font-bold">2.</span>
+                <span className="text-blue-400 font-bold">2.</span>
                 <span>The approximate **Account Balance** or plan tier</span>
               </div>
               <div className="flex gap-2 text-white/70">
-                <span className="text-[#D4AF37] font-bold">3.</span>
+                <span className="text-blue-400 font-bold">3.</span>
                 <span>Any screenshot or text record of deposit transactions</span>
               </div>
             </div>
@@ -1291,10 +1291,10 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             <div className="pt-1 select-none">
               <a
                 href="mailto:support@moneymindspace.online"
-                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all text-center shadow-[0_0_15px_rgba(212,175,55,0.25)] cursor-pointer"
+                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all text-center shadow-[0_0_15px_rgba(59,130,246,0.25)] cursor-pointer"
               >
                 <span>Email Secure Support Desk</span>
-                <span className="bg-black/10 px-1.5 py-0.5 rounded text-[8.5px] text-black/85">support@moneymindspace.online</span>
+                <span className="bg-slate-950/10 px-1.5 py-0.5 rounded text-[8.5px] text-black/85">support@moneymindspace.online</span>
               </a>
             </div>
           </motion.div>
@@ -1321,13 +1321,13 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                     setEmail(e.target.value);
                     if (e.target.value) setError('');
                   }}
-                  className="flex-1 bg-black/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-[#D4AF37]/60 transition-all shadow-inner disabled:opacity-50"
+                  className="flex-1 bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-xs text-white placeholder-white/25 outline-none focus:border-blue-500/60 transition-all shadow-inner disabled:opacity-50"
                 />
                 <button
                   type="button"
                   disabled={isEmailVerified || isSendingCode || !email.includes('@')}
                   onClick={handleSendVerificationCode}
-                  className="px-3 py-1.5 bg-[#D4AF37] hover:bg-[#c39e2e] disabled:bg-white/5 disabled:text-white/20 text-black text-[10.5px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md shadow-[#D4AF37]/10"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-[#c39e2e] disabled:bg-white/5 disabled:text-white/20 text-black text-[10.5px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md shadow-blue-500/10"
                 >
                   {isSendingCode ? 'Sending...' : isEmailVerified ? 'Verified ✔' : 'Get Code'}
                 </button>
@@ -1344,7 +1344,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                     setEnteredCode(val);
                     if (val) setError('');
                   }}
-                  className="flex-1 text-center bg-black border border-white/10 rounded-xl p-2 font-mono text-xs tracking-widest text-[#D4AF37] focus:border-[#D4AF37]/50 outline-none"
+                  className="flex-1 text-center bg-slate-950 border border-white/10 rounded-xl p-2 font-mono text-xs tracking-widest text-blue-400 focus:border-blue-500/50 outline-none"
                 />
                 <button
                   type="button"
@@ -1371,9 +1371,9 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                     type="button"
                     onClick={handleCaptchaCheckboxClick}
                     disabled={isCaptchaVerified || isCaptchaLoading}
-                    className="w-6 h-6 rounded border border-white/20 bg-black/80 flex items-center justify-center transition-all cursor-pointer hover:border-[#D4AF37]/50 active:scale-95 disabled:hover:border-white/20 select-none animate-none"
+                    className="w-6 h-6 rounded border border-white/20 bg-slate-950/80 flex items-center justify-center transition-all cursor-pointer hover:border-blue-500/50 active:scale-95 disabled:hover:border-white/20 select-none animate-none"
                   >
-                    {isCaptchaLoading ? <div className="w-3 h-3 border border-t-white border-[#D4AF37] rounded-full animate-spin"></div> : isCaptchaVerified ? '✔' : ''}
+                    {isCaptchaLoading ? <div className="w-3 h-3 border border-t-white border-blue-500/30 rounded-full animate-spin"></div> : isCaptchaVerified ? '✔' : ''}
                   </button>
                   <span className="text-[11px] font-bold text-white/80 font-sans tracking-wide">
                     I'm not a robot
@@ -1388,22 +1388,22 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               </div>
 
               {showCaptchaPuzzle && (
-                <div className="mt-2 p-3 bg-black/60 border border-[#D4AF37]/20 rounded-lg space-y-3 animate-fade-in shadow-[inset_0_0_15px_rgba(212,175,55,0.05)]">
+                <div className="mt-2 p-3 bg-slate-950/60 border border-blue-500/20 rounded-lg space-y-3 animate-fade-in shadow-[inset_0_0_15px_rgba(59,130,246,0.05)]">
                   <p className="text-[9.5px] text-white/70 font-medium uppercase tracking-widest">Human Verification Challenge</p>
                   <div className="flex items-center gap-3">
-                    <span className="text-xl font-bold tracking-widest text-[#D4AF37] font-mono">{captchaNum1} + {captchaNum2} = </span>
+                    <span className="text-xl font-bold tracking-widest text-blue-400 font-mono">{captchaNum1} + {captchaNum2} = </span>
                     <input
                       type="text"
                       pattern="[0-9]*"
                       value={userCaptchaVal}
                       onChange={(e) => setUserCaptchaVal(e.target.value.replace(/\D/g, ''))}
-                      className="w-16 bg-black border border-white/20 rounded-md p-1.5 text-center text-[#D4AF37] text-sm outline-none focus:border-[#D4AF37]/60 font-mono font-bold"
+                      className="w-16 bg-slate-950 border border-white/20 rounded-md p-1.5 text-center text-blue-400 text-sm outline-none focus:border-blue-500/60 font-mono font-bold"
                       placeholder="?"
                     />
                     <button
                       type="button"
                       onClick={handleVerifyCaptcha}
-                      className="bg-[#D4AF37]/10 border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-[10px] px-3 py-1.5 rounded-md hover:bg-[#D4AF37]/20 transition-all uppercase tracking-wider h-full whitespace-nowrap"
+                      className="bg-blue-600/10 border border-blue-500/50 text-blue-400 font-bold text-[10px] px-3 py-1.5 rounded-md hover:bg-blue-600/20 transition-all uppercase tracking-wider h-full whitespace-nowrap"
                     >
                       Verify
                     </button>
@@ -1417,7 +1417,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           
         {/* Feedback Messages */}
         {sentCode && (
-           <div className="mt-2 p-2 bg-black border border-[#D4AF37]/30 rounded-lg text-[#D4AF37] font-mono text-[10px] text-center">
+           <div className="mt-2 p-2 bg-slate-950 border border-blue-500/30 rounded-lg text-blue-400 font-mono text-[10px] text-center">
              {sentCode}
            </div>
         )}
@@ -1440,10 +1440,10 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="p-4 bg-gradient-to-r from-[#D4AF37]/15 to-[#10B981]/15 rounded-2xl border-2 border-[#D4AF37]/50 text-center space-y-2 select-all relative z-20"
+            className="p-4 bg-gradient-to-r from-blue-600/15 to-[#10B981]/15 rounded-2xl border-2 border-blue-500/50 text-center space-y-2 select-all relative z-20"
           >
-            <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-black">Account Located Successfully</p>
-            <div className="text-xs font-black text-white font-mono flex items-center justify-center gap-1.5 bg-black/85 py-2.5 px-3 rounded-xl border border-white/10 select-all">
+            <p className="text-[10px] uppercase tracking-widest text-blue-400 font-black">Account Located Successfully</p>
+            <div className="text-xs font-black text-white font-mono flex items-center justify-center gap-1.5 bg-slate-950/85 py-2.5 px-3 rounded-xl border border-white/10 select-all">
               🔑 User ID: <span className="text-emerald-400 text-base font-bold select-all">{recoveryFoundId}</span>
             </div>
             <p className="text-[9px] text-white/50 font-medium">Use this User ID and your registered password to sign in directly.</p>
@@ -1455,7 +1455,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           <button
             type="submit"
             disabled={isLoading}
-            className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(212,175,55,0.35)] hover:shadow-[0_0_45px_rgba(212,175,55,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
+            className="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 bg-[length:200%_auto] hover:bg-right text-black shadow-[0_0_25px_rgba(59,130,246,0.35)] hover:shadow-[0_0_45px_rgba(59,130,246,0.6)] active:scale-[0.98] transition-all duration-500 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-40 border-0 text-center flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
@@ -1516,7 +1516,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               setError('');
               setSuccessMsg('');
             }}
-            className="text-[9.5px] text-white/50 uppercase tracking-widest font-black hover:text-[#D4AF37] transition-all cursor-pointer underline decoration-[#D4AF37]/35 decoration-2"
+            className="text-[9.5px] text-white/50 uppercase tracking-widest font-black hover:text-blue-400 transition-all cursor-pointer underline decoration-[#D4AF37]/35 decoration-2"
           >
             Already have an account? Sign In
           </button>
@@ -1528,7 +1528,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               setError('');
               setSuccessMsg('');
             }}
-            className="text-[9.5px] text-white/50 uppercase tracking-widest font-black hover:text-[#D4AF37] transition-all cursor-pointer underline decoration-[#D4AF37]/35 decoration-2"
+            className="text-[9.5px] text-white/50 uppercase tracking-widest font-black hover:text-blue-400 transition-all cursor-pointer underline decoration-[#D4AF37]/35 decoration-2"
           >
             Don't have an account? Sign Up
           </button>
@@ -1551,7 +1551,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
       <div className="pt-5 border-t border-white/5 space-y-4 text-left relative z-10 font-sans">
         <div className="flex items-start gap-3 bg-white/[0.01] border border-white/5 p-3.5 rounded-2xl">
-          <div className="p-1.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] mt-0.5 border border-[#D4AF37]/20 shrink-0">
+          <div className="p-1.5 rounded bg-blue-600/10 text-blue-400 mt-0.5 border border-blue-500/20 shrink-0">
             <TrendingUp className="w-3.5 h-3.5" />
           </div>
           <div>
@@ -1582,21 +1582,21 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               <span className="text-[7.5px] bg-[#24A1DE]/15 text-[#24A1DE] font-bold px-1.5 py-0.5 rounded border border-[#24A1DE]/30 uppercase tracking-wider">Join Group</span>
             </h4>
             <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
-              Join our public channel at <a href="https://t.me/moneymindonlineearningspace" target="_blank" rel="noopener noreferrer" className="text-[#24A1DE] font-extrabold hover:underline">t.me/moneymindonlineearningspace</a> representing <span className="text-[#D4AF37] font-semibold">Moneymindspace.online</span> today! Exchange payment receipts and claim staking updates.
+              Join our public channel at <a href="https://t.me/moneymindonlineearningspace" target="_blank" rel="noopener noreferrer" className="text-[#24A1DE] font-extrabold hover:underline">t.me/moneymindonlineearningspace</a> representing <span className="text-blue-400 font-semibold">Moneymindspace.online</span> today! Exchange payment receipts and claim staking updates.
             </p>
           </div>
         </div>
-        <div className="flex items-start gap-3 bg-[#D4AF37]/5 border border-[#D4AF37]/20 p-3.5 rounded-2xl hover:border-[#D4AF37]/45 transition-[border-color] duration-300">
-          <div className="p-1.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] mt-0.5 border border-[#D4AF37]/25 shrink-0">
+        <div className="flex items-start gap-3 bg-blue-600/5 border border-blue-500/20 p-3.5 rounded-2xl hover:border-blue-500/45 transition-[border-color] duration-300">
+          <div className="p-1.5 rounded bg-blue-600/10 text-blue-400 mt-0.5 border border-blue-500/25 shrink-0">
             <span className="text-[11px] leading-none select-none">📧</span>
           </div>
           <div>
             <h4 className="text-[10px] font-black text-white/90 uppercase tracking-widest flex items-center justify-between gap-2 flex-wrap">
               <span>Secure Support Desk</span>
-              <span className="text-[7.5px] bg-[#D4AF37]/15 text-[#D4AF37] font-bold px-1.5 py-0.5 rounded border border-[#D4AF37]/35 uppercase tracking-wider">Email Help Desk</span>
+              <span className="text-[7.5px] bg-blue-600/15 text-blue-400 font-bold px-1.5 py-0.5 rounded border border-blue-500/35 uppercase tracking-wider">Email Help Desk</span>
             </h4>
             <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
-              Have persistent queries, setup issues, or login failures? Email our security team directly at <a href="mailto:support@moneymindspace.online" className="text-[#D4AF37] font-extrabold hover:underline">support@moneymindspace.online</a> for priority assistance.
+              Have persistent queries, setup issues, or login failures? Email our security team directly at <a href="mailto:support@moneymindspace.online" className="text-blue-400 font-extrabold hover:underline">support@moneymindspace.online</a> for priority assistance.
             </p>
           </div>
         </div>
@@ -1605,12 +1605,12 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
 
     <AnimatePresence>
       {isResetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 0.99 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="relative w-full max-w-sm bg-gradient-to-b from-[#0F0F0E] to-[#040404] border-2 border-[#D4AF37] rounded-3xl p-6 shadow-[0_0_50px_rgba(212,175,55,0.25)] text-left space-y-5"
+            className="relative w-full max-w-sm bg-gradient-to-b from-[#0F0F0E] to-[#040404] border-2 border-blue-500/30 rounded-3xl p-6 shadow-[0_0_50px_rgba(59,130,246,0.25)] text-left space-y-5"
           >
             {/* Close Button */}
             <button
@@ -1631,7 +1631,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
             </button>
 
             <div className="space-y-1">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[#D4AF37] text-[8.5px] uppercase font-black tracking-widest font-mono">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-600/15 border border-blue-500/25 text-blue-400 text-[8.5px] uppercase font-black tracking-widest font-mono">
                 Security Password Recovery
               </span>
               <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
@@ -1640,9 +1640,9 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               
               {/* Simple Step indicator bar */}
               <div className="grid grid-cols-3 gap-1 pt-2">
-                <div className={`h-1 rounded-full ${resetStep >= 1 ? 'bg-[#D4AF37]' : 'bg-white/10'}`} />
-                <div className={`h-1 rounded-full ${resetStep >= 2 ? 'bg-[#D4AF37]' : 'bg-white/10'}`} />
-                <div className={`h-1 rounded-full ${resetStep >= 3 ? 'bg-[#D4AF37]' : 'bg-white/10'}`} />
+                <div className={`h-1 rounded-full ${resetStep >= 1 ? 'bg-blue-600' : 'bg-white/10'}`} />
+                <div className={`h-1 rounded-full ${resetStep >= 2 ? 'bg-blue-600' : 'bg-white/10'}`} />
+                <div className={`h-1 rounded-full ${resetStep >= 3 ? 'bg-blue-600' : 'bg-white/10'}`} />
               </div>
               <p className="text-[10px] text-white/50 pt-1">
                 {resetStep === 1 && "Step 1: Enter your registered Gmail / email address to request a setup code."}
@@ -1664,7 +1664,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                     placeholder="Enter your registered email address"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
-                    className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-[#D4AF37]/60"
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 select-all outline-none focus:border-blue-500/60"
                   />
                 </div>
 
@@ -1677,7 +1677,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                 <button
                   type="submit"
                   disabled={isLoading || isSendingResetOtp}
-                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-[#D4AF37]/10 cursor-pointer disabled:opacity-40"
+                  className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-blue-500/10 cursor-pointer disabled:opacity-40"
                 >
                   {isLoading || isSendingResetOtp ? 'Sending Code...' : 'Get Verification Code'}
                 </button>
@@ -1698,7 +1698,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                     placeholder="Enter verification code"
                     value={resetEnteredOtp}
                     onChange={(e) => setResetEnteredOtp(e.target.value.replace(/\D/g, ''))}
-                    className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 text-center tracking-widest font-mono outline-none focus:border-[#D4AF37]/60 font-black"
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 text-center tracking-widest font-mono outline-none focus:border-blue-500/60 font-black"
                   />
                 </div>
 
@@ -1727,7 +1727,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                   </button>
                   <button
                     type="submit"
-                    className="w-2/3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-[#D4AF37]/10 cursor-pointer"
+                    className="w-2/3 py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-blue-500/10 cursor-pointer"
                   >
                     Verify Code
                   </button>
@@ -1748,7 +1748,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                     placeholder="Create password (min 6 chars)"
                     value={resetNewPassword}
                     onChange={(e) => setResetNewPassword(e.target.value)}
-                    className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-blue-500/60"
                   />
                 </div>
 
@@ -1762,7 +1762,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                     placeholder="Re-enter password to match"
                     value={resetConfirmPassword}
                     onChange={(e) => setResetConfirmPassword(e.target.value)}
-                    className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37]/60"
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 outline-none focus:border-blue-500/60"
                   />
                 </div>
 
@@ -1780,7 +1780,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3cb49] to-[#D4AF37] text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-[#D4AF37]/10 cursor-pointer disabled:opacity-40"
+                  className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 text-center shadow-lg shadow-blue-500/10 cursor-pointer disabled:opacity-40"
                 >
                   {isLoading ? 'Processing Reset...' : 'Set New Password'}
                 </button>

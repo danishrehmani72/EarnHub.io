@@ -10,12 +10,12 @@ export default function CodeModal({ isOpen, onClose, sentCode }: CodeModalProps)
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#111] border border-[#D4AF37]/50 p-8 rounded-3xl text-center shadow-2xl max-w-sm w-full">
-        <h3 className="text-[#D4AF37] font-black uppercase tracking-widest mb-4">Verification Code</h3>
-        <p className="text-white text-sm mb-6 bg-black p-4 rounded-xl border border-white/10 font-mono">{sentCode || "No code generated."}</p>
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-slate-950/80 backdrop-blur-sm p-4">
+      <div className="bg-[#111] border border-blue-500/50 p-8 rounded-3xl text-center shadow-2xl max-w-sm w-full">
+        <h3 className="text-blue-400 font-black uppercase tracking-widest mb-4">Verification Code</h3>
+        <p className="text-white text-sm mb-6 bg-slate-950 p-4 rounded-xl border border-white/10 font-mono">{sentCode || "No code generated."}</p>
         <button
-          className="w-full bg-[#D4AF37] text-black font-black py-3 rounded-xl uppercase tracking-widest text-xs"
+          className="w-full bg-blue-600 text-black font-black py-3 rounded-xl uppercase tracking-widest text-xs"
           onClick={onClose}
         >
           Close
