@@ -26,7 +26,6 @@ import RegistrationCard from './components/RegistrationCard';
 import DashboardCard from './components/DashboardCard';
 import ReferralHistory from './components/ReferralHistory';
 import AdminPanel from './components/AdminPanel';
-import LiveChatBot from './components/LiveChatBot';
 import RecentWithdrawalToast, { RecentWithdrawalRecord } from './components/RecentWithdrawalToast';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarIcon, getAvatarConfig } from './lib/avatars';
@@ -1158,7 +1157,7 @@ export default function App() {
 
     // Withdrawal Protection for suspicious or blocked accounts
     if (userProfile?.blocked || userProfile?.isSuspicious) {
-      addToast("Your account is under security review. Please contact support.", "error");
+      addToast("Your account is under security review. ", "error");
       return;
     }
 
@@ -1356,7 +1355,7 @@ export default function App() {
     }
 
     if (target === 'helpline') {
-      window.open('https://t.me/ApexCapitalSupport', '_blank');
+      window.open('https://t.me/apexcapital_official', '_blank');
       addToast('Opening Apex Capital Support on Telegram...', 'success');
       return;
     }
@@ -1595,22 +1594,16 @@ export default function App() {
           <p className="text-xs text-white/70 leading-relaxed">
             Your Apex Capital account <strong className="text-white">#{userProfile.userId}</strong> has been suspended by our Compliance Desk under compliance guidelines of multiple accounts or suspicious ledger deposits.
           </p>
-          <div className="p-3 bg-red-500/5 rounded-2xl border border-red-500/10 text-[10px] leading-relaxed text-red-400">
-            If you believe this is a false block, contact our 24/7 compliance desk on Telegram to submit identification credentials.
-          </div>
-          <button
-            onClick={() => window.open('https://t.me/ApexCapitalSupport', '_blank')}
-            className="w-full py-3 bg-red-500 hover:bg-red-600 text-black text-[10px] uppercase tracking-[0.15em] font-black rounded-xl transition-all shadow-md shadow-red-500/10 cursor-pointer"
-          >
-            Contact Live Support Desk 💬
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans flex flex-col justify-between antialiased selection:bg-blue-600/20 selection:text-blue-400">
+    <div className="min-h-screen bg-[#060202] bg-[linear-gradient(to_right,#1a0606_1px,transparent_1px),linear-gradient(to_bottom,#1a0606_1px,transparent_1px)] bg-[size:32px_32px] text-[#E5E7EB] font-sans flex flex-col justify-between antialiased selection:bg-red-600/20 selection:text-red-400 relative overflow-x-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.1)_0%,transparent_75%)] pointer-events-none" />
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-red-600/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none" />
       
       {/* Toast Notification Container */}
       <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-[340px] xs:max-w-sm w-full pointer-events-none">
@@ -1770,14 +1763,6 @@ export default function App() {
             Withdraw
           </button>
 
-          <button 
-            type="button"
-            onClick={() => handleNavClick('helpline')}
-            className="hover:text-sky-300 pb-1 transition-all cursor-pointer flex items-center gap-1.5 text-sky-400 font-extrabold bg-transparent border-0"
-          >
-            <MessageSquare className="w-4 h-4 text-sky-400 animate-pulse" />
-            Helpline
-          </button>
 
           <button 
             type="button"
@@ -1935,18 +1920,6 @@ export default function App() {
                   </motion.button>
                 </div>
 
-                <motion.button 
-                  variants={mobileItemVariants}
-                  type="button"
-                  onClick={() => handleNavClick('helpline')}
-                  className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-white/5 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all text-sky-400 hover:text-sky-300 font-extrabold cursor-pointer bg-transparent inline-flex"
-                >
-                  <span className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 animate-pulse" />
-                    Customer Telegram Helpline
-                  </span>
-                  <span className="text-[9px] bg-sky-500/10 px-2 rounded text-sky-400 border border-sky-500/20 uppercase tracking-wider font-bold">24/7 Support</span>
-                </motion.button>
 
                 <motion.button 
                   variants={mobileItemVariants}
@@ -2155,11 +2128,11 @@ export default function App() {
                   {/* HELPLINES */}
                   <div className="bg-[#121212]/50 backdrop-blur-md border border-white/5 hover:border-[#10B981]/30 rounded-2xl p-5 md:p-6 space-y-3 transition-all duration-300 relative group overflow-hidden text-left">
                     <div className="w-10 h-10 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 flex items-center justify-center text-xl text-[#10B981]">
-                      📞
+                      ⚡
                     </div>
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider font-serif">Active Support</h3>
+                    <h3 className="text-xs font-black text-white uppercase tracking-wider font-serif">Automated Processing</h3>
                     <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
-                      Help systems are fully functional. Reach our administration instantly for fast, expert guidance on Telegram or email desk.
+                      Our platform handles transactions and portfolio balancing with advanced institutional algorithms.
                     </p>
                   </div>
                 </div>
@@ -2300,13 +2273,10 @@ export default function App() {
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#10B981]">Support Contact</h4>
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#10B981]">Community</h4>
                     <div className="flex flex-col gap-2 text-xs font-semibold">
-                      <a href="mailto:support@apexcapital.test" className="text-zinc-300 hover:text-[#10B981] transition-all flex items-center gap-1 bg-transparent border-0">
-                        ✉️ support@apexcapital.test
-                      </a>
-                      <a href="https://t.me/moneymindspace" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-sky-400 transition-all flex items-center gap-1 bg-transparent border-0">
-                        ✈️ Telegram Official Helpline
+                      <a href="https://t.me/apexcapital_official" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-sky-400 transition-all flex items-center gap-1 bg-transparent border-0">
+                        ✈️ Official Channel
                       </a>
                     </div>
                   </div>
@@ -2317,9 +2287,7 @@ export default function App() {
                       <button onClick={() => setOpenedFooterDoc('about')} className="text-left text-zinc-300 hover:text-blue-400 transition-all bg-transparent border-0 cursor-pointer outline-none">
                         About Apex Capital
                       </button>
-                      <button onClick={() => setOpenedFooterDoc('contact')} className="text-left text-zinc-300 hover:text-blue-400 transition-all bg-transparent border-0 cursor-pointer outline-none">
-                        Support Helplines Overview
-                      </button>
+                      
                     </div>
                   </div>
 
@@ -2412,7 +2380,7 @@ export default function App() {
                 <div>
                   <h2 className="text-xs uppercase font-extrabold tracking-[0.2em] text-blue-400 font-sans">
                     {openedFooterDoc === 'about' && 'About Apex Capital'}
-                    {openedFooterDoc === 'contact' && 'Contact Support Center'}
+                    {openedFooterDoc === 'contact' && 'Contact Information'}
                     {openedFooterDoc === 'privacy' && 'Official Privacy Policy'}
                     {openedFooterDoc === 'terms' && 'Core Terms & Conditions'}
                   </h2>
@@ -2926,8 +2894,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <LiveChatBot />
-
+      
       {/* Real-time Simulated Recent Payout & Withdrawal Feed Popups Sourced from DB */}
       <RecentWithdrawalToast feed={approvedWithdrawalsFeed} />
     </div>

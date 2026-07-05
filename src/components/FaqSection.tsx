@@ -35,31 +35,7 @@ const faqs: FaqItemConfig[] = [
       </span>
     )
   },
-  {
-    question: 'How do I contact customer support 24/7?',
-    answer: (
-      <span>
-        We offer elite 24/7 customer support. For transactions, deposit confirmations, or withdrawal inquiries, contact our live Telegram representative at{' '}
-        <a 
-          href="https://t.me/ApexCapitalSupport" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="text-sky-400 hover:underline font-bold"
-        >
-          @ApexCapitalSupport
-        </a>
-        . For any secure administration questions or compliance inquiries, you can reach out directly to our help desk via email at{' '}
-        <a 
-          href="mailto:support@apexcapital.test" 
-          className="text-blue-400 hover:underline font-bold"
-        >
-          support@apexcapital.test
-        </a>
-        .
-      </span>
-    )
-  }
-];
+  ];
 
 export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);

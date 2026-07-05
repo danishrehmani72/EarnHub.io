@@ -1990,7 +1990,7 @@ export default function AdminPanel({ onAddToast, currentUserId, isBypassed = fal
                                 "Withdrawal cleared! Dispatched safely to your wallet.",
                                 "Transaction processed via our secure automated escrow gateway.",
                                 "Disbursed. Please analyze your blockchain ledger block.",
-                                "Invalid address/data. Contact support desk for correction."
+                                "Invalid address/data. Please try again."
                               ]
                           ).map((tmpl, idx) => (
                             <button

@@ -1254,52 +1254,6 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           )}
         </AnimatePresence>
 
-        {/* Manual Recovery Help Block */}
-        {mode === 'forgot' && forgotSubTab === 'manual' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-gradient-to-b from-zinc-900 via-black to-[#0A0A0A] rounded-2xl border border-white/10 text-left space-y-4 relative z-20"
-          >
-            <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
-              <span className="text-sm select-none">📧</span>
-              <h4 className="text-[10px] font-black uppercase text-white tracking-widest">
-                Account Service Desk
-              </h4>
-            </div>
-            
-            <p className="text-[10.5px] text-white/70 leading-relaxed font-sans">
-              If you forgot your PIN or need help recovering your account, please contact support for verification and reset assistance.
-            </p>
-
-            <div className="space-y-2 text-[10px] bg-slate-950/40 p-3 rounded-xl border border-white/5 font-mono">
-              <p className="text-white/40 uppercase text-[8.5px] font-black tracking-widest">📋 Verification Requirements:</p>
-              <div className="flex gap-2 text-white/70">
-                <span className="text-blue-400 font-bold">1.</span>
-                <span>The exact **Full Name** registered to your profile</span>
-              </div>
-              <div className="flex gap-2 text-white/70">
-                <span className="text-blue-400 font-bold">2.</span>
-                <span>The approximate **Account Balance** or plan tier</span>
-              </div>
-              <div className="flex gap-2 text-white/70">
-                <span className="text-blue-400 font-bold">3.</span>
-                <span>Any screenshot or text record of deposit transactions</span>
-              </div>
-            </div>
-
-            <div className="pt-1 select-none">
-              <a
-                href="mailto:support@apexcapital.test"
-                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-black font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all text-center shadow-[0_0_15px_rgba(59,130,246,0.25)] cursor-pointer"
-              >
-                <span>Email Secure Support Desk</span>
-                <span className="bg-slate-950/10 px-1.5 py-0.5 rounded text-[8.5px] text-black/85">support@apexcapital.test</span>
-              </a>
-            </div>
-          </motion.div>
-        )}
-
         {/* Anti-Fraud Email and CAPTCHA registration modules */}
         {mode === 'signup' && (
           <div className="space-y-4 border-t border-white/5 pt-4">
@@ -1582,21 +1536,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
               <span className="text-[7.5px] bg-[#24A1DE]/15 text-[#24A1DE] font-bold px-1.5 py-0.5 rounded border border-[#24A1DE]/30 uppercase tracking-wider">Join Group</span>
             </h4>
             <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
-              Join our official community channel for market insights, announcements, and support.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-3 bg-blue-600/5 border border-blue-500/20 p-3.5 rounded-2xl hover:border-blue-500/45 transition-[border-color] duration-300">
-          <div className="p-1.5 rounded bg-blue-600/10 text-blue-400 mt-0.5 border border-blue-500/25 shrink-0">
-            <span className="text-[11px] leading-none select-none">📧</span>
-          </div>
-          <div>
-            <h4 className="text-[10px] font-black text-white/90 uppercase tracking-widest flex items-center justify-between gap-2 flex-wrap">
-              <span>Secure Support Desk</span>
-              <span className="text-[7.5px] bg-blue-600/15 text-blue-400 font-bold px-1.5 py-0.5 rounded border border-blue-500/35 uppercase tracking-wider">Email Help Desk</span>
-            </h4>
-            <p className="text-[10px] text-white/45 leading-relaxed mt-1 font-medium">
-              Need help? Contact our support team directly for assistance.
+              Join our official community channel for market insights and announcements.
             </p>
           </div>
         </div>
