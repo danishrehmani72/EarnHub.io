@@ -150,6 +150,22 @@ export default function DashboardCard({
   const [showWithdrawSheet, setShowWithdrawSheet] = useState(false);
   const [showFaqModal, setShowFaqModal] = useState(false);
   const [showQuickActionsDrawer, setShowQuickActionsDrawer] = useState(false);
+
+  // Redesigned premium features modal and popup states
+  const [showSpinModal, setShowSpinModal] = useState(false);
+  const [showTasksModal, setShowTasksModal] = useState(false);
+  const [showDailyBonusModal, setShowDailyBonusModal] = useState(false);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showWithdrawalProgressModal, setShowWithdrawalProgressModal] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [spinRotation, setSpinRotation] = useState(0);
+  const [giftCode, setGiftCode] = useState('');
+  const [verifyingTaskId, setVerifyingTaskId] = useState<string | null>(null);
+  const [taskProgress, setTaskProgress] = useState(0);
+  const [notificationsRead, setNotificationsRead] = useState(false);
+
   const [completedTasks, setCompletedTasks] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -321,6 +337,114 @@ export default function DashboardCard({
     } else {
       setPullStatus('idle');
       setPullDistance(0);
+    }
+  };
+
+  // ⚡ CUSTOM INTERACTIVE HANDLERS FOR REDESIGNED POPUPS
+  const handleTaskClick = async (taskId: string, link: string, rewardPKR: number) => {
+    if (completedTasks.includes(taskId)) return;
+    setVerifyingTaskId(taskId);
+    setTaskProgress(0);
+    window.open(link, '_blank');
+    
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      setTaskProgress(progress);
+      if (progress >= 100) {
+        clearInterval(interval);
+        setVerifyingTaskId(null);
+        
+        const updated = [...completedTasks, taskId];
+        setCompletedTasks(updated);
+        const key = `earnhub_completed_tasks_${userId || 'guest'}`;
+        localStorage.setItem(key, JSON.stringify(updated));
+        
+        // Payout to live database
+        if (onClaimDailyReward) {
+          const rewardUSD = rewardPKR / 280;
+          onClaimDailyReward(rewardUSD);
+        }
+        playSound('new_referral');
+        onAddToast(`Task Completed! ₨ ${rewardPKR} credited to your live ledger.`, 'success');
+      }
+    }, 300);
+  };
+
+  const handleSpinClick = () => {
+    if (isSpinning) return;
+    setIsSpinning(true);
+    playSound('new_referral');
+    
+    // Choose a random segment
+    const segmentIndex = Math.floor(Math.random() * 8);
+    const selectedSegment = [
+      { prize: 0.1, label: "Rs. 28" },
+      { prize: 0.25, label: "Rs. 70" },
+      { prize: 0.05, label: "Rs. 14" },
+      { prize: 0.5, label: "Rs. 140" },
+      { prize: 0, label: "Try Again" },
+      { prize: 1.0, label: "Rs. 280" },
+      { prize: 0.15, label: "Rs. 42" },
+      { prize: 0.08, label: "Rs. 22" },
+    ][segmentIndex];
+
+    const targetRotation = 360 * 5 + (360 - (segmentIndex * 45) - 22.5);
+    setSpinRotation(targetRotation);
+
+    setTimeout(() => {
+      setIsSpinning(false);
+      if (selectedSegment.prize > 0) {
+        if (onClaimDailyReward) {
+          onClaimDailyReward(selectedSegment.prize);
+        }
+        playSound('new_referral');
+        onAddToast(`🎉 Congratulations! You won ${selectedSegment.label} from the Lucky Spin!`, 'success');
+      } else {
+        onAddToast("Better luck next time! Try again tomorrow.", 'error');
+      }
+    }, 4100);
+  };
+
+  const handleRedeemGiftCode = () => {
+    const code = giftCode.trim().toUpperCase();
+    if (!code) {
+      onAddToast("Please enter a gift code.", "error");
+      return;
+    }
+    
+    let prizePKR = 0;
+    if (code === 'MINDS2026') {
+      prizePKR = 140; // $0.5
+    } else if (code === 'FREE100') {
+      prizePKR = 280; // $1.0
+    } else {
+      onAddToast("Invalid or expired gift code.", "error");
+      return;
+    }
+    
+    setGiftCode('');
+    setShowGiftModal(false);
+    
+    if (onClaimDailyReward) {
+      onClaimDailyReward(prizePKR / 280);
+    }
+    playSound('new_referral');
+    onAddToast(`🎉 Promo code applied! ₨ ${prizePKR} credited successfully.`, "success");
+  };
+
+  const handleClaimDailyDividend = async (dayIndex: number, pkrAmount: number) => {
+    if (onClaimDailyReward) {
+      try {
+        await onClaimDailyReward(pkrAmount / 280);
+        setShowDailyBonusModal(false);
+        playSound('new_referral');
+        onAddToast(`🎉 Daily check-in successful! ₨ ${pkrAmount} credited to balance.`, 'success');
+      } catch (err) {
+        onAddToast('Could not claim daily bonus. Wait for clock countdown.', 'error');
+      }
+    } else {
+      onAddToast('Daily reward pipeline unavailable.', 'error');
     }
   };
 
@@ -1120,40 +1244,66 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
   return (
     <div 
-      className={`${theme === 'dark' ? 'dark bg-[#0B0F19] text-[#E5E7EB]' : 'bg-[#F3F4F6] text-slate-800'} w-full max-w-md mx-auto md:rounded-[40px] md:border-[10px] md:border-zinc-800 md:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] h-full md:h-[840px] overflow-hidden flex flex-col font-sans relative transition-all duration-300`}
+      className={`${theme === 'dark' ? 'dark bg-[#08080c] text-[#E5E7EB]' : 'bg-[#FAFCFA] text-slate-800'} w-full max-w-5xl mx-auto md:rounded-[32px] md:border-2 md:border-gray-200/50 dark:md:border-white/5 md:shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:md:shadow-[0_20px_50px_rgba(0,0,0,0.55)] overflow-hidden flex flex-col font-sans relative transition-all duration-300 min-h-[850px] shadow-sm`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* 📱 TOP HEADER (Screenshot style: "Free Earn Money By Online") */}
-      <div className="bg-white dark:bg-[#131B2E] border-b border-gray-100 dark:border-white/5 py-4 px-4 flex items-center justify-between shrink-0 sticky top-0 z-40 select-none shadow-sm">
-        <div className="flex items-center gap-2.5">
+      {/* 📱 TOP HEADER (Redesigned premium style) */}
+      <div className="bg-white/85 dark:bg-[#0c0d12]/85 backdrop-blur-md border-b border-gray-150/80 dark:border-white/5 py-4 px-5 flex items-center justify-between shrink-0 sticky top-0 z-40 select-none shadow-sm transition-colors">
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => {
               if (activeTab !== 'overview') {
                 setActiveTab('overview');
               }
             }}
-            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer"
+            className="w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 text-slate-500 dark:text-slate-400 flex items-center justify-center bg-gray-50 dark:bg-white/5 hover:text-emerald-500 hover:border-emerald-500/30 transition-all cursor-pointer active:scale-95"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h1 className="text-[13px] font-black uppercase tracking-wider text-emerald-500 font-sans leading-none flex items-center gap-1">
-              <span>Free Earn Money By Online</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="text-left">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest leading-none">Welcome Back</p>
+            <h1 className="text-sm font-black text-slate-800 dark:text-white font-sans mt-1 leading-none flex items-center gap-1.5">
+              <span>{name || 'User'}</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </h1>
-            <p className="text-[9px] text-zinc-400 uppercase tracking-widest leading-none mt-1">No invest You Money</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] font-extrabold uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-            v3.5 Live
-          </span>
+        <div className="flex items-center gap-3">
+          {/* Notification Bell */}
+          <button 
+            onClick={() => {
+              setShowNotificationModal(true);
+              setNotificationsRead(true);
+            }}
+            className="w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 text-slate-500 dark:text-slate-400 flex items-center justify-center bg-gray-50 dark:bg-white/5 hover:text-emerald-500 hover:border-emerald-500/30 relative transition-all cursor-pointer active:scale-95"
+          >
+            <Bell className="w-4 h-4" />
+            {!notificationsRead && (
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 border-2 border-white dark:border-[#0c0d12] rounded-full animate-bounce" />
+            )}
+          </button>
+
+          {/* Volume Control Mute/Unmute */}
+          <button 
+            onClick={toggleMuted}
+            className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
+              isMuted 
+                ? 'border-gray-200 dark:border-white/10 text-slate-400 bg-gray-50 dark:bg-white/5' 
+                : 'border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10'
+            }`}
+            title={isMuted ? "Enable Audio Feedback" : "Mute Audio Feedback"}
+          >
+            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
+
+          {/* Settings Trigger */}
           <button 
             onClick={() => setActiveTab('settings')}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer"
+            className="w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 text-slate-500 dark:text-slate-400 flex items-center justify-center bg-gray-50 dark:bg-white/5 hover:text-emerald-500 hover:border-emerald-500/30 transition-all cursor-pointer active:scale-95"
+            title="Profile Settings"
           >
             <Settings className="w-4 h-4" />
           </button>
@@ -1177,18 +1327,18 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
       {/* SECURITY / SYSTEM LIVE BROADCAST ANNOUNCEMENT LEVEL 1 MARQUEE */}
       {globalSettings?.isAnnouncementActive && globalSettings?.systemAnnouncement && (
-        <div className="bg-amber-500/5 dark:bg-[#1a140b] border-b border-amber-500/10 px-4 py-2 flex items-center gap-3.5 relative overflow-hidden z-20 shrink-0 font-sans">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0 animate-pulse" />
+        <div className="bg-[#22C55E]/10 border-b border-[#22C55E]/15 px-4 py-2 flex items-center gap-3.5 relative overflow-hidden z-20 shrink-0 font-sans">
+          <Sparkles className="w-3.5 h-3.5 text-emerald-500 shrink-0 animate-pulse" />
           <div className="flex-1 overflow-hidden relative">
-            <div className="animate-marquee whitespace-nowrap text-[9px] font-bold text-amber-600 dark:text-amber-200 tracking-wider">
+            <div className="animate-marquee whitespace-nowrap text-[10px] font-bold text-emerald-700 dark:text-emerald-300 tracking-wider">
               {globalSettings.systemAnnouncement}
             </div>
           </div>
         </div>
       )}
 
-      {/* Main middle scrollable area of the mobile container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-5 hide-scrollbar pb-24">
+      {/* Main middle scrollable area of the container */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-6 hide-scrollbar pb-28">
         <AnimatePresence mode="wait">
           {activeTab === 'overview' && (
             <motion.div
@@ -1199,147 +1349,325 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="space-y-6"
             >
-              {/* Dynamic Cards: Balance, Investment, Timer, Referrals */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                
-                {/* 1. Live Wallet Balance */}
-                <motion.div 
-                  id="live-wallet-balance-card" 
-                  layout
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ 
-                    opacity: 1, 
-                    y: 0,
-                    scale: flashType === 'up' ? 1.03 : flashType === 'down' ? 0.97 : 1.0,
-                    borderColor: flashType === 'up' ? 'rgba(16,185,129,0.4)' : flashType === 'down' ? 'rgba(244,63,94,0.4)' : theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(229,231,235,1)',
-                    backgroundColor: flashType === 'up' ? 'rgba(16,185,129,0.1)' : flashType === 'down' ? 'rgba(244,63,94,0.1)' : theme === 'dark' ? 'rgba(19,27,46,1)' : 'rgba(255,255,255,1)',
-                    boxShadow: flashType === 'up' 
-                      ? '0 0 25px rgba(16,185,129,0.15)' 
-                      : flashType === 'down' 
-                      ? '0 0 25px rgba(244,63,94,0.15)' 
-                      : '0 4px 6px -1px rgba(0,0,0,0.05)'
-                  }}
-                  exit={{ opacity: 0, scale: 0.92, y: -15 }}
-                  whileHover={{ y: -3, scale: 1.015 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden border rounded-2xl cursor-pointer"
-                >
-                  <div className={`absolute -top-4 -right-4 pointer-events-none transition-colors duration-500 ${
-                    flashType === 'up' ? 'text-emerald-500/10' : flashType === 'down' ? 'text-rose-500/10' : 'text-emerald-500/5'
-                  }`}>
-                    <DollarSign className="w-20 h-20" />
-                  </div>
-                  <div className="flex items-center justify-between z-10">
-                    <span className="text-[10px] uppercase tracking-[0.12em] text-slate-500 dark:text-white/40 font-bold font-sans">Wallet Balance</span>
-                    <div className="w-6 h-6 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
-                      <DollarSign className="w-3 h-3" />
+              {/* Premium redone Balance Card with Green Gradient */}
+              <motion.div
+                id="live-wallet-balance-card"
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ y: -3 }}
+                className="bg-gradient-to-br from-[#22C55E] to-[#16A34A] rounded-[24px] p-6 text-white relative overflow-hidden shadow-[0_12px_30px_rgba(22,163,74,0.22)] select-none border border-[#22C55E]/30"
+              >
+                {/* Abstract graphic grid backgrounds inside card */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_60%)] pointer-events-none" />
+                <div className="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-white/5 blur-xl pointer-events-none" />
+                <div className="absolute top-4 right-4 opacity-10">
+                  <DollarSign className="w-24 h-24" />
+                </div>
+
+                <div className="flex flex-col gap-5 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/80">Available Wallet Balance</span>
+                      <span className="px-2 py-0.5 rounded-full bg-white/15 text-[8px] uppercase tracking-wider font-extrabold text-emerald-100">Live Ledger</span>
                     </div>
-                  </div>
-                  <motion.div 
-                    layout="position"
-                    className={`my-1 text-2xl font-bold tracking-tight z-10 flex items-center gap-1.5 transition-all duration-300 ${
-                      flashType === 'up' ? 'text-emerald-500 drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]' : flashType === 'down' ? 'text-rose-500 drop-shadow-[0_0_12px_rgba(244,63,94,0.4)]' : 'text-emerald-500'
-                    }`}
-                  >
-                    <span>{currencySymbol}</span>
-                    <motion.span 
-                      key={`${currency}-${balance}`} 
-                      initial={{ scale: 0.95, filter: "brightness(1.2)" }}
-                      animate={{ scale: 1, filter: "brightness(1)" }}
-                      layout="position"
+                    
+                    {/* Hide / Show Balance Toggle button */}
+                    <button 
+                      onClick={() => setShowBalance(!showBalance)}
+                      className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-all bg-transparent border-0 cursor-pointer active:scale-90"
+                      title={showBalance ? "Hide Balance" : "Show Balance"}
                     >
-                      {animatedBalanceDisplay}
-                    </motion.span>
-                  </motion.div>
-                  <div className="text-[8.5px] font-medium flex items-center justify-between gap-1 z-10 leading-normal text-emerald-500">
-                    <span className="flex items-center gap-1">
-                      <TrendingUp className="w-2.5 h-2.5 shrink-0" /> Real-time active ledger
-                    </span>
+                      {showBalance ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
-                </motion.div>
 
-                {/* 2. Matured Balance */}
-                <motion.div 
-                  id="matured-balance-card" 
-                  layout
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.92, y: -15 }}
-                  whileHover={{ y: -3, scale: 1.015 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-white dark:bg-[#131B2E] border border-gray-100 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden cursor-pointer shadow-sm dark:shadow-inner"
-                >
-                  <div className="absolute -top-4 -right-4 text-emerald-500/5 pointer-events-none">
-                    <TrendingUp className="w-20 h-20" />
+                  <div className="flex items-baseline gap-2.5">
+                    <span className="text-xl font-bold text-emerald-100">{currencySymbol}</span>
+                    <h2 className="text-3xl md:text-4xl font-black font-sans tracking-tight">
+                      {showBalance ? animatedBalanceDisplay : "••••••"}
+                    </h2>
                   </div>
-                  <div className="flex items-center justify-between z-10">
-                    <span className="text-[10px] uppercase tracking-[0.12em] text-slate-500 dark:text-white/40 font-bold font-sans">Matured Balance</span>
-                    <div className="w-6 h-6 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
-                      <CheckCircle className="w-3 h-3" />
+
+                  {/* Accrued and Matured balances */}
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/15 text-left">
+                    <div>
+                      <p className="text-[9px] uppercase tracking-wider text-emerald-100/70 font-semibold leading-none">Matured Balance</p>
+                      <p className="text-sm font-bold text-white mt-1.5">
+                        {currencySymbol}{(maturedBalance * conversionRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] uppercase tracking-wider text-emerald-100/70 font-semibold leading-none">Active Plans</p>
+                      <p className="text-sm font-bold text-white mt-1.5 flex items-center justify-end gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping" />
+                        <span>{investments.filter(i => i.status === 'active').length} Active</span>
+                      </p>
                     </div>
                   </div>
-                  <div className="my-1 font-serif text-emerald-500 text-2xl tracking-tight z-10 flex items-center gap-1">
-                    <span>{currencySymbol}</span>
-                    <span>{(maturedBalance * conversionRate).toFixed(2)}</span>
-                  </div>
-                  <div className="text-[8.5px] text-slate-500 dark:text-white/40 font-medium flex items-center gap-1 z-10 leading-normal">
-                    <Sparkles className="w-2.5 h-2.5 text-emerald-500 shrink-0" /> Ready to reinvest / withdraw
-                  </div>
-                </motion.div>
 
-                {/* 3. Next Daily Payout Timer */}
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.92, y: -15 }}
-                  whileHover={{ y: -3, scale: 1.015 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-white dark:bg-[#131B2E] border border-gray-100 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden cursor-pointer shadow-sm dark:shadow-inner"
-                >
-                  <div className="absolute -top-4 -right-4 text-slate-400/5 dark:text-white/5 pointer-events-none font-black text-6xl select-none">
-                    T
+                  {/* Quick Action Deposit & Withdraw Buttons Inside Balance Card */}
+                  <div className="grid grid-cols-2 gap-3.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('funding');
+                        playSound('new_referral');
+                        onAddToast('Redirected to deposit channel.', 'success');
+                      }}
+                      className="py-3 px-4 rounded-xl bg-white text-[#16A34A] hover:bg-emerald-50 font-black text-xs uppercase tracking-widest transition-all duration-200 text-center cursor-pointer shadow-md shadow-emerald-800/10 border-0 flex items-center justify-center gap-1.5"
+                    >
+                      <Plus className="w-4 h-4 text-[#16A34A] shrink-0" />
+                      <span>Deposit</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('funding');
+                        playSound('new_referral');
+                        onAddToast('Redirected to withdrawal forms.', 'success');
+                      }}
+                      className="py-3 px-4 rounded-xl bg-emerald-600/35 hover:bg-emerald-600/50 text-white border border-white/20 font-black text-xs uppercase tracking-widest transition-all duration-200 text-center cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <ArrowUpRight className="w-4 h-4 text-white shrink-0" />
+                      <span>Withdraw</span>
+                    </button>
                   </div>
-                  <div className="flex items-center justify-between z-10">
-                    <span className="text-[10px] uppercase tracking-[0.12em] text-slate-500 dark:text-white/40 font-bold">Payout Timer</span>
-                    <div className="w-6 h-6 rounded bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-slate-600 dark:text-white/60 flex items-center justify-center font-mono text-[9px]">
-                      ⏱
+                </div>
+              </motion.div>
+
+              {/* 📊 DUAL STATS GRID (Deposit & Withdrawal Tracker) */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* 1. Total Approved Deposit Card */}
+                <div className="bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 rounded-2xl p-4.5 text-left relative overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                  <div className="absolute -top-3 -right-3 text-emerald-500/5 dark:text-emerald-400/5 pointer-events-none">
+                    <ArrowDownLeft className="w-16 h-16" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+                      <ArrowDownLeft className="w-3.5 h-3.5" />
                     </div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-widest">Total Deposit</span>
                   </div>
-                  <div className="my-1 font-mono text-slate-800 dark:text-white/95 text-xl font-bold tracking-wider z-10">
-                    {timeRemaining}
-                  </div>
-                  <div className="text-[8.5px] text-slate-500 dark:text-white/40 font-medium flex items-center gap-1 z-10 leading-normal">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${hasActivePlan ? 'bg-emerald-500 animate-ping' : 'bg-zinc-400'}`} />
-                    {hasActivePlan ? 'Fixed daily cycle running' : 'Await approved deposit'}
-                  </div>
-                </motion.div>
+                  <h3 className="text-lg md:text-xl font-black font-sans tracking-tight text-slate-800 dark:text-white mt-3">
+                    {currencySymbol}{(deposits.filter(d => d.status === 'approved').reduce((sum, d) => sum + d.amount, 0) * conversionRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h3>
+                  <p className="text-[8.5px] text-emerald-500 font-medium mt-1.5 flex items-center gap-1">
+                    <CheckCircle className="w-2.5 h-2.5 shrink-0" />
+                    <span>Instant automatic credit</span>
+                  </p>
+                </div>
 
-                {/* 4. Total Referrals */}
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.92, y: -15 }}
-                  whileHover={{ y: -3, scale: 1.015 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-white dark:bg-[#131B2E] border border-gray-100 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden cursor-pointer shadow-sm dark:shadow-inner"
-                >
-                  <div className="absolute -top-4 -right-4 text-slate-400/5 dark:text-white/5 pointer-events-none">
-                    <Users className="w-20 h-20" />
+                {/* 2. Total Approved Withdrawal Card */}
+                <div className="bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 rounded-2xl p-4.5 text-left relative overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                  <div className="absolute -top-3 -right-3 text-rose-500/5 dark:text-rose-400/5 pointer-events-none">
+                    <ArrowUpRight className="w-16 h-16" />
                   </div>
-                  <div className="flex items-center justify-between z-10">
-                    <span className="text-[10px] uppercase tracking-[0.12em] text-slate-500 dark:text-white/40 font-bold">Total Referrals</span>
-                    <div className="w-6 h-6 rounded bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-slate-600 dark:text-white/60 flex items-center justify-center">
-                      <Users className="w-3 h-3" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
+                      <ArrowUpRight className="w-3.5 h-3.5" />
                     </div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-widest">Total Withdraw</span>
                   </div>
-                  <div className="my-1 font-serif text-slate-800 dark:text-white/90 text-2xl tracking-tight z-10">
-                    {referralCount}
-                  </div>
-                  <div className="text-[8.5px] text-emerald-500 font-medium flex items-center gap-1 z-10 leading-normal font-sans">
-                    <Award className="w-2.5 h-2.5 shrink-0 animate-pulse" /> Target progress: {progressPercent.toFixed(0)}%
-                  </div>
-                </motion.div>
+                  <h3 className="text-lg md:text-xl font-black font-sans tracking-tight text-slate-800 dark:text-white mt-3">
+                    {currencySymbol}{(withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + w.amount, 0) * conversionRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h3>
+                  <button 
+                    onClick={() => setShowWithdrawalProgressModal(true)}
+                    className="text-[8.5px] text-blue-500 hover:text-blue-600 font-bold mt-1.5 flex items-center gap-1 bg-transparent border-0 cursor-pointer p-0 select-none outline-none hover:underline"
+                  >
+                    <RefreshCw className="w-2.5 h-2.5 shrink-0 animate-spin" />
+                    <span>Track progress stepper</span>
+                  </button>
+                </div>
+              </div>
 
+              {/* ⚡ MORE SHORTCUTS (Quick Actions Grid Redesigned) */}
+              <div className="space-y-3 text-left">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-white/30">More Shortcuts</h4>
+                  <span className="text-[8px] uppercase tracking-wider bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-2 py-0.5 rounded-full text-slate-500 dark:text-white/50">12 shortcuts</span>
+                </div>
+
+                <div className="grid grid-cols-4 gap-3">
+                  {/* Shortcut 1: Tasks */}
+                  <button
+                    onClick={() => {
+                      setShowTasksModal(true);
+                      playSound('new_referral');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                      <CheckSquare className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Tasks</span>
+                  </button>
+
+                  {/* Shortcut 2: Deposit */}
+                  <button
+                    onClick={() => {
+                      setActiveTab('funding');
+                      setDepositMethodTab('pakistan');
+                      playSound('new_referral');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center">
+                      <ArrowDownLeft className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Deposit</span>
+                  </button>
+
+                  {/* Shortcut 3: Withdraw */}
+                  <button
+                    onClick={() => {
+                      setActiveTab('funding');
+                      playSound('new_referral');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-500 flex items-center justify-center">
+                      <ArrowUpRight className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Withdraw</span>
+                  </button>
+
+                  {/* Shortcut 4: Portfolios */}
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById('deposit-section') || document.getElementById('live-wallet-balance-card');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      onAddToast('Scroll down to discover and lock investment portfolios below!', 'success');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Plans</span>
+                  </button>
+
+                  {/* Shortcut 5: History */}
+                  <button
+                    onClick={() => {
+                      setActiveTab('funding');
+                      onAddToast('Scroll down to view detailed transaction ledger histories!', 'success');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-500 flex items-center justify-center">
+                      <Coins className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">History</span>
+                  </button>
+
+                  {/* Shortcut 6: Referral */}
+                  <button
+                    onClick={() => {
+                      handleCopy();
+                      playSound('new_referral');
+                      onAddToast('Referral link copied to clipboard! Share with friends to earn.', 'success');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Invite</span>
+                  </button>
+
+                  {/* Shortcut 7: Daily Reward */}
+                  <button
+                    onClick={() => {
+                      setShowDailyBonusModal(true);
+                      playSound('new_referral');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 flex items-center justify-center">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Daily Reward</span>
+                  </button>
+
+                  {/* Shortcut 8: Lucky Spin */}
+                  <button
+                    onClick={() => {
+                      setShowSpinModal(true);
+                      playSound('new_referral');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-500 flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 animate-pulse" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Lucky Spin</span>
+                  </button>
+
+                  {/* Shortcut 9: Support */}
+                  <button
+                    onClick={() => {
+                      window.open('https://t.me/apexcapital_official', '_blank');
+                      playSound('new_referral');
+                      onAddToast('Redirecting to MoneyMind Space support helpline...', 'success');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 flex items-center justify-center">
+                      <HelpCircle className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Help Desk</span>
+                  </button>
+
+                  {/* Shortcut 10: Wallet */}
+                  <button
+                    onClick={() => {
+                      setActiveTab('funding');
+                      playSound('new_referral');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 flex items-center justify-center">
+                      <Wallet className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Wallet</span>
+                  </button>
+
+                  {/* Shortcut 11: Leaderboard */}
+                  <button
+                    onClick={() => {
+                      setShowLeaderboardModal(true);
+                      playSound('new_referral');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 flex items-center justify-center">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Trophy</span>
+                  </button>
+
+                  {/* Shortcut 12: Gift Card */}
+                  <button
+                    onClick={() => {
+                      setShowGiftModal(true);
+                      playSound('new_referral');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center">
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Gift Voucher</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 🏆 PREMIUM CAMPAIGNS (Banners & Featured VIP plans) */}
+              <div className="space-y-3.5 text-left">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-white/30">Premium Yield Portfolios</h4>
               </div>
 
               <PlanMatrix
@@ -1948,29 +2276,45 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 {/* 1. DEPOSIT PORTAL - UPGRADED GLASSMORPHISM CARD WITH MULTI-RAIL PAKISTAN & CRYPTO SUPPORT */}
                 <div 
                   id="deposit-section" 
-                  className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ${depositMethodTab === 'pakistan' ? 'from-[#031d10] via-[#010905] to-black border-2 border-emerald-500/40 hover:border-emerald-500/70 shadow-[0_0_40px_rgba(16,185,129,0.15)] shadow-emerald-500/10' : 'from-[#0B0B0B] via-[#050505] to-black border-2 border-blue-500/45 hover:border-emerald-500/60 shadow-[0_0_40px_rgba(59,130,246,0.12)]'} hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl`}
+                  className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ${
+                    theme === 'dark' 
+                      ? depositMethodTab === 'pakistan' 
+                        ? 'from-[#031d10] via-[#010905] to-black border-2 border-emerald-500/40 hover:border-emerald-500/70 shadow-[0_0_40px_rgba(16,185,129,0.15)] shadow-emerald-500/10' 
+                        : 'from-[#0B0B0B] via-[#050505] to-black border-2 border-blue-500/45 hover:border-emerald-500/60 shadow-[0_0_40px_rgba(59,130,246,0.12)]'
+                      : depositMethodTab === 'pakistan'
+                        ? 'from-emerald-50/30 via-white to-emerald-50/10 border-2 border-emerald-500/20 hover:border-emerald-500/40 shadow-[0_12px_45px_rgba(16,185,129,0.04)] shadow-emerald-500/5'
+                        : 'from-white via-slate-50 to-white border-2 border-slate-200 hover:border-slate-300 shadow-[0_12px_45px_rgba(0,0,0,0.03)]'
+                  } hover:shadow-[0_0_55px_rgba(16,185,129,0.18)] transition-all duration-500 p-6 md:p-8 space-y-7 scroll-mt-24 backdrop-blur-xl`}
                 >
                   {/* Premium color overlay gradients */}
                   <div className={`absolute top-0 right-0 w-72 h-72 bg-gradient-to-br ${depositMethodTab === 'pakistan' ? 'from-emerald-500/10 to-transparent' : 'from-blue-600/6 via-[#10B981]/3 to-transparent'} blur-3xl pointer-events-none`} />
                   <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
                   {/* Portal Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                  <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${theme === 'dark' ? 'border-white/5' : 'border-slate-200/60'} pb-4`}>
                     <div className="flex items-center gap-3">
-                      <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${depositMethodTab === 'pakistan' ? 'from-emerald-500/25 to-black border border-emerald-500/40' : 'from-blue-600/20 to-black border border-blue-500/40'} flex items-center justify-center ring-1 ring-white/5`}>
+                      <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${
+                        theme === 'dark' 
+                          ? depositMethodTab === 'pakistan' 
+                            ? 'from-emerald-500/25 to-black border border-emerald-500/40' 
+                            : 'from-blue-600/20 to-black border border-blue-500/40'
+                          : depositMethodTab === 'pakistan'
+                            ? 'from-emerald-500/10 to-white border border-emerald-500/20 shadow-sm'
+                            : 'from-blue-50 to-white border border-blue-200 shadow-sm'
+                      } flex items-center justify-center ring-1 ring-white/5`}>
                         <span className="text-xl">{depositMethodTab === 'pakistan' ? '🇵🇰' : '💳'}</span>
                       </div>
                       <div>
-                        <h3 className="text-sm font-black uppercase tracking-widest text-white leading-none">
+                        <h3 className={`text-sm font-black uppercase tracking-widest ${theme === 'dark' ? 'text-white' : 'text-slate-800'} leading-none`}>
                           {depositMethodTab === 'pakistan' ? 'Pakistan Deposit Center' : 'Deposit Portal'}
                         </h3>
-                        <p className={`text-[8.5px] ${depositMethodTab === 'pakistan' ? 'text-emerald-400' : 'text-blue-400'} uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse`}>
+                        <p className={`text-[8.5px] ${depositMethodTab === 'pakistan' ? 'text-emerald-500 font-black' : 'text-blue-500'} uppercase tracking-widest mt-1.5 font-mono font-bold animate-pulse`}>
                           {depositMethodTab === 'pakistan' ? 'PKR local rails active' : 'Crypto protocol active'}
                         </p>
                       </div>
                     </div>
                     
-                    <span className={`self-start sm:self-auto text-[8.5px] ${depositMethodTab === 'pakistan' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30'} px-3 py-1.5 rounded-full uppercase tracking-widest font-black flex items-center gap-2`}>
+                    <span className={`self-start sm:self-auto text-[8.5px] ${depositMethodTab === 'pakistan' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' : 'bg-[#10B981]/10 text-emerald-600 border border-emerald-500/30'} px-3 py-1.5 rounded-full uppercase tracking-widest font-black flex items-center gap-2`}>
                       <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
                       Verified Secure Core
                     </span>
@@ -1978,37 +2322,37 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
                   {/* Live Available Balance Block / Description */}
                   {depositMethodTab === 'pakistan' ? (
-                    <div className="bg-gradient-to-r from-emerald-950/20 via-white/[0.01] to-transparent p-5 rounded-2xl border border-white/5 relative">
+                    <div className={`bg-gradient-to-r ${theme === 'dark' ? 'from-emerald-950/20 via-white/[0.01]' : 'from-emerald-50 via-white'} to-transparent p-5 rounded-2xl border ${theme === 'dark' ? 'border-white/5' : 'border-emerald-500/10'} relative`}>
                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#10B981] mb-2 flex items-center gap-1.5">
                         <span>🇵🇰 Instantly Secure Local Route</span>
                         <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
                       </p>
-                      <p className="text-[11.5px] text-white/80 leading-relaxed font-sans">
+                      <p className={`text-[11.5px] ${theme === 'dark' ? 'text-white/80' : 'text-slate-600'} leading-relaxed font-sans`}>
                         Add funds to your account instantly and securely using available payment methods in Pakistan.
                       </p>
                     </div>
                   ) : (
-                    <div className="bg-gradient-to-r from-white/[0.01] via-white/[0.02] to-transparent p-5 rounded-2xl border border-white/5 relative">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mb-2 flex items-center gap-1.5">
+                    <div className={`bg-gradient-to-r ${theme === 'dark' ? 'from-white/[0.01] via-white/[0.02]' : 'from-slate-50 via-white'} to-transparent p-5 rounded-2xl border ${theme === 'dark' ? 'border-white/5' : 'border-slate-200'} relative`}>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500 mb-2 flex items-center gap-1.5">
                         <span>💎 Official Smart Contract Node</span>
                         <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
                       </p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-mono font-black text-white tracking-tight">
+                        <span className={`text-2xl font-mono font-black ${theme === 'dark' ? 'text-white' : 'text-slate-800'} tracking-tight`}>
                           100% Instant
                         </span>
-                        <span className="text-xs text-white/40 uppercase font-mono tracking-wider">
+                        <span className={`text-xs ${theme === 'dark' ? 'text-white/40' : 'text-slate-400'} uppercase font-mono tracking-wider`}>
                           Auto-Credited Funds
                         </span>
                       </div>
-                      <p className="text-[9.5px] text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
+                      <p className="text-[9.5px] text-emerald-600 mt-2 flex items-center gap-1 font-semibold">
                         <span>✅ Audited deposit addresses connected to our automated processing ledger.</span>
                       </p>
                     </div>
                   )}
 
                   {/* Custom Navigation Tab Toggle Bar */}
-                  <div className="bg-slate-950/60 border border-white/5 p-1 rounded-xl grid grid-cols-2 gap-1.5 shadow-inner shadow-black">
+                  <div className={`${theme === 'dark' ? 'bg-slate-950/60 border-white/5 shadow-black' : 'bg-slate-100 border-slate-200/80'} border p-1 rounded-xl grid grid-cols-2 gap-1.5 shadow-inner`}>
                     <button
                       type="button"
                       onClick={() => {
@@ -2018,8 +2362,12 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       }}
                       className={`py-2 px-3 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
                         depositMethodTab === 'pakistan'
-                          ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                          : 'text-white/40 hover:text-white/70 border border-transparent'
+                          ? theme === 'dark'
+                            ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                            : 'bg-emerald-600 text-white border border-emerald-700 shadow-md'
+                          : theme === 'dark'
+                            ? 'text-white/40 hover:text-white/70 border border-transparent'
+                            : 'text-slate-500 hover:text-slate-800 border border-transparent'
                       }`}
                     >
                       🇵🇰 Pakistan Center
@@ -2033,8 +2381,12 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       }}
                       className={`py-2 px-3 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
                         depositMethodTab === 'crypto'
-                          ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 shadow-sm'
-                          : 'text-white/40 hover:text-white/70 border border-transparent'
+                          ? theme === 'dark'
+                            ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 shadow-sm'
+                            : 'bg-emerald-600 text-white border border-emerald-700 shadow-md'
+                          : theme === 'dark'
+                            ? 'text-white/40 hover:text-white/70 border border-transparent'
+                            : 'text-slate-500 hover:text-slate-800 border border-transparent'
                       }`}
                     >
                       🌐 Crypto Deposits
@@ -3726,6 +4078,495 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               )}
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 🎡 LUCKY SPIN WHEEL GAME MODAL */}
+      <AnimatePresence>
+        {showSpinModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { if (!isSpinning) setShowSpinModal(false); }}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+            />
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="absolute top-12 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white dark:bg-[#0f1016] border border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl z-[101] text-center space-y-5 select-none"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-white flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-emerald-500 animate-spin" />
+                  <span>Lucky Spin Wheel</span>
+                </h3>
+                <button
+                  onClick={() => setShowSpinModal(false)}
+                  disabled={isSpinning}
+                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center border-0 cursor-pointer disabled:opacity-40"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Animated Virtual Wheel */}
+              <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
+                {/* Pointer Indicator */}
+                <div className="absolute -top-1.5 z-20 text-emerald-500 text-lg animate-bounce">
+                  🎯
+                </div>
+                
+                {/* Wheel Body */}
+                <div 
+                  style={{ transform: `rotate(${spinRotation}deg)`, transition: isSpinning ? 'transform 4s cubic-bezier(0.15, 0.85, 0.35, 1)' : 'none' }}
+                  className="w-44 h-44 rounded-full border-4 border-emerald-500 bg-slate-50 dark:bg-slate-950 overflow-hidden relative shadow-lg flex items-center justify-center"
+                >
+                  {/* Digital Wheel divisions overlay */}
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.1),transparent_70%)]" />
+                  
+                  {/* Wheel segments indicators */}
+                  <div className="absolute w-full h-[1px] bg-emerald-500/30 rotate-0" />
+                  <div className="absolute w-full h-[1px] bg-emerald-500/30 rotate-45" />
+                  <div className="absolute w-full h-[1px] bg-emerald-500/30 rotate-90" />
+                  <div className="absolute w-full h-[1px] bg-emerald-500/30 rotate-135" />
+                  
+                  {/* Custom segment titles */}
+                  <span className="absolute top-3 text-[8px] font-black text-emerald-600 dark:text-emerald-400">Rs. 28</span>
+                  <span className="absolute right-3 text-[8px] font-black text-[#229ED9]">Rs. 70</span>
+                  <span className="absolute bottom-3 text-[8px] font-black text-amber-500">Rs. 14</span>
+                  <span className="absolute left-3 text-[8px] font-black text-purple-500">Rs. 140</span>
+                  <span className="absolute top-10 right-10 text-[7px] font-semibold text-rose-500 rotate-45">Rs. 280</span>
+                  <span className="absolute bottom-10 right-10 text-[7px] font-semibold text-zinc-500 rotate-135">Try Again</span>
+                  <span className="absolute bottom-10 left-10 text-[7px] font-semibold text-teal-500 -rotate-135">Rs. 42</span>
+                  <span className="absolute top-10 left-10 text-[7px] font-semibold text-yellow-500 -rotate-45">Rs. 22</span>
+                </div>
+                
+                {/* Center Core Hub */}
+                <div className="absolute w-10 h-10 rounded-full bg-[#16A34A] border-2 border-white flex items-center justify-center shadow-md z-10">
+                  <Award className="w-4 h-4 text-white" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-slate-400 dark:text-white/40 uppercase tracking-widest font-bold">Spin with automatic balance check</p>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-tight">
+                  Win up to <span className="text-emerald-500 font-extrabold">Rs. 280</span> instant payout
+                </h4>
+              </div>
+
+              {/* Spin Trigger Button */}
+              <button
+                type="button"
+                onClick={handleSpinClick}
+                disabled={isSpinning}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-white font-black text-xs uppercase tracking-widest transition-all shadow-md shadow-emerald-700/10 active:scale-[0.98] cursor-pointer disabled:opacity-50"
+              >
+                {isSpinning ? '🌀 Spin Active...' : '🔥 Spin Now'}
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 📋 SOCIAL TASK CENTER MODAL */}
+      <AnimatePresence>
+        {showTasksModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { if (!verifyingTaskId) setShowTasksModal(false); }}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+            />
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="absolute top-12 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white dark:bg-[#0f1016] border border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl z-[101] flex flex-col gap-4 select-none"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-white flex items-center gap-1.5">
+                  <CheckSquare className="w-4 h-4 text-emerald-500" />
+                  <span>Social Task Hub</span>
+                </h3>
+                <button
+                  onClick={() => setShowTasksModal(false)}
+                  disabled={!!verifyingTaskId}
+                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center border-0 cursor-pointer disabled:opacity-40"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+
+              <p className="text-[10px] text-slate-400 dark:text-white/40 leading-relaxed font-bold uppercase tracking-wider text-left">
+                Complete simple social platform interactions to unlock real-time PKR bonuses credited to your available balance:
+              </p>
+
+              {/* Task Items list */}
+              <div className="space-y-3 overflow-y-auto max-h-72 pr-1 hide-scrollbar text-left">
+                {[
+                  { id: 'youtube_sub', label: 'Subscribe Official Channel', reward: 100, link: 'https://youtube.com', platform: 'YouTube', color: 'from-red-500 to-rose-600' },
+                  { id: 'telegram_join', label: 'Join Telegram Community', reward: 100, link: 'https://telegram.org', platform: 'Telegram', color: 'from-[#24A1DE] to-[#229ED9]' },
+                  { id: 'tiktok_follow', label: 'Follow MindSpace on TikTok', reward: 150, link: 'https://tiktok.com', platform: 'TikTok', color: 'from-[#010101] to-[#25F4EE]' },
+                  { id: 'tutorial_watch', label: 'Watch 60s Staking Guide', reward: 200, link: 'https://youtube.com', platform: 'Video', color: 'from-amber-500 to-orange-600' },
+                ].map((task) => {
+                  const isCompleted = completedTasks.includes(task.id);
+                  const isVerifying = verifyingTaskId === task.id;
+                  
+                  return (
+                    <div 
+                      key={task.id}
+                      className="p-3.5 rounded-xl border border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/40 flex flex-col gap-3 transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded bg-gradient-to-r ${task.color} text-white`}>
+                            {task.platform}
+                          </span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-white">{task.label}</span>
+                        </div>
+                        <span className="text-xs font-black text-emerald-500">₨ {task.reward}</span>
+                      </div>
+
+                      {isVerifying ? (
+                        <div className="space-y-1.5 pt-1">
+                          <div className="flex justify-between text-[9px] font-mono text-slate-500 dark:text-white/40">
+                            <span>Verifying task completion...</span>
+                            <span>{taskProgress}%</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-gray-150 dark:bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${taskProgress}%` }} />
+                          </div>
+                        </div>
+                      ) : isCompleted ? (
+                        <div className="text-[10px] text-emerald-500 font-black uppercase flex items-center gap-1.5 pt-1 select-none">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>Ledger Credited Successfully</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleTaskClick(task.id, task.link, task.reward)}
+                          className="w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] uppercase tracking-widest cursor-pointer transition-all border-0 shadow-sm"
+                        >
+                          Unlock Task (Rs. {task.reward})
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 🎁 DAILY CHECK-IN REWARD MODAL */}
+      <AnimatePresence>
+        {showDailyBonusModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDailyBonusModal(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+            />
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="absolute top-12 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white dark:bg-[#0f1016] border border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl z-[101] text-center space-y-5 select-none"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-white flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-emerald-500 animate-bounce" />
+                  <span>Daily Dividend Tracker</span>
+                </h3>
+                <button
+                  onClick={() => setShowDailyBonusModal(false)}
+                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center border-0 cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+
+              <p className="text-[10px] text-slate-400 dark:text-white/40 font-bold uppercase tracking-widest">
+                Daily Stake Dividend Rewards Calendar
+              </p>
+
+              {/* 7 Day Calendar Cards */}
+              <div className="grid grid-cols-4 gap-2 text-left">
+                {[
+                  { d: 1, amt: 30 },
+                  { d: 2, amt: 50 },
+                  { d: 3, amt: 80 },
+                  { d: 4, amt: 100 },
+                  { d: 5, amt: 120 },
+                  { d: 6, amt: 150 },
+                  { d: 7, amt: 250 },
+                ].map((item, idx) => (
+                  <div 
+                    key={item.d}
+                    className="p-2 rounded-xl border border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/40 text-center flex flex-col gap-1 hover:border-emerald-500/25 transition-all"
+                  >
+                    <span className="text-[8px] font-black uppercase text-slate-400 dark:text-white/30">Day {item.d}</span>
+                    <span className="text-[10px] font-extrabold text-slate-800 dark:text-white">₨ {item.amt}</span>
+                    <button
+                      onClick={() => handleClaimDailyDividend(idx, item.amt)}
+                      className="mt-1 py-1 rounded bg-emerald-500 text-[7px] text-white font-black uppercase tracking-wider border-0 cursor-pointer select-none"
+                    >
+                      Claim
+                    </button>
+                  </div>
+                ))}
+                
+                {/* Day 7 Elite Gift box */}
+                <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 text-white text-center flex flex-col gap-1 justify-center relative overflow-hidden shadow-sm">
+                  <span className="text-[8px] font-black uppercase text-white/75">VIP 👑</span>
+                  <span className="text-[10px] font-black">Bonus</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium leading-relaxed">
+                📢 Daily payouts audit verifies IP addresses. Double claiming on multiple accounts triggers security lockouts.
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 🏆 LEADERBOARD MODAL */}
+      <AnimatePresence>
+        {showLeaderboardModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLeaderboardModal(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+            />
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="absolute top-12 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white dark:bg-[#0f1016] border border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl z-[101] text-left space-y-4 select-none"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-white flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-emerald-500" />
+                  <span>Earner Hall of Fame</span>
+                </h3>
+                <button
+                  onClick={() => setShowLeaderboardModal(false)}
+                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center border-0 cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2.5">
+                {[
+                  { rank: 1, name: 'Daniyal Khan', city: 'Rawalpindi', profit: '₨ 342,800', crown: '🥇' },
+                  { rank: 2, name: 'Ayesha Malik', city: 'Lahore', profit: '₨ 289,500', crown: '🥈' },
+                  { rank: 3, name: 'Zainab Shah', city: 'Karachi', profit: '₨ 194,200', crown: '🥉' },
+                  { rank: 4, name: 'Danish Danish', city: 'Faisalabad', profit: '₨ 150,400', crown: '👑' },
+                  { rank: 5, name: 'Hamza Ali', city: 'Islamabad', profit: '₨ 120,500', crown: '⭐' },
+                ].map((user) => (
+                  <div 
+                    key={user.rank}
+                    className="p-3 rounded-xl border border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/40 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{user.crown}</span>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-800 dark:text-white">{user.name}</h4>
+                        <span className="text-[8.5px] text-slate-400 dark:text-white/30 font-medium uppercase tracking-wider">{user.city}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-black text-[#16A34A]">{user.profit}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 🎟 GIFT CARD REDEEM MODAL */}
+      <AnimatePresence>
+        {showGiftModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowGiftModal(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+            />
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="absolute top-12 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white dark:bg-[#0f1016] border border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl z-[101] text-center space-y-5 select-none"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-white flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-emerald-500" />
+                  <span>Promo Voucher</span>
+                </h3>
+                <button
+                  onClick={() => setShowGiftModal(false)}
+                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center border-0 cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2 text-left">
+                <label className="text-[9px] uppercase tracking-widest text-slate-400 dark:text-white/30 font-bold block">Enter Promo Voucher Code</label>
+                <input 
+                  type="text"
+                  placeholder="e.g. MINDS2026"
+                  value={giftCode}
+                  onChange={(e) => setGiftCode(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-250 dark:border-white/10 bg-gray-50 dark:bg-slate-950/60 text-slate-800 dark:text-white font-mono text-sm uppercase font-bold tracking-wider text-center outline-none focus:border-[#16A34A] transition-all"
+                />
+                <p className="text-[8.5px] text-emerald-600 dark:text-emerald-400 font-bold mt-1.5">
+                  💡 Hint: Try code "MINDS2026" to instantly unlock free Rs. 140 or "FREE100" to claim Rs. 280!
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleRedeemGiftCode}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-white font-black text-xs uppercase tracking-widest cursor-pointer hover:brightness-105 active:scale-95 transition-all text-center border-0"
+              >
+                Claim Free Dividends
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 🔔 NOTIFICATIONS INBOX MODAL */}
+      <AnimatePresence>
+        {showNotificationModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNotificationModal(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+            />
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="absolute top-12 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white dark:bg-[#0f1016] border border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl z-[101] text-left space-y-4 select-none"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-white flex items-center gap-1.5">
+                  <Bell className="w-4 h-4 text-emerald-500 animate-swing" />
+                  <span>System Bulletins</span>
+                </h3>
+                <button
+                  onClick={() => setShowNotificationModal(false)}
+                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center border-0 cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3 max-h-80 overflow-y-auto pr-1 hide-scrollbar">
+                {[
+                  { id: 1, title: '🔐 Security PIN Configured', msg: 'Your withdrawal private PIN audit has been validated. Multi-auditing logs successfully registered on the cloud.', date: 'Today' },
+                  { id: 2, title: '💚 PKR Liquidity Pool Injection', msg: 'Platform reserves successfully expanded. Direct instant bank payouts are running with 100% automated settlement routing.', date: 'Yesterday' },
+                  { id: 3, title: '🚀 MoneyMind Space Revamp', msg: 'Welcome to the premium MoneyMind Space! Experience lightning-fast automatic loading and sleek glassmorphism themes.', date: 'July 2026' }
+                ].map((item) => (
+                  <div key={item.id} className="p-3.5 rounded-xl border border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/40 space-y-1">
+                    <div className="flex justify-between items-baseline">
+                      <h4 className="text-xs font-black text-slate-800 dark:text-white">{item.title}</h4>
+                      <span className="text-[8px] font-bold text-slate-400 dark:text-white/30 uppercase">{item.date}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-white/60 leading-relaxed font-medium">{item.msg}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 📊 WITHDRAWAL PROGRESS STEPPER MODAL */}
+      <AnimatePresence>
+        {showWithdrawalProgressModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowWithdrawalProgressModal(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+            />
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="absolute top-12 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white dark:bg-[#0f1016] border border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl z-[101] text-left space-y-4 select-none"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-white/5">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-white flex items-center gap-1.5">
+                  <RefreshCw className="w-4 h-4 text-emerald-500 animate-spin" />
+                  <span>Withdrawal Stepper</span>
+                </h3>
+                <button
+                  onClick={() => setShowWithdrawalProgressModal(false)}
+                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center border-0 cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4 pt-1 text-left">
+                {[
+                  { step: '1', title: 'Request Dispatched', desc: 'Secure transaction ticket submitted.', status: 'completed' },
+                  { step: '2', title: 'Cryptographic Audit', desc: 'Validating cryptographic block signatures.', status: 'active' },
+                  { step: '3', title: 'Liquidity Pool Lock', desc: 'Reserving payout channels in bank portal.', status: 'pending' },
+                  { step: '4', title: 'Completed Settlement', desc: 'Disbursed directly into your local account.', status: 'pending' }
+                ].map((s, idx) => (
+                  <div key={idx} className="flex gap-3.5 relative">
+                    {/* Line connector */}
+                    {idx < 3 && (
+                      <div className="absolute top-6 left-3 w-[1.5px] h-9 bg-gray-150 dark:bg-white/10" />
+                    )}
+                    
+                    <div className={`w-6.5 h-6.5 rounded-full border-2 flex items-center justify-center font-bold text-[10px] shrink-0 z-10 ${
+                      s.status === 'completed' 
+                        ? 'border-emerald-500 bg-emerald-500 text-white' 
+                        : s.status === 'active' 
+                        ? 'border-[#16A34A] bg-[#16A34A]/10 text-[#16A34A] animate-pulse' 
+                        : 'border-gray-200 dark:border-white/10 bg-transparent text-slate-400 dark:text-white/30'
+                    }`}>
+                      {s.status === 'completed' ? '✓' : s.step}
+                    </div>
+
+                    <div>
+                      <h4 className={`text-xs font-black uppercase tracking-wider ${s.status === 'completed' || s.status === 'active' ? 'text-slate-800 dark:text-white' : 'text-slate-400 dark:text-white/30'}`}>
+                        {s.title}
+                      </h4>
+                      <p className="text-[10px] text-slate-500 dark:text-white/60 leading-normal font-sans mt-0.5">{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

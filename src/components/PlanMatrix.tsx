@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { UserPlan } from '../types';
-import { ShieldCheck, CheckCircle2, TrendingUp, XCircle, ArrowRight, Lock } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, TrendingUp, XCircle, ArrowRight, Lock, Zap } from 'lucide-react';
 
 interface PlanMatrixProps {
   balance: number;
@@ -14,10 +14,10 @@ interface PlanMatrixProps {
 }
 
 const PLANS = [
-  { id: 'bronze', name: 'Starter Portfolio', min: 100, max: 999.99, targetPercent: 8, color: 'text-emerald-500', border: 'border-emerald-500/30' },
-  { id: 'silver', name: 'Growth Portfolio', min: 1000, max: 4999.99, targetPercent: 12, color: 'text-indigo-400', border: 'border-indigo-400/30' },
-  { id: 'gold', name: 'Pro Portfolio', min: 5000, max: 24999.99, targetPercent: 18, color: 'text-purple-400', border: 'border-purple-400/50' },
-  { id: 'diamond', name: 'Elite Portfolio', min: 25000, max: Infinity, targetPercent: 24, color: 'text-blue-400', border: 'border-blue-500/50' },
+  { id: 'bronze', name: 'Starter Portfolio', min: 100, max: 999.99, targetPercent: 8, color: 'text-emerald-500 dark:text-emerald-400', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-emerald-500/10 to-transparent' },
+  { id: 'silver', name: 'Growth Portfolio', min: 1000, max: 4999.99, targetPercent: 12, color: 'text-emerald-600 dark:text-emerald-400', badgeColor: 'bg-teal-500/10 text-teal-600 dark:text-teal-300 border-teal-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-teal-500/10 to-transparent' },
+  { id: 'gold', name: 'Pro Portfolio', min: 5000, max: 24999.99, targetPercent: 18, color: 'text-[#16A34A] dark:text-emerald-400', badgeColor: 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-600/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#16A34A]/10 to-transparent' },
+  { id: 'diamond', name: 'Elite Portfolio', min: 25000, max: Infinity, targetPercent: 24, color: 'text-[#22C55E] dark:text-emerald-400', badgeColor: 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#22C55E]/15 to-transparent' },
 ];
 
 export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, currencySymbol, conversionRate, theme = 'light' }: PlanMatrixProps) {
@@ -61,46 +61,87 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
       transition={{ duration: 0.2 }}
       className="space-y-6"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         {PLANS.map(plan => {
           const hasActive = activePlans.some(inv => inv.planId === plan.id);
           
           return (
-            <div 
+            <motion.div 
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.99 }}
               key={plan.id} 
-              className={`rounded-2xl border ${plan.border} p-5 relative overflow-hidden flex flex-col justify-between transition-all duration-500 cursor-pointer group hover:scale-[1.03] hover:-translate-y-1 shadow-[0_8px_32px_rgba(0,0,0,0.04)] ${
+              className={`rounded-[20px] border ${plan.border} p-6 relative overflow-hidden flex flex-col justify-between transition-all duration-300 cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_15px_40px_rgba(34,197,94,0.06)] dark:hover:shadow-[0_15px_40px_rgba(22,163,74,0.12)] ${
                 theme === 'dark' 
-                  ? 'bg-[#131B2E]/65 backdrop-blur-md text-white hover:shadow-[0_12px_40px_rgba(59,130,246,0.15)] hover:border-blue-500/50' 
-                  : 'bg-white/70 backdrop-blur-md text-slate-800 hover:shadow-[0_12px_40px_rgba(16,185,129,0.08)] hover:border-emerald-500/35'
+                  ? 'bg-[#111625]/80 backdrop-blur-md text-white hover:border-[#22C55E]/20' 
+                  : 'bg-white text-slate-800 hover:border-[#22C55E]/30'
               }`} 
               onClick={() => setSelectedPlan(plan)}
             >
-               <div className="space-y-2 relative z-10 mb-4">
-                 <h4 className={`text-xl font-bold font-serif ${plan.color}`}>{plan.name} Plan</h4>
-                 <div className={`flex flex-col gap-1.5 mt-2 text-sm ${theme === 'dark' ? 'text-white/80' : 'text-slate-600'}`}>
-                    <p><span className={`${theme === 'dark' ? 'text-white/40' : 'text-slate-400'} font-mono text-[10px] uppercase tracking-wider`}>Deposit:</span> <strong className="font-sans">{currencySymbol}{(plan.min * conversionRate).toFixed(0)} {plan.max === Infinity ? '+' : `- ${currencySymbol}${(plan.max * conversionRate).toFixed(0)}`}</strong></p>
-                    <p><span className={`${theme === 'dark' ? 'text-white/40' : 'text-slate-400'} font-mono text-[10px] uppercase tracking-wider`}>Daily Profit:</span> <strong className="font-sans text-emerald-500">Dynamic (Varies)</strong></p>
-                    <p><span className={`${theme === 'dark' ? 'text-white/40' : 'text-slate-400'} font-mono text-[10px] uppercase tracking-wider`}>Completion:</span> <strong className={`font-sans ${theme === 'dark' ? 'text-white/90' : 'text-slate-800'}`}>{plan.targetPercent}% Return OR 30 Days</strong></p>
+               {/* Accent Gradient Glow Corner */}
+               <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${plan.accentBg} blur-2xl opacity-40 rounded-full pointer-events-none`} />
+
+               <div className="space-y-4 relative z-10 mb-5">
+                 <div className="flex items-start justify-between">
+                   <h4 className={`text-lg font-black tracking-tight ${plan.color}`}>{plan.name}</h4>
+                   <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${plan.badgeColor}`}>
+                     {plan.targetPercent}% ROI
+                   </span>
+                 </div>
+
+                 <div className="space-y-2.5">
+                   <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100/50 dark:border-white/5">
+                     <span className="text-slate-400 dark:text-zinc-500 font-medium">Staking Limit</span>
+                     <strong className="font-extrabold font-mono text-slate-700 dark:text-zinc-200">
+                       {currencySymbol}{(plan.min * conversionRate).toLocaleString(undefined, { maximumFractionDigits: 0 })} {plan.max === Infinity ? '+' : `- ${currencySymbol}${(plan.max * conversionRate).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                     </strong>
+                   </div>
+
+                   <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100/50 dark:border-white/5">
+                     <span className="text-slate-400 dark:text-zinc-500 font-medium">Daily Interest</span>
+                     <strong className="font-extrabold text-[#22C55E]">Dynamic Return</strong>
+                   </div>
+
+                   <div className="flex items-center justify-between text-xs py-1">
+                     <span className="text-slate-400 dark:text-zinc-500 font-medium">Lock-up Period</span>
+                     <strong className="font-extrabold text-slate-700 dark:text-zinc-200">30 Days</strong>
+                   </div>
                  </div>
                </div>
                
-               <div className="relative z-10 w-full mt-2">
-                  <button className={`w-full py-2.5 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all cursor-pointer border-0 ${hasActive ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 shadow-sm font-extrabold' : `${theme === 'dark' ? 'bg-white/5 text-white/60' : 'bg-gray-100 text-slate-700'} hover:bg-emerald-500 hover:text-white`}`}>
-                     {hasActive ? 'Plan Active' : 'Activate Plan'}
+               <div className="relative z-10 w-full">
+                  <button className={`w-full py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all cursor-pointer border-0 flex items-center justify-center gap-1.5 ${
+                    hasActive 
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold border border-emerald-500/20' 
+                      : 'bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-white hover:opacity-90 shadow-md shadow-emerald-500/10'
+                  }`}>
+                     {hasActive ? (
+                       <>
+                         <CheckCircle2 className="w-3.5 h-3.5" />
+                         <span>Plan Active</span>
+                       </>
+                     ) : (
+                       <>
+                         <span>Stake Portfolio</span>
+                         <ArrowRight className="w-3.5 h-3.5" />
+                       </>
+                     )}
                   </button>
                </div>
                
-               <div className={`absolute -right-8 -bottom-8 opacity-[0.03] ${plan.color}`}>
+               <div className={`absolute -right-8 -bottom-8 opacity-[0.03] dark:opacity-[0.05] ${plan.color}`}>
                   <ShieldCheck className="w-32 h-32" />
                </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
       {activePlans.length > 0 && (
-        <div className={`rounded-2xl p-5 mt-8 border ${theme === 'dark' ? 'bg-[#131B2E] border-white/5' : 'bg-white border-gray-150 shadow-sm'}`}>
-           <h3 className={`text-[11px] font-bold uppercase tracking-widest mb-4 ${theme === 'dark' ? 'text-white/60' : 'text-slate-500'}`}>Active Locked Portfolios</h3>
+        <div className={`rounded-[20px] p-6 border ${theme === 'dark' ? 'bg-[#111625]/85 border-white/5' : 'bg-white border-gray-150 shadow-sm'}`}>
+           <h3 className={`text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${theme === 'dark' ? 'text-zinc-400' : 'text-slate-500'}`}>
+             <Zap className="w-4 h-4 text-emerald-500 animate-pulse" />
+             <span>Active Locked Portfolios</span>
+           </h3>
            <div className="space-y-3">
              {activePlans.map(inv => {
                const planInfo = PLANS.find(p => p.id === inv.planId);
@@ -116,15 +157,15 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
 
                return (
                  <div key={inv.id} className={`flex flex-col sm:flex-row justify-between sm:items-center rounded-xl p-4 gap-4 border ${theme === 'dark' ? 'bg-slate-950/40 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
-                   <div>
-                     <p className={`text-sm font-bold capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
-                     <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-white/40' : 'text-slate-500'}`}>Principal Locked: {currencySymbol}{(inv.amount * conversionRate).toFixed(2)}</p>
+                   <div className="text-left">
+                     <p className={`text-sm font-black capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
+                     <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-slate-500'}`}>Principal Locked: <strong className="font-mono text-slate-800 dark:text-white">{currencySymbol}{(inv.amount * conversionRate).toFixed(2)}</strong></p>
                    </div>
                    <div className="flex items-center gap-4">
-                     <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] uppercase font-bold tracking-wider rounded border border-emerald-500/20">Dynamic Profit Accruing</span>
+                     <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] uppercase font-bold tracking-wider rounded border border-emerald-500/15">Dynamic Profit Accruing</span>
                      {true ? (
                        <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded select-none cursor-default" title="This plan is locked. Accrued profits automatically transfer upon completion.">
-                         <Lock className="w-3 h-3 text-amber-500 animate-pulse" />
+                         <Lock className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
                          <span>Locked ({remainingDays}d / Max 30d)</span>
                        </div>
                      ) : (
@@ -139,71 +180,77 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
       )}
 
       {completedPlans.length > 0 && (
-        <div className={`rounded-2xl p-5 mt-8 border ${theme === 'dark' ? 'bg-[#131B2E] border-emerald-500/10' : 'bg-white border-emerald-500/10 shadow-sm'}`}>
-            <h3 className="text-[11px] font-bold text-emerald-500 uppercase tracking-widest mb-4">Completed (Matured) Portfolios</h3>
+        <div className={`rounded-[20px] p-6 border ${theme === 'dark' ? 'bg-[#111625]/85 border-emerald-500/10' : 'bg-white border-emerald-500/10 shadow-sm'}`}>
+            <h3 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Completed (Matured) Portfolios</span>
+            </h3>
             <div className="space-y-3">
-              {completedPlans.map(inv => {
-                const planInfo = PLANS.find(p => p.id === inv.planId);
-                return (
-                  <div key={inv.id} className={`flex flex-col sm:flex-row justify-between sm:items-center rounded-xl p-4 gap-4 border ${theme === 'dark' ? 'bg-slate-950/40 border-emerald-500/10' : 'bg-gray-50 border-emerald-500/10'}`}>
-                    <div>
-                      <p className={`text-sm font-bold capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
-                      <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-white/40' : 'text-slate-500'}`}>Matured Return: {currencySymbol}{(inv.amount * (planInfo ? 1 + (planInfo.targetPercent / 100) : 1.20) * conversionRate).toFixed(2)} (Principal & Yield Credited)</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded select-none cursor-default">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>Matured</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+               {completedPlans.map(inv => {
+                 const planInfo = PLANS.find(p => p.id === inv.planId);
+                 return (
+                   <div key={inv.id} className={`flex flex-col sm:flex-row justify-between sm:items-center rounded-xl p-4 gap-4 border ${theme === 'dark' ? 'bg-slate-950/40 border-emerald-500/10' : 'bg-gray-50 border-emerald-500/10'}`}>
+                     <div className="text-left">
+                       <p className={`text-sm font-black capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
+                       <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-zinc-400' : 'text-slate-500'}`}>Matured Return: <strong className="font-mono text-slate-800 dark:text-white">{currencySymbol}{(inv.amount * (planInfo ? 1 + (planInfo.targetPercent / 100) : 1.20) * conversionRate).toFixed(2)}</strong> (Principal & Yield Credited)</p>
+                     </div>
+                     <div className="flex items-center gap-4">
+                       <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded select-none cursor-default">
+                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                         <span>Matured</span>
+                       </div>
+                     </div>
+                   </div>
+                 );
+               })}
             </div>
         </div>
       )}
 
       {/* Deposit Modal / Plan Setup Modal */}
       {selectedPlan && (
-        <div className={`fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-sm p-4 ${theme === 'dark' ? 'bg-slate-950/80' : 'bg-slate-900/60'}`}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+           {/* Backdrop Overlay */}
+           <div className={`fixed inset-0 cursor-pointer ${theme === 'dark' ? 'bg-slate-950/80' : 'bg-slate-900/60'} backdrop-blur-sm`} onClick={() => { setSelectedPlan(null); setError(''); }} />
+
            <motion.div 
-             initial={{ opacity: 0, scale: 0.9 }}
-             animate={{ opacity: 1, scale: 1 }}
-             exit={{ opacity: 0, scale: 0.9 }}
-             className={`w-full max-w-md rounded-2xl shadow-2xl p-6 border ${theme === 'dark' ? 'bg-[#131B2E] border-white/10 text-white' : 'bg-white border-gray-200 text-slate-800'}`}
+             initial={{ opacity: 0, scale: 0.95, y: 15 }}
+             animate={{ opacity: 1, scale: 1, y: 0 }}
+             exit={{ opacity: 0, scale: 0.95, y: 15 }}
+             className={`w-full max-w-md rounded-[24px] shadow-2xl p-6 border relative z-50 ${theme === 'dark' ? 'bg-[#111625] border-white/10 text-white' : 'bg-white border-gray-200 text-slate-800'}`}
            >
               <div className="flex justify-between items-center mb-6">
-                 <div>
-                   <h2 className={`text-xl font-bold font-serif ${selectedPlan.color}`}>Activate {selectedPlan.name}</h2>
-                   <p className={`text-xs mt-1 uppercase tracking-wider ${theme === 'dark' ? 'text-white/40' : 'text-slate-400'}`}>Estimated APY: {selectedPlan.targetPercent}%</p>
+                 <div className="text-left">
+                   <h2 className={`text-lg font-black tracking-tight ${selectedPlan.color}`}>Activate {selectedPlan.name}</h2>
+                   <p className={`text-[10px] mt-1 font-bold uppercase tracking-wider ${theme === 'dark' ? 'text-zinc-500' : 'text-slate-400'}`}>Est. Completion ROI: {selectedPlan.targetPercent}%</p>
                  </div>
-                 <button onClick={() => { setSelectedPlan(null); setError(''); }} className={`p-2 rounded-full cursor-pointer border-0 ${theme === 'dark' ? 'bg-white/5 text-white/50 hover:text-white' : 'bg-gray-100 text-slate-400 hover:text-slate-600'}`}>
+                 <button onClick={() => { setSelectedPlan(null); setError(''); }} className={`p-2 rounded-full cursor-pointer border-0 transition-colors ${theme === 'dark' ? 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10' : 'bg-gray-100 text-slate-400 hover:text-slate-600 hover:bg-gray-200'}`}>
                    <XCircle className="w-5 h-5" />
                  </button>
               </div>
 
               <div className="space-y-4">
-                 <div className={`border rounded-xl p-4 flex justify-between items-center text-sm font-sans ${theme === 'dark' ? 'bg-slate-950/50 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
-                   <span className={theme === 'dark' ? 'text-white/50' : 'text-slate-500'}>Available Wallet</span>
-                   <span className={`font-mono font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{currencySymbol}{(balance * conversionRate).toFixed(2)}</span>
+                 <div className={`border rounded-xl p-4 flex justify-between items-center text-xs font-sans ${theme === 'dark' ? 'bg-slate-950/50 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                   <span className={theme === 'dark' ? 'text-zinc-400' : 'text-slate-500'}>Available Wallet Balance</span>
+                   <span className={`font-mono font-black text-sm ${theme === 'dark' ? 'text-[#22C55E]' : 'text-slate-800'}`}>{currencySymbol}{(balance * conversionRate).toFixed(2)}</span>
                  </div>
                  
-                 <div className="space-y-2 text-left">
-                   <label className={`text-[11px] font-bold tracking-widest uppercase ml-1 ${theme === 'dark' ? 'text-white/50' : 'text-slate-500'}`}>Investment Amount ({currencySymbol.trim()})</label>
+                 <div className="space-y-1.5 text-left">
+                   <label className={`text-[10px] font-black tracking-widest uppercase ml-1 ${theme === 'dark' ? 'text-zinc-400' : 'text-slate-500'}`}>Investment Amount ({currencySymbol.trim()})</label>
                    <input 
                       type="number" 
                       value={depositAmount} 
                       onChange={e => setDepositAmount(e.target.value)}
                       placeholder={`Min ${selectedPlan.min * conversionRate}`}
-                      className={`w-full border rounded-xl px-4 py-3 outline-none focus:border-emerald-500/50 font-mono ${theme === 'dark' ? 'bg-[#161616] border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-slate-800'}`}
+                      className={`w-full border rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 font-mono text-sm ${theme === 'dark' ? 'bg-[#161616] border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-slate-800'}`}
                    />
                  </div>
 
                  {error && (
-                   <p className="text-xs text-rose-500 font-semibold px-1 text-left">{error}</p>
+                   <p className="text-xs text-rose-500 font-bold px-1 text-left">{error}</p>
                  )}
 
-                 <p className={`text-[10px] leading-relaxed px-1 text-left ${theme === 'dark' ? 'text-white/40' : 'text-slate-400'}`}>
+                 <p className={`text-[10px] leading-relaxed px-1 text-left ${theme === 'dark' ? 'text-zinc-500' : 'text-slate-400'}`}>
                    Note: The investment principal will be locked to generate yields. The portfolio automatically matures once the Estimated Yield of {selectedPlan.targetPercent}% is reached, or after a maximum of 30 days. No manual cancellation or auto-renewal is permitted. 
                    Once completed, your matured principal and profit will be credited to your Matured Balance, ready for reinvestment or withdrawal.
                  </p>
@@ -211,7 +258,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                  <button 
                    onClick={handleActivate}
                    disabled={isLoading || !depositAmount}
-                   className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-500 text-white font-black uppercase tracking-widest text-xs py-3.5 rounded-xl transition-all disabled:opacity-50 mt-4 flex items-center justify-center gap-2 border-0 cursor-pointer shadow-lg"
+                   className="w-full bg-gradient-to-r from-[#22C55E] to-[#16A34A] hover:opacity-90 disabled:bg-slate-300 disabled:text-slate-500 text-white font-black uppercase tracking-widest text-[10px] py-4 rounded-xl transition-all disabled:opacity-50 mt-4 flex items-center justify-center gap-2 border-0 cursor-pointer shadow-lg shadow-emerald-500/10"
                  >
                    {isLoading ? 'Processing...' : 'Confirm Activation'} <ArrowRight className="w-4 h-4" />
                  </button>

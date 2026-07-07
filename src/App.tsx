@@ -1737,20 +1737,20 @@ export default function App() {
       </AnimatePresence>
 
        {/* Header and Branding */}
-      <header className="sticky top-0 z-50 border-b border-white/10 flex items-center justify-between px-6 md:px-10 bg-slate-900/95 backdrop-blur-md h-20">
+      <header className={`sticky top-0 z-50 border-b flex items-center justify-between px-6 md:px-10 h-20 backdrop-blur-md transition-colors ${theme === 'dark' ? 'border-white/10 bg-slate-950/95 text-white' : 'border-gray-200/80 bg-white/95 text-slate-800'}`}>
         <div className="flex items-center gap-3">
           <img 
             src={earnhubLogo} 
-            alt="Apex Capital Logo" 
+            alt="MoneyMind Space Logo" 
             onClick={handleLogoClick}
-            className="w-10 h-10 object-contain rounded-lg border border-blue-500/15 shadow-[0_0_15px_rgba(59,130,246,0.15)] bg-slate-950 cursor-pointer active:scale-95 transition-transform"
+            className="w-10 h-10 object-contain rounded-lg border border-emerald-500/20 shadow-[0_0_15px_rgba(34,197,94,0.15)] bg-slate-950 cursor-pointer active:scale-95 transition-transform"
             referrerPolicy="no-referrer"
           />
           <button 
             onClick={() => handleNavClick('dashboard')} 
-            className="text-lg font-bold tracking-[0.25em] uppercase font-serif text-white hover:brightness-110 transition-all text-left bg-transparent border-0 cursor-pointer"
+            className={`text-lg font-bold tracking-[0.2em] uppercase font-serif hover:brightness-110 transition-all text-left bg-transparent border-0 cursor-pointer ${theme === 'dark' ? 'text-white' : 'text-emerald-600'}`}
           >
-            Apex Capital
+            MoneyMind Space
           </button>
         </div>
 

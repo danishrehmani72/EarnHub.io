@@ -974,17 +974,17 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       <div className="text-center space-y-2 relative z-10">
         <img 
           src={earnhubLogo}
-          alt="Apex Capital Logo"
-          className="w-16 h-16 mx-auto object-contain rounded-2xl border-2 border-blue-500/40 ring-1 ring-blue-500/15 shadow-[0_0_20px_rgba(59,130,246,0.15)] bg-slate-950 mb-3"
+          alt="MoneyMind Space Logo"
+          className="w-16 h-16 mx-auto object-contain rounded-2xl border-2 border-emerald-500/40 ring-1 ring-emerald-500/15 shadow-[0_0_20px_rgba(34,197,94,0.15)] bg-slate-950 mb-3"
           referrerPolicy="no-referrer"
         />
         <h2 className="text-base font-black uppercase tracking-[0.14em] text-white font-serif leading-none">
           {mode === 'signup' ? (
-            <>Join <span className="text-blue-400 animate-pulse">Apex Capital</span></>
+            <>Join <span className="text-emerald-400 animate-pulse">MoneyMind Space</span></>
           ) : mode === 'login' ? (
-            <>Welcome to <span className="text-blue-400 animate-pulse">Apex Capital</span></>
+            <>Welcome to <span className="text-emerald-400 animate-pulse">MoneyMind Space</span></>
           ) : (
-            <>Account <span className="text-blue-400 animate-pulse">Security Recovery</span></>
+            <>Account <span className="text-emerald-400 animate-pulse">Security Recovery</span></>
           )}
         </h2>
         <p className="text-[11px] text-white/50 leading-relaxed font-sans max-w-xs mx-auto">
