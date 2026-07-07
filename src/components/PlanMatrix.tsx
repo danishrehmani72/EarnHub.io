@@ -160,7 +160,7 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
 
                // Calculate performance multiplier for the current day
                const currentDay = Math.max(1, elapsedDays);
-               const hashStr = (inv.id || String(inv.time)) + "_" + currentDay;
+               const hashStr = (inv.id || String(startTime)) + "_" + currentDay;
                let hash = 0;
                for (let idx = 0; idx < hashStr.length; idx++) {
                  hash = hashStr.charCodeAt(idx) + ((hash << 5) - hash);

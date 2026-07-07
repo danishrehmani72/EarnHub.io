@@ -70,12 +70,27 @@ import { playSound } from '../lib/sounds';
 
 export function getPlanCapPercent(planId: string, amount: number): number {
   const normId = (planId || '').toLowerCase().trim();
-  if (normId === 'mini') return 0.05; // Mini: 5% yield (105% total)
-  if (normId === 'bronze') return 0.08; // Starter: 8% yield (108% total)
-  if (normId === 'silver') return 0.12; // Growth: 12% yield (112% total)
-  if (normId === 'gold') return 0.18;   // Pro: 18% yield (118% total)
-  if (normId === 'diamond') return 0.24; // Elite: 24% yield (124% total)
-  return 0.10; // Default 10%
+  if (normId === 'bronze') {
+    if (amount <= 7.5) return 1.00; // $5 -> $10 (+100%, $5 profit)
+    if (amount <= 12.5) return 0.70; // $10 -> $17 (+70%, $7 profit)
+    return 0.666667; // $15 -> $25 (+66.67%, $10 profit)
+  }
+  if (normId === 'silver') {
+    if (amount <= 25) return 0.60; // $20 -> $32 (+60%, $12 profit)
+    if (amount <= 40) return 0.633333; // $30 -> $49 (+63.33%, $19 profit)
+    return 0.66; // $50 -> $83 (+66%, $33 profit)
+  }
+  if (normId === 'gold') {
+    if (amount <= 62.5) return 0.50; // $50 -> $75 (+50%, $25 profit)
+    if (amount <= 87.5) return 0.533333; // $75 -> $115 (+53.33%, $40 profit)
+    return 0.40; // $100 -> $140 (+40%, $40 profit)
+  }
+  if (normId === 'diamond') {
+    if (amount <= 175) return 0.40; // $100 -> $140 (+40%, $40 profit)
+    if (amount <= 375) return 0.40; // $250 -> $350 (+40%, $100 profit)
+    return 0.50; // $500 -> $750 (+50%, $250 profit)
+  }
+  return 0.20; // fallback
 }
 
 interface DashboardCardProps {
