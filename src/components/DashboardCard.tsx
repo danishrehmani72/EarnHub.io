@@ -221,11 +221,10 @@ export default function DashboardCard({
 
   // Real-time projected yield calculation
   const planInfoForAmount = useMemo(() => {
-    let planId = 'mini';
-    if (calcAmount >= 25000) planId = 'diamond';
-    else if (calcAmount >= 5000) planId = 'gold';
-    else if (calcAmount >= 1000) planId = 'silver';
-    else if (calcAmount >= 100) planId = 'bronze';
+    let planId = 'bronze';
+    if (calcAmount >= 100) planId = 'diamond';
+    else if (calcAmount >= 50) planId = 'gold';
+    else if (calcAmount >= 20) planId = 'silver';
     
     const cap = getPlanCapPercent(planId, calcAmount);
     return { id: planId, cap };
@@ -1794,17 +1793,17 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </div>
                     <input 
                       type="range"
-                      min="25"
-                      max="25000"
-                      step="25"
+                      min="5"
+                      max="1000"
+                      step="5"
                       value={calcAmount}
                       onChange={(e) => setCalcAmount(Number(e.target.value))}
                       className="w-full accent-[#D4AF37] bg-gray-200 dark:bg-slate-950/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-gray-200 dark:border-white/5 hover:border-slate-400 transition-colors cursor-pointer"
                     />
                     <div className="flex justify-between text-[7px] font-mono text-slate-400 dark:text-white/30">
-                      <span>Min: {currencySymbol}{(25 * conversionRate).toFixed(0)}</span>
-                      <span>Mid: {currencySymbol}{(12500 * conversionRate).toFixed(0)}</span>
-                      <span>Max: {currencySymbol}{(25000 * conversionRate).toFixed(0)}</span>
+                      <span>Min: {currencySymbol}{(5 * conversionRate).toFixed(2)}</span>
+                      <span>Mid: {currencySymbol}{(500 * conversionRate).toFixed(2)}</span>
+                      <span>Max: {currencySymbol}{(1000 * conversionRate).toFixed(2)}</span>
                     </div>
                   </div>
 
