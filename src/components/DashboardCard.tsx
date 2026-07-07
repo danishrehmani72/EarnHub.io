@@ -538,12 +538,12 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
     }
   };
 
-  // Live balance counting animation using motion/react
-  const motionBalance = useMotionValue(balance);
-  const animatedBalanceDisplay = useTransform(motionBalance, (val) => {
-    const activeConf = SUPPORTED_CURRENCIES[currencyRef.current] || SUPPORTED_CURRENCIES.USD;
-    return (val * activeConf.rate).toFixed(2);
+  // Live balance counting animation using state and motion's animate
+  const [animatedBalanceDisplay, setAnimatedBalanceDisplay] = useState(() => {
+    const activeConf = SUPPORTED_CURRENCIES[currency] || SUPPORTED_CURRENCIES.USD;
+    return (balance * activeConf.rate).toFixed(2);
   });
+  const currentValRef = useRef(balance);
 
   // Balance change visual flash effects
   const [flashType, setFlashType] = useState<'up' | 'down' | null>(null);
@@ -566,12 +566,20 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
   }, [balance]);
 
   useEffect(() => {
-    const controls = animate(motionBalance, balance, {
+    const startVal = currentValRef.current;
+    const endVal = balance;
+
+    const controls = animate(startVal, endVal, {
       duration: 1.2,
       ease: [0.16, 1, 0.3, 1], // easeOutExpo
+      onUpdate: (latest) => {
+        const activeConf = SUPPORTED_CURRENCIES[currencyRef.current] || SUPPORTED_CURRENCIES.USD;
+        setAnimatedBalanceDisplay((latest * activeConf.rate).toFixed(2));
+        currentValRef.current = latest;
+      }
     });
     return () => controls.stop();
-  }, [balance, motionBalance]);
+  }, [balance, currency]);
 
   useEffect(() => {
     if (!userProfile?.lastClaimedAt) {
