@@ -35,6 +35,7 @@ import {
   Bell,
   ToggleRight,
   ToggleLeft,
+  MessageCircle,
   Mail,
   Eye,
   EyeOff,
@@ -1718,6 +1719,21 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       <HelpCircle className="w-5 h-5" />
                     </div>
                     <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">Help Desk</span>
+                  </button>
+
+                  {/* Shortcut 10: WhatsApp */}
+                  <button
+                    onClick={() => {
+                      window.open('https://whatsapp.com/channel/0029VbAa01YEKyZNN2FRqe1v', '_blank');
+                      playSound('new_referral');
+                      onAddToast('Redirecting to WhatsApp Channel...', 'success');
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                      <MessageCircle className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9.5px] font-bold text-slate-600 dark:text-white/80 leading-none">WhatsApp</span>
                   </button>
 
                   {/* Shortcut 10: Wallet */}
