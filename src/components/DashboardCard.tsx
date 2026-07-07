@@ -1252,13 +1252,13 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
   return (
     <div 
-      className={`${theme === 'dark' ? 'dark bg-[#08080c] text-[#E5E7EB]' : 'bg-[#FAFCFA] text-slate-800'} w-full max-w-5xl mx-auto md:rounded-[32px] md:border-2 md:border-gray-200/50 dark:md:border-white/5 md:shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:md:shadow-[0_20px_50px_rgba(0,0,0,0.55)] overflow-hidden flex flex-col font-sans relative transition-all duration-300 min-h-[850px] shadow-sm`}
+      className={`${theme === 'dark' ? 'dark bg-[#08080c] text-[#E5E7EB]' : 'bg-[#FAFCFA] text-slate-800'} w-full max-w-5xl mx-auto md:rounded-[32px] md:border-2 md:border-gray-200/50 dark:md:border-white/5 md:shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:md:shadow-[0_20px_50px_rgba(0,0,0,0.55)] overflow-hidden font-sans relative transition-all duration-300 shadow-sm`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {/* 📱 TOP HEADER (Redesigned premium style) */}
-      <div className="bg-white/85 dark:bg-[#0c0d12]/85 backdrop-blur-md border-b border-gray-150/80 dark:border-white/5 py-4 px-5 flex items-center justify-between shrink-0 sticky top-0 z-40 select-none shadow-sm transition-colors">
+      <div className="bg-white/85 dark:bg-[#0c0d12]/85 backdrop-blur-md border-b border-gray-150/80 dark:border-white/5 py-4 px-5 flex items-center justify-between shrink-0 sticky top-20 z-40 select-none shadow-sm transition-colors">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => {
@@ -1345,8 +1345,8 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
         </div>
       )}
 
-      {/* Main middle scrollable area of the container */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-6 hide-scrollbar pb-28">
+      {/* Main middle area of the container */}
+      <div className="p-5 space-y-6 pb-28">
         <AnimatePresence mode="wait">
           {activeTab === 'overview' && (
             <motion.div
@@ -4659,7 +4659,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       </AnimatePresence>
 
       {/* 📱 STICKY BOTTOM NAVIGATION BAR (Screenshot style: Home, Funding, FAQ, Profile) */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-[#131B2E]/95 backdrop-blur-md border-t border-gray-100 dark:border-white/5 py-2.5 px-3 flex items-center justify-around z-40 select-none shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)]">
+      <div className="fixed bottom-0 left-0 right-0 max-w-5xl mx-auto bg-white/95 dark:bg-[#131B2E]/95 backdrop-blur-md border-t border-gray-100 dark:border-white/5 py-2.5 px-3 flex items-center justify-around z-40 select-none shadow-[0_-5px_30px_rgba(0,0,0,0.15)] md:rounded-t-3xl">
         <button 
           onClick={() => setActiveTab('overview')}
           className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'overview' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}

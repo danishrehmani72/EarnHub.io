@@ -306,7 +306,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         }
       });
 
-      if (ipRegsIn24h >= 3) {
+      if (ipRegsIn24h >= 100) {
         // Save security rate limit log
         const blockLogId = doc(collection(db, 'security_logs')).id;
         await setDoc(doc(db, 'security_logs', blockLogId), {
@@ -315,14 +315,14 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
           username: cleanName,
           type: 'rate_limit_exceeded',
           severity: 'critical',
-          description: `Blocked registration from IP ${clientIp} due to exceeding limit (3 accounts in 24 hours).`,
+          description: `Blocked registration from IP ${clientIp} due to exceeding limit (100 accounts in 24 hours).`,
           ipAddress: clientIp,
           deviceFingerprint: currentFingerprint,
           timestamp: new Date().toISOString(),
           createdAt: serverTimestamp()
         });
 
-        setError('❌ Registration Blocked: Exceeded maximum allowed account registrations (3 accounts max) from this IP address within 24 hours.');
+        setError('❌ Registration Blocked: Exceeded maximum allowed account registrations (100 accounts max) from this IP address within 24 hours.');
         setIsLoading(false);
         return;
       }
@@ -359,12 +359,12 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
       }
 
       // Check multi account count on this device:
-      // "If more than 2 accounts are created from the same device fingerprint, automatically mark them as suspicious AND Auto-Ban them"
+      // "If more than 50 accounts are created from the same device fingerprint, automatically mark them as suspicious AND Auto-Ban them"
       const sameDeviceCount = snapDevice.docs.length;
       let shouldAutoBan = false;
       let shouldMarkSuspicious = false;
 
-      if (sameDeviceCount >= 2) {
+      if (sameDeviceCount >= 50) {
         shouldMarkSuspicious = true;
         shouldAutoBan = true; // Auto Ban duplicate accounts!
       }

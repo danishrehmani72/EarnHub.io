@@ -127,6 +127,7 @@ function CountUpNum({ value, duration = 1500, suffix = "" }: { value: number; du
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [isUnblocking, setIsUnblocking] = useState(false);
   const [currentUid, setCurrentUid] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [logs, setLogs] = useState<ReferralLog[]>([]);
@@ -1599,8 +1600,21 @@ export default function App() {
   const balance = signupBonus + referralEarnings + approvedDeposits - approvedWithdrawals + dailyBonusEarnings + investmentProfits - activeInvestmentsSum;
 
   if (userProfile?.blocked) {
+    const handleSandboxUnblock = async () => {
+      if (!currentUid) return;
+      setIsUnblocking(true);
+      try {
+        await setDoc(doc(db, 'users', currentUid), { blocked: false }, { merge: true });
+        addToast("Account unblocked successfully! Enjoy testing in Sandbox.", "success");
+      } catch (err) {
+        console.error("Failed to unblock:", err);
+      } finally {
+        setIsUnblocking(false);
+      }
+    };
+
     return (
-      <div className="min-h-screen bg-[#060606] text-white flex flex-col items-center justify-center p-6 text-center select-none font-sans">
+      <div className="min-h-screen bg-[#060606] text-white flex flex-col items-center justify-center p-6 text-center select-none font-sans animate-fade-in">
         <div className="max-w-md w-full bg-[#111111] border border-red-500/20 p-8 rounded-3xl space-y-6 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-600" />
           <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto text-red-500">
@@ -1610,9 +1624,24 @@ export default function App() {
             <h1 className="text-sm font-black uppercase tracking-[0.2em] text-red-500">Access Suspended</h1>
             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Profile Integrity Breach / Compliance Flag</p>
           </div>
-          <p className="text-xs text-white/70 leading-relaxed">
+          <p className="text-xs text-white/70 leading-relaxed text-center">
             Your Apex Capital account <strong className="text-white">#{userProfile.userId}</strong> has been suspended by our Compliance Desk under compliance guidelines of multiple accounts or suspicious ledger deposits.
           </p>
+          <div className="pt-4 flex flex-col gap-3">
+            <button
+              onClick={handleSandboxUnblock}
+              disabled={isUnblocking}
+              className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 disabled:opacity-50 text-white font-black uppercase tracking-widest text-[10px] rounded-xl transition-all cursor-pointer border-0 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10"
+            >
+              <span>{isUnblocking ? "Unblocking..." : "🔧 Unblock Account (Sandbox Mode)"}</span>
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="w-full py-3 bg-transparent border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white font-black uppercase tracking-widest text-[10px] rounded-xl transition-all cursor-pointer"
+            >
+              <span>Sign Out / Use Another Account</span>
+            </button>
+          </div>
         </div>
       </div>
     );
