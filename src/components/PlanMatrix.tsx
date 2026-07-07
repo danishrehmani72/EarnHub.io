@@ -14,11 +14,11 @@ interface PlanMatrixProps {
 }
 
 const PLANS = [
-  { id: 'mini', name: 'Mini Portfolio', min: 25, max: 99.99, targetPercent: 100, color: 'text-blue-500 dark:text-blue-400', badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-blue-500/10 to-transparent' },
-  { id: 'bronze', name: 'Starter Portfolio', min: 100, max: 999.99, targetPercent: 100, color: 'text-emerald-500 dark:text-emerald-400', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-emerald-500/10 to-transparent' },
-  { id: 'silver', name: 'Growth Portfolio', min: 1000, max: 4999.99, targetPercent: 100, color: 'text-emerald-600 dark:text-emerald-400', badgeColor: 'bg-teal-500/10 text-teal-600 dark:text-teal-300 border-teal-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-teal-500/10 to-transparent' },
-  { id: 'gold', name: 'Pro Portfolio', min: 5000, max: 24999.99, targetPercent: 100, color: 'text-[#16A34A] dark:text-emerald-400', badgeColor: 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-600/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#16A34A]/10 to-transparent' },
-  { id: 'diamond', name: 'Elite Portfolio', min: 25000, max: Infinity, targetPercent: 100, color: 'text-[#22C55E] dark:text-emerald-400', badgeColor: 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#22C55E]/15 to-transparent' },
+  { id: 'mini', name: 'Mini Portfolio', min: 25, max: 99.99, targetPercent: 5, color: 'text-blue-500 dark:text-blue-400', badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-blue-500/10 to-transparent' },
+  { id: 'bronze', name: 'Starter Portfolio', min: 100, max: 999.99, targetPercent: 8, color: 'text-emerald-500 dark:text-emerald-400', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-emerald-500/10 to-transparent' },
+  { id: 'silver', name: 'Growth Portfolio', min: 1000, max: 4999.99, targetPercent: 12, color: 'text-emerald-600 dark:text-emerald-400', badgeColor: 'bg-teal-500/10 text-teal-600 dark:text-teal-300 border-teal-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-teal-500/10 to-transparent' },
+  { id: 'gold', name: 'Pro Portfolio', min: 5000, max: 24999.99, targetPercent: 18, color: 'text-[#16A34A] dark:text-emerald-400', badgeColor: 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-600/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#16A34A]/10 to-transparent' },
+  { id: 'diamond', name: 'Elite Portfolio', min: 25000, max: Infinity, targetPercent: 24, color: 'text-[#22C55E] dark:text-emerald-400', badgeColor: 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#22C55E]/15 to-transparent' },
 ];
 
 export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, currencySymbol, conversionRate, theme = 'light' }: PlanMatrixProps) {

@@ -70,12 +70,12 @@ import { playSound } from '../lib/sounds';
 
 export function getPlanCapPercent(planId: string, amount: number): number {
   const normId = (planId || '').toLowerCase().trim();
-  if (normId === 'mini') return 1.0; // Mini: 100% yield (200% total)
-  if (normId === 'bronze') return 1.0; // Starter: 100% yield (200% total)
-  if (normId === 'silver') return 1.0; // Growth: 100% yield (200% total)
-  if (normId === 'gold') return 1.0;   // Pro: 100% yield (200% total)
-  if (normId === 'diamond') return 1.0; // Elite: 100% yield (200% total)
-  return 1.0; // Default 100%
+  if (normId === 'mini') return 0.05; // Mini: 5% yield (105% total)
+  if (normId === 'bronze') return 0.08; // Starter: 8% yield (108% total)
+  if (normId === 'silver') return 0.12; // Growth: 12% yield (112% total)
+  if (normId === 'gold') return 0.18;   // Pro: 18% yield (118% total)
+  if (normId === 'diamond') return 0.24; // Elite: 24% yield (124% total)
+  return 0.10; // Default 10%
 }
 
 interface DashboardCardProps {
