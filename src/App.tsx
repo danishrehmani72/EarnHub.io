@@ -164,7 +164,7 @@ export default function App() {
 
   // Load and manage simulated days offset
   const [virtualDays, setVirtualDays] = useState<number>(0);
-  const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'faq' | 'settings'>('overview');
+  const [dashboardTab, setDashboardTab] = useState<'overview' | 'funding' | 'faq' | 'settings' | 'security'>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -1366,7 +1366,7 @@ export default function App() {
   };
 
   // Handle click on top navbar or mobile drawer menu items
-  const handleNavClick = (target: 'deposit' | 'withdraw' | 'helpline' | 'faq' | 'dashboard' | 'admin' | 'settings') => {
+  const handleNavClick = (target: 'deposit' | 'withdraw' | 'helpline' | 'faq' | 'dashboard' | 'admin' | 'settings' | 'security') => {
     setMobileMenuOpen(false); // Close mobile drawer if open
     
     if (target === 'admin') {
@@ -1381,7 +1381,7 @@ export default function App() {
     }
 
     if (!isRegistered) {
-      if (target === 'faq' || target === 'settings') {
+      if (target === 'faq' || target === 'settings' || target === 'security') {
         addToast('Please login or register to access premium features and settings!', 'error');
       } else {
         addToast(`Please login or register to access the ${target === 'deposit' ? 'Deposit' : 'Withdrawal'} Portal!`, 'error');
@@ -1406,6 +1406,12 @@ export default function App() {
       }, 100);
     } else if (target === 'settings') {
       setDashboardTab('settings');
+      setTimeout(() => {
+        const el = document.getElementById('dashboard-container');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else if (target === 'security') {
+      setDashboardTab('security');
       setTimeout(() => {
         const el = document.getElementById('dashboard-container');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1882,6 +1888,16 @@ export default function App() {
                       >
                         <Settings className="w-4 h-4 text-blue-400" />
                         Settings
+                      </button>
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          handleNavClick('security');
+                        }}
+                        className="w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-wider text-white/80 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2 cursor-pointer bg-transparent border-none outline-none"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        Security
                       </button>
                     </motion.div>
                   </>

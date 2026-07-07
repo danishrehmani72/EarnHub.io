@@ -99,8 +99,8 @@ interface DashboardCardProps {
   userProfile?: any;
   onClaimDailyReward?: (amount: number) => Promise<void>;
   virtualDays?: number;
-  activeTab?: 'overview' | 'funding' | 'faq' | 'settings';
-  onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq' | 'settings') => void;
+  activeTab?: 'overview' | 'funding' | 'faq' | 'settings' | 'security';
+  onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq' | 'settings' | 'security') => void;
   onUpdateProfile?: (newName: string, newAvatar: string) => Promise<void>;
   dailyRewardLogs?: DailyRewardLog[];
   onRefresh?: () => Promise<void>;
@@ -145,11 +145,18 @@ export default function DashboardCard({
   setTheme: setThemeProp,
 }: DashboardCardProps) {
   const [copied, setCopied] = useState(false);
-  const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq' | 'settings'>('overview');
+  const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq' | 'settings' | 'security'>('overview');
   const [showDepositSheet, setShowDepositSheet] = useState(false);
   const [showWithdrawSheet, setShowWithdrawSheet] = useState(false);
   const [showFaqModal, setShowFaqModal] = useState(false);
   const [showQuickActionsDrawer, setShowQuickActionsDrawer] = useState(false);
+
+  // 2FA Security states
+  const [is2faEnabled, setIs2faEnabled] = useState(() => localStorage.getItem('apex_2fa_enabled') === 'true');
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const pendingWithdrawalRef = useRef<(() => Promise<void>) | null>(null);
 
   // Redesigned premium features modal and popup states
   const [showSpinModal, setShowSpinModal] = useState(false);
@@ -161,6 +168,12 @@ export default function DashboardCard({
   const [showWithdrawalProgressModal, setShowWithdrawalProgressModal] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinRotation, setSpinRotation] = useState(0);
+  const [lastSpinTime, setLastSpinTime] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      return parseInt(localStorage.getItem(`apex_last_spin_time_${userId || 'guest'}`) || '0', 10);
+    }
+    return 0;
+  });
   const [giftCode, setGiftCode] = useState('');
   const [verifyingTaskId, setVerifyingTaskId] = useState<string | null>(null);
   const [taskProgress, setTaskProgress] = useState(0);
@@ -381,6 +394,16 @@ export default function DashboardCard({
 
   const handleSpinClick = () => {
     if (isSpinning) return;
+
+    const now = Date.now();
+    const hours48 = 48 * 60 * 60 * 1000;
+    if (now - lastSpinTime < hours48) {
+      const remainingTime = hours48 - (now - lastSpinTime);
+      const remainingHours = Math.ceil(remainingTime / (1000 * 60 * 60));
+      onAddToast(`Please wait ${remainingHours} hours before your next spin.`, 'error');
+      return;
+    }
+
     setIsSpinning(true);
     playSound('new_referral');
     
@@ -402,6 +425,14 @@ export default function DashboardCard({
 
     setTimeout(() => {
       setIsSpinning(false);
+      
+      // Update last spin time
+      const spinTime = Date.now();
+      setLastSpinTime(spinTime);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`apex_last_spin_time_${userId || 'guest'}`, spinTime.toString());
+      }
+
       if (selectedSegment.prize > 0) {
         if (onClaimDailyReward) {
           onClaimDailyReward(selectedSegment.prize);
@@ -823,20 +854,31 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       return;
     }
 
-    setSubmitting(true);
-    try {
-      if (onCreateWithdrawal) {
-        await onCreateWithdrawal(amtUSD, withdrawNetwork, withdrawWallet.trim());
-        setWithdrawSuccess('Withdrawal Request Saved! Admin approval pending.');
-        setWithdrawAmount('');
-        setWithdrawWallet('');
-      } else {
-        setWithdrawError('Withdrawal system configuration issues. Please try again.');
+    const executeWithdrawal = async () => {
+      setSubmitting(true);
+      try {
+        if (onCreateWithdrawal) {
+          await onCreateWithdrawal(amtUSD, withdrawNetwork, withdrawWallet.trim());
+          setWithdrawSuccess('Withdrawal Request Saved! Admin approval pending.');
+          setWithdrawAmount('');
+          setWithdrawWallet('');
+        } else {
+          setWithdrawError('Withdrawal system configuration issues. Please try again.');
+        }
+      } catch (err) {
+        setWithdrawError('Could not save withdrawal request.');
+      } finally {
+        setSubmitting(false);
       }
-    } catch (err) {
-      setWithdrawError('Could not save withdrawal request.');
-    } finally {
-      setSubmitting(false);
+    };
+
+    if (is2faEnabled) {
+      pendingWithdrawalRef.current = executeWithdrawal;
+      setOtpInput('');
+      setOtpError('');
+      setShowOTPModal(true);
+    } else {
+      executeWithdrawal();
     }
   };
 
@@ -862,26 +904,51 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       return;
     }
 
-    setSubmitting(true);
-    try {
-      if (onCreateWithdrawal) {
-        const methodName = pkMethod === 'EASYPAISA' ? 'Easypaisa' :
-                           pkMethod === 'JAZZCASH' ? 'JazzCash' :
-                           pkMethod === 'SADAPAY' ? 'SadaPay' :
-                           pkMethod === 'NAYAPAY' ? 'NayaPay' : 'Bank Transfer';
-        const walletDetails = `${methodName} - Number/Account: ${pkWithdrawNumber.trim()} | Account Title: ${pkWithdrawName.trim()}`;
-        await onCreateWithdrawal(amtUSD, pkMethod, walletDetails);
-        setPkWithdrawSuccess('✅ Your withdrawal request has been submitted successfully. Processing may take 2 minutes to 2 hours after verification (24/7).');
-        setPkWithdrawAmount('');
-        setPkWithdrawNumber('');
-        setPkWithdrawName('');
-      } else {
-        setPkWithdrawError('❌ Withdrawal system configuration issues. Please try again.');
+    const executePkWithdrawal = async () => {
+      setSubmitting(true);
+      try {
+        if (onCreateWithdrawal) {
+          const methodName = pkMethod === 'EASYPAISA' ? 'Easypaisa' :
+                             pkMethod === 'JAZZCASH' ? 'JazzCash' :
+                             pkMethod === 'SADAPAY' ? 'SadaPay' :
+                             pkMethod === 'NAYAPAY' ? 'NayaPay' : 'Bank Transfer';
+          const walletDetails = `${methodName} - Number/Account: ${pkWithdrawNumber.trim()} | Account Title: ${pkWithdrawName.trim()}`;
+          await onCreateWithdrawal(amtUSD, pkMethod, walletDetails);
+          setPkWithdrawSuccess('✅ Your withdrawal request has been submitted successfully. Processing may take 2 minutes to 2 hours after verification (24/7).');
+          setPkWithdrawAmount('');
+          setPkWithdrawNumber('');
+          setPkWithdrawName('');
+        } else {
+          setPkWithdrawError('❌ Withdrawal system configuration issues. Please try again.');
+        }
+      } catch (err) {
+        setPkWithdrawError('❌ Could not save withdrawal request.');
+      } finally {
+        setSubmitting(false);
       }
-    } catch (err) {
-      setPkWithdrawError('❌ Could not save withdrawal request.');
-    } finally {
-      setSubmitting(false);
+    };
+
+    if (is2faEnabled) {
+      pendingWithdrawalRef.current = executePkWithdrawal;
+      setOtpInput('');
+      setOtpError('');
+      setShowOTPModal(true);
+    } else {
+      executePkWithdrawal();
+    }
+  };
+
+  const execute2FAVerified = async () => {
+    if (otpInput.trim().length !== 6) {
+      setOtpError('Invalid OTP Code. Must be 6 digits.');
+      return;
+    }
+    setOtpError('');
+    setShowOTPModal(false);
+    setOtpInput('');
+    if (pendingWithdrawalRef.current) {
+      await pendingWithdrawalRef.current();
+      pendingWithdrawalRef.current = null;
     }
   };
 
@@ -3980,6 +4047,58 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               </div>
             </motion.div>
           )}
+
+          {activeTab === 'security' && (
+            <motion.div
+              key="security-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="space-y-6 scroll-mt-24"
+              id="security-section"
+            >
+              <div className="bg-white dark:bg-[#131B2E] border border-gray-100 dark:border-white/5 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-md dark:shadow-2xl">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-600/5 blur-[120px] rounded-full pointer-events-none" />
+                
+                <div className="relative space-y-6">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-black text-emerald-500 tracking-[0.2em] uppercase font-sans">
+                      Security & Privacy
+                    </span>
+                    <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+                      Security Center
+                    </h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="p-5 border border-emerald-500/30 bg-emerald-500/10 rounded-2xl flex items-center justify-between">
+                      <div className="flex items-start gap-3">
+                        <ShieldCheck className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
+                        <div>
+                          <h4 className="text-sm font-black text-slate-800 dark:text-white">Two-Factor Authentication (2FA)</h4>
+                          <p className="text-xs text-slate-500 dark:text-white/60 mt-1 pr-4 font-sans leading-relaxed">
+                            Require an email OTP verification for every withdrawal request to maximize your account's safety.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const newState = !is2faEnabled;
+                          setIs2faEnabled(newState);
+                          localStorage.setItem('apex_2fa_enabled', newState ? 'true' : 'false');
+                          onAddToast(newState ? '2FA Enabled successfully' : '2FA Disabled successfully', 'success');
+                        }}
+                        className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none shrink-0 ${is2faEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                      >
+                        <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 ${is2faEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
@@ -4177,10 +4296,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               <button
                 type="button"
                 onClick={handleSpinClick}
-                disabled={isSpinning}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-white font-black text-xs uppercase tracking-widest transition-all shadow-md shadow-emerald-700/10 active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                disabled={isSpinning || (Date.now() - lastSpinTime < 48 * 60 * 60 * 1000)}
+                className={`w-full py-3.5 rounded-xl text-white font-black text-xs uppercase tracking-widest transition-all shadow-md active:scale-[0.98] cursor-pointer disabled:opacity-50 ${(Date.now() - lastSpinTime < 48 * 60 * 60 * 1000) ? 'bg-slate-500' : 'bg-gradient-to-r from-[#22C55E] to-[#16A34A] shadow-emerald-700/10'}`}
               >
-                {isSpinning ? '🌀 Spin Active...' : '🔥 Spin Now'}
+                {isSpinning ? '🌀 Spin Active...' : (Date.now() - lastSpinTime < 48 * 60 * 60 * 1000 ? `⏳ Next spin in ${Math.ceil((48 * 60 * 60 * 1000 - (Date.now() - lastSpinTime)) / (1000 * 60 * 60))}h` : '🔥 Spin Now')}
               </button>
             </motion.div>
           </>
@@ -4666,6 +4785,71 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {showOTPModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-[#131B2E] border border-blue-500/20 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden text-center"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/40 mb-4 text-emerald-400">
+                  <ShieldCheck className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-black text-white mb-2">Security Verification</h3>
+                <p className="text-xs text-white/60 mb-6 px-4">
+                  For your safety, 2FA is required for this withdrawal. We've sent a 6-digit code to your registered email address.
+                </p>
+
+                <div className="w-full mb-4">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otpInput}
+                    onChange={(e) => {
+                      setOtpInput(e.target.value.replace(/\D/g, ''));
+                      setOtpError('');
+                    }}
+                    placeholder="Enter 6-digit OTP"
+                    className="w-full bg-[#0A0F1C] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl font-mono text-white tracking-[0.5em] focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  />
+                  {otpError && (
+                    <p className="text-red-400 text-[10px] mt-2 font-bold uppercase tracking-widest">{otpError}</p>
+                  )}
+                </div>
+
+                <div className="w-full flex gap-3">
+                  <button 
+                    onClick={() => {
+                      setShowOTPModal(false);
+                      setOtpInput('');
+                      pendingWithdrawalRef.current = null;
+                    }}
+                    className="flex-1 py-3.5 rounded-xl border border-white/10 text-white/70 text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={execute2FAVerified}
+                    className="flex-1 py-3.5 rounded-xl bg-emerald-500 text-slate-900 text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all"
+                  >
+                    Verify
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 📱 STICKY BOTTOM NAVIGATION BAR (Screenshot style: Home, Funding, FAQ, Profile) */}
       <div className="fixed bottom-0 left-0 right-0 max-w-5xl mx-auto bg-white/95 dark:bg-[#131B2E]/95 backdrop-blur-md border-t border-gray-100 dark:border-white/5 py-2.5 px-3 flex items-center justify-around z-40 select-none shadow-[0_-5px_30px_rgba(0,0,0,0.15)] md:rounded-t-3xl">
         <button 
@@ -4707,6 +4891,14 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
         >
           <User className="w-5 h-5" />
           <span className="text-[9px] uppercase tracking-wider font-sans">Profile</span>
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('security')}
+          className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'security' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
+        >
+          <ShieldCheck className="w-5 h-5" />
+          <span className="text-[9px] uppercase tracking-wider font-sans">Security</span>
         </button>
       </div>
     </div>
