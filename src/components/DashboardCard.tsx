@@ -114,7 +114,7 @@ interface DashboardCardProps {
   maturedBalance?: number;
   onAddToast: (message: string, type: 'success' | 'error', sound?: any) => void;
   userProfile?: any;
-  onClaimDailyReward?: (amount: number) => Promise<void>;
+  onClaimDailyReward?: (dayIndex: number, amount: number) => Promise<void>;
   virtualDays?: number;
   activeTab?: 'overview' | 'funding' | 'faq' | 'settings' | 'security';
   onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq' | 'settings' | 'security') => void;
@@ -161,6 +161,7 @@ export default function DashboardCard({
   theme: themeProp,
   setTheme: setThemeProp,
 }: DashboardCardProps) {
+  const hasDeposited = deposits && deposits.length > 0;
   const [copied, setCopied] = useState(false);
   const [activeTabLocal, setActiveTabLocal] = useState<'overview' | 'funding' | 'faq' | 'settings' | 'security'>('overview');
   const [showDepositSheet, setShowDepositSheet] = useState(false);
@@ -401,7 +402,7 @@ export default function DashboardCard({
         // Payout to live database
         if (onClaimDailyReward) {
           const rewardUSD = rewardPKR / 280;
-          onClaimDailyReward(rewardUSD);
+          onClaimDailyReward(null, rewardUSD);
         }
         playSound('new_referral');
         onAddToast(`Task Completed! ₨ ${rewardPKR} credited to your live ledger.`, 'success');
@@ -452,7 +453,7 @@ export default function DashboardCard({
 
       if (selectedSegment.prize > 0) {
         if (onClaimDailyReward) {
-          onClaimDailyReward(selectedSegment.prize);
+          onClaimDailyReward(null, selectedSegment.prize);
         }
         playSound('new_referral');
         onAddToast(`🎉 Congratulations! You won ${selectedSegment.label} from the Lucky Spin!`, 'success');
@@ -483,26 +484,12 @@ export default function DashboardCard({
     setShowGiftModal(false);
     
     if (onClaimDailyReward) {
-      onClaimDailyReward(prizePKR / 280);
+      onClaimDailyReward(null, prizePKR / 280);
     }
     playSound('new_referral');
     onAddToast(`🎉 Promo code applied! ₨ ${prizePKR} credited successfully.`, "success");
   };
 
-  const handleClaimDailyDividend = async (dayIndex: number, pkrAmount: number) => {
-    if (onClaimDailyReward) {
-      try {
-        await onClaimDailyReward(pkrAmount / 280);
-        setShowDailyBonusModal(false);
-        playSound('new_referral');
-        onAddToast(`🎉 Daily check-in successful! ₨ ${pkrAmount} credited to balance.`, 'success');
-      } catch (err) {
-        onAddToast('Could not claim daily bonus. Wait for clock countdown.', 'error');
-      }
-    } else {
-      onAddToast('Daily reward pipeline unavailable.', 'error');
-    }
-  };
 
   // Cooldown calculation for daily check-in claims
   const [claimCooldown, setClaimCooldown] = useState('');
@@ -2222,7 +2209,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                         const maxAmt = currentStreak >= 5 ? 0.42 : 0.245;
                         const claimAmt = Number((Math.random() * (maxAmt - minAmt) + minAmt).toFixed(2));
                         
-                        await onClaimDailyReward(claimAmt);
+                        await onClaimDailyReward(null, claimAmt);
                         onAddToast(`Daily dividends of ${currencySymbol}${(claimAmt * conversionRate).toFixed(2)} credited! Keep checking in daily! 🪙`, 'success', 'new_referral');
                       }
                     }}
@@ -4477,15 +4464,20 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   { d: 7, amt: 250 },
                 ].map((item, idx) => {
                   const day = idx + 1;
-                  const isClaimed = userProfile.claimStreak && userProfile.claimStreak >= day;
+                  const isClaimed = userProfile.claimStreak > idx;
                   const isNext = userProfile.claimStreak === idx;
                   const lastClaimed = userProfile.lastClaimedAt ? new Date(userProfile.lastClaimedAt) : null;
                   const now = new Date();
-                  const nextClaimTime = lastClaimed ? new Date(lastClaimed.getTime() + 24 * 60 * 60 * 1000) : null;
                   const canClaim = isNext && (!lastClaimed || (now.getTime() - lastClaimed.getTime()) >= 24 * 60 * 60 * 1000);
-                  const timeLeft = nextClaimTime ? Math.max(0, nextClaimTime.getTime() - now.getTime()) : 0;
+                  
+                  // Calculate time remaining for next claim (if not claimable)
+                  let timeLeft = 0;
+                  if (!canClaim && lastClaimed) {
+                    timeLeft = Math.max(0, lastClaimed.getTime() + 24 * 60 * 60 * 1000 - now.getTime());
+                  }
                   const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
                   const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                  const secondsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
                   
                   return (
                     <div 
@@ -4495,20 +4487,30 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       <span className="text-[8px] font-black uppercase text-slate-400 dark:text-white/30">Day {item.d}</span>
                       <span className="text-[10px] font-extrabold text-slate-800 dark:text-white">₨ {item.amt}</span>
                       <button
-                        onClick={() => canClaim && handleClaimDailyDividend(idx, item.amt)}
-                        disabled={!canClaim}
+                        onClick={() => canClaim && onClaimDailyReward(idx, item.amt)}
+                        disabled={!canClaim || isClaimed}
                         className={`mt-1 py-1 rounded text-[7px] text-white font-black uppercase tracking-wider border-0 cursor-pointer select-none ${isClaimed ? 'bg-emerald-600' : canClaim ? 'bg-emerald-500' : 'bg-gray-400 cursor-not-allowed'}`}
                       >
-                        {isClaimed ? 'Claimed' : canClaim ? 'Claim' : `${hoursLeft}h ${minutesLeft}m`}
+                        {isClaimed ? 'Claimed' : canClaim ? 'Claim' : `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`}
                       </button>
                     </div>
                   );
                 })}
                 
-                {/* Day 7 Elite Gift box */}
-                <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 text-white text-center flex flex-col gap-1 justify-center relative overflow-hidden shadow-sm">
-                  <span className="text-[8px] font-black uppercase text-white/75">VIP 👑</span>
-                  <span className="text-[10px] font-black">Bonus</span>
+                {/* VIP Daily Rewards Section */}
+                <div className="col-span-4 mt-2 pt-2 border-t border-gray-150 dark:border-white/5">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-white mb-2">VIP Daily Rewards</h4>
+                  {userProfile.claimStreak >= 7 ? (
+                    hasDeposited ? (
+                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest">VIP Reward Unlocked!</p>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">Deposit to unlock VIP Daily Rewards.</p>
+                    )
+                  ) : (
+                    <p className="text-[10px] text-slate-400 dark:text-white/30 font-bold uppercase tracking-widest">Complete 7-Day Streak first.</p>
+                  )}
                 </div>
               </div>
 
@@ -4617,18 +4619,23 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   onChange={(e) => setGiftCode(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-gray-250 dark:border-white/10 bg-gray-50 dark:bg-slate-950/60 text-slate-800 dark:text-white font-mono text-sm uppercase font-bold tracking-wider text-center outline-none focus:border-[#16A34A] transition-all"
                 />
-                <div className="space-y-2 mt-2">
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Gift voucher codes are shared only on our official WhatsApp group. Join the group to get the latest voucher codes.
-                  </p>
-                  <a
-                    href="https://whatsapp.com/channel/0029VbAa01YEKyZNN2FRqe1v"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full py-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-widest text-center hover:bg-emerald-500/20 transition-all border border-emerald-500/20"
-                  >
-                    Join Official WhatsApp Channel
-                  </a>
+                <div className="space-y-3 mt-3">
+                  <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-white/5">
+                    <p className="text-[11px] text-slate-700 dark:text-slate-300 font-bold leading-relaxed text-center mb-2">
+                      🎁 JOIN OUR OFFICIAL WHATSAPP GROUP 🎁<br/><br/>
+                      Get the latest Promo Codes before everyone else!<br/><br/>
+                      💰 WIN UP TO PKR 500 💰<br/><br/>
+                      Promo codes are shared ONLY in our official WhatsApp Group.
+                    </p>
+                    <a
+                      href="https://whatsapp.com/channel/0029VbAa01YEKyZNN2FRqe1v"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full py-3 rounded-lg bg-emerald-500 text-white font-black text-[11px] uppercase tracking-widest text-center hover:bg-emerald-600 transition-all border-0"
+                    >
+                      👇 Join Now 👇
+                    </a>
+                  </div>
                 </div>
 
               </div>

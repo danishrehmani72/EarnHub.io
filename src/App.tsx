@@ -1276,37 +1276,50 @@ export default function App() {
   };
 
   // Claim account daily rewards in database
-  const handleClaimDailyReward = async (amount: number) => {
+  const handleClaimDailyReward = async (dayIndex: number | null, amount: number) => {
     if (!currentUid || !userProfile) return;
+    
+    const now = new Date();
+    
+    // Only enforce 24h cooldown for daily streak rewards (dayIndex !== null)
+    if (dayIndex !== null) {
+        const lastClaimed = userProfile.lastClaimedAt ? new Date(userProfile.lastClaimedAt) : null;
+        if (lastClaimed && (now.getTime() - lastClaimed.getTime()) < 24 * 60 * 60 * 1000) {
+          addToast("Next reward available in 24 hours.", "error");
+          return;
+        }
+    }
+
     try {
       const userRef = doc(db, 'users', currentUid);
-      const currentEarnings = userProfile.dailyBonusEarnings || 0;
-      const currentStreak = userProfile.claimStreak || 0;
       
-      const nextStreak = currentStreak + 1;
-      const claimTimestamp = new Date().toISOString();
+      const updateData: any = {
+        dailyBonusEarnings: Number(((userProfile.dailyBonusEarnings || 0) + amount).toFixed(2)),
+        updatedAt: serverTimestamp()
+      };
+
+      if (dayIndex !== null) {
+        const currentStreak = userProfile.claimStreak || 0;
+        const nextStreak = currentStreak + 1;
+        updateData.claimStreak = nextStreak;
+        updateData.lastClaimedAt = now.toISOString();
+      }
 
       // 1. Update main user profile with dividend yield and streak status
-      await setDoc(userRef, {
-        dailyBonusEarnings: Number((currentEarnings + amount).toFixed(2)),
-        claimStreak: nextStreak,
-        lastClaimedAt: claimTimestamp,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
+      await setDoc(userRef, updateData, { merge: true });
 
-      // 2. Record this event in the daily_rewards subcollection for historical audit
+      // 2. Record this event
       const rewardLogRef = doc(collection(db, 'users', currentUid, 'daily_rewards'));
       await setDoc(rewardLogRef, {
         id: rewardLogRef.id,
         amount: Number(amount.toFixed(2)),
-        streak: nextStreak,
-        timestamp: claimTimestamp,
+        timestamp: now.toISOString(),
         createdAt: serverTimestamp(),
       });
+      addToast(`🎉 Reward successful! ₨ ${amount * 280} credited to balance.`, 'success');
     } catch (error) {
-      console.error("Error claiming daily reward:", error);
-      addToast("Failed to lock daily dividends inside cloud nodes. Please try again.", "error");
-      handleFirestoreError(error, OperationType.WRITE, `users/${currentUid}/daily_rewards`);
+      console.error("Error claiming reward:", error);
+      addToast("Failed to lock dividends inside cloud nodes. Please try again.", "error");
     }
   };
 
