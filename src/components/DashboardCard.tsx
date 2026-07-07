@@ -70,11 +70,12 @@ import { playSound } from '../lib/sounds';
 
 export function getPlanCapPercent(planId: string, amount: number): number {
   const normId = (planId || '').toLowerCase().trim();
-  if (normId === 'bronze') return 0.08; // Starter: 8% yield (108% total)
-  if (normId === 'silver') return 0.12; // Growth: 12% yield (112% total)
-  if (normId === 'gold') return 0.18;   // Pro: 18% yield (118% total)
-  if (normId === 'diamond') return 0.24; // Elite: 24% yield (124% total)
-  return 0.10; // Default 10%
+  if (normId === 'mini') return 1.0; // Mini: 100% yield (200% total)
+  if (normId === 'bronze') return 1.0; // Starter: 100% yield (200% total)
+  if (normId === 'silver') return 1.0; // Growth: 100% yield (200% total)
+  if (normId === 'gold') return 1.0;   // Pro: 100% yield (200% total)
+  if (normId === 'diamond') return 1.0; // Elite: 100% yield (200% total)
+  return 1.0; // Default 100%
 }
 
 interface DashboardCardProps {
@@ -220,10 +221,11 @@ export default function DashboardCard({
 
   // Real-time projected yield calculation
   const planInfoForAmount = useMemo(() => {
-    let planId = 'bronze';
-    if (calcAmount >= 100) planId = 'diamond';
-    else if (calcAmount >= 50) planId = 'gold';
-    else if (calcAmount >= 20) planId = 'silver';
+    let planId = 'mini';
+    if (calcAmount >= 25000) planId = 'diamond';
+    else if (calcAmount >= 5000) planId = 'gold';
+    else if (calcAmount >= 1000) planId = 'silver';
+    else if (calcAmount >= 100) planId = 'bronze';
     
     const cap = getPlanCapPercent(planId, calcAmount);
     return { id: planId, cap };
@@ -1792,17 +1794,17 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </div>
                     <input 
                       type="range"
-                      min="5"
-                      max="1000"
-                      step="5"
+                      min="25"
+                      max="25000"
+                      step="25"
                       value={calcAmount}
                       onChange={(e) => setCalcAmount(Number(e.target.value))}
                       className="w-full accent-[#D4AF37] bg-gray-200 dark:bg-slate-950/60 h-1.5 rounded-lg appearance-none cursor-pointer border border-gray-200 dark:border-white/5 hover:border-slate-400 transition-colors cursor-pointer"
                     />
                     <div className="flex justify-between text-[7px] font-mono text-slate-400 dark:text-white/30">
-                      <span>Min: {currencySymbol}{(5 * conversionRate).toFixed(2)}</span>
-                      <span>Mid: {currencySymbol}{(500 * conversionRate).toFixed(2)}</span>
-                      <span>Max: {currencySymbol}{(1000 * conversionRate).toFixed(2)}</span>
+                      <span>Min: {currencySymbol}{(25 * conversionRate).toFixed(0)}</span>
+                      <span>Mid: {currencySymbol}{(12500 * conversionRate).toFixed(0)}</span>
+                      <span>Max: {currencySymbol}{(25000 * conversionRate).toFixed(0)}</span>
                     </div>
                   </div>
 
@@ -1835,10 +1837,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     <div className="bg-gray-50 dark:bg-slate-950/40 border border-gray-100 dark:border-white/5 rounded-2xl p-3 text-left space-y-1">
                       <span className="text-[7.5px] uppercase tracking-widest font-black text-slate-400 dark:text-white/40 font-sans block">Dynamic Daily Yield</span>
                       <p className="text-[12px] font-serif font-bold text-slate-800 dark:text-white leading-tight">
-                        {currencySymbol}{(( (calcAmount >= 100 ? 0.07 : calcAmount >= 50 ? 0.05 : calcAmount >= 15 ? 0.04 : 0.03) * calcAmount * (globalSettings?.yieldMultiplier || 1.0) ) * conversionRate).toFixed(2)}
+                        {currencySymbol}{(( (planInfoForAmount.cap / 30) * calcAmount * (globalSettings?.yieldMultiplier || 1.0) ) * conversionRate).toFixed(2)}
                       </p>
                       <span className="text-[6.5px] font-mono text-blue-400/85 block">
-                        Based on {calcAmount >= 100 ? "7%" : calcAmount >= 50 ? "5%" : calcAmount >= 15 ? "4%" : "3%"} Plan tier rate
+                        Based on {(planInfoForAmount.cap * 100).toFixed(0)}% Plan tier rate
                       </span>
                     </div>
 

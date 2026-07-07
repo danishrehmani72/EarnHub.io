@@ -14,10 +14,11 @@ interface PlanMatrixProps {
 }
 
 const PLANS = [
-  { id: 'bronze', name: 'Starter Portfolio', min: 100, max: 999.99, targetPercent: 8, color: 'text-emerald-500 dark:text-emerald-400', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-emerald-500/10 to-transparent' },
-  { id: 'silver', name: 'Growth Portfolio', min: 1000, max: 4999.99, targetPercent: 12, color: 'text-emerald-600 dark:text-emerald-400', badgeColor: 'bg-teal-500/10 text-teal-600 dark:text-teal-300 border-teal-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-teal-500/10 to-transparent' },
-  { id: 'gold', name: 'Pro Portfolio', min: 5000, max: 24999.99, targetPercent: 18, color: 'text-[#16A34A] dark:text-emerald-400', badgeColor: 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-600/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#16A34A]/10 to-transparent' },
-  { id: 'diamond', name: 'Elite Portfolio', min: 25000, max: Infinity, targetPercent: 24, color: 'text-[#22C55E] dark:text-emerald-400', badgeColor: 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#22C55E]/15 to-transparent' },
+  { id: 'mini', name: 'Mini Portfolio', min: 25, max: 99.99, targetPercent: 100, color: 'text-blue-500 dark:text-blue-400', badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-blue-500/10 to-transparent' },
+  { id: 'bronze', name: 'Starter Portfolio', min: 100, max: 999.99, targetPercent: 100, color: 'text-emerald-500 dark:text-emerald-400', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-emerald-500/10 to-transparent' },
+  { id: 'silver', name: 'Growth Portfolio', min: 1000, max: 4999.99, targetPercent: 100, color: 'text-emerald-600 dark:text-emerald-400', badgeColor: 'bg-teal-500/10 text-teal-600 dark:text-teal-300 border-teal-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-teal-500/10 to-transparent' },
+  { id: 'gold', name: 'Pro Portfolio', min: 5000, max: 24999.99, targetPercent: 100, color: 'text-[#16A34A] dark:text-emerald-400', badgeColor: 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-600/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#16A34A]/10 to-transparent' },
+  { id: 'diamond', name: 'Elite Portfolio', min: 25000, max: Infinity, targetPercent: 100, color: 'text-[#22C55E] dark:text-emerald-400', badgeColor: 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/15', border: 'border-gray-100 dark:border-white/5', accentBg: 'from-[#22C55E]/15 to-transparent' },
 ];
 
 export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, currencySymbol, conversionRate, theme = 'light' }: PlanMatrixProps) {
@@ -154,23 +155,58 @@ export function PlanMatrix({ balance, investments, onCreatePlan, onCancelPlan, c
                const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
                const isLocked = elapsedMs < thirtyDaysMs;
                const remainingDays = isLocked ? Math.ceil((thirtyDaysMs - elapsedMs) / (24 * 60 * 60 * 1000)) : 0;
+               const elapsedDays = 30 - remainingDays;
+               const progressPercent = Math.min(100, Math.max(0, (elapsedDays / 30) * 100));
+
+               // Calculate performance multiplier for the current day
+               const currentDay = Math.max(1, elapsedDays);
+               const hashStr = (inv.id || String(inv.time)) + "_" + currentDay;
+               let hash = 0;
+               for (let idx = 0; idx < hashStr.length; idx++) {
+                 hash = hashStr.charCodeAt(idx) + ((hash << 5) - hash);
+               }
+               const index = Math.abs(hash) % 4;
+               const multiplier = [0.98, 1.02, 0.95, 1.05][index];
+               const isAboveTarget = multiplier > 1.0;
 
                return (
-                 <div key={inv.id} className={`flex flex-col sm:flex-row justify-between sm:items-center rounded-xl p-4 gap-4 border ${theme === 'dark' ? 'bg-slate-950/40 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
-                   <div className="text-left">
-                     <p className={`text-sm font-black capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
-                     <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-slate-500'}`}>Principal Locked: <strong className="font-mono text-slate-800 dark:text-white">{currencySymbol}{(inv.amount * conversionRate).toFixed(2)}</strong></p>
+                 <div key={inv.id} className={`flex flex-col rounded-xl p-4 gap-4 border ${theme === 'dark' ? 'bg-slate-950/40 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                     <div className="text-left">
+                       <p className={`text-sm font-black capitalize ${planInfo?.color || 'text-white'}`}>{inv.planId} Package</p>
+                       <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-slate-500'}`}>Principal Locked: <strong className="font-mono text-slate-800 dark:text-white">{currencySymbol}{(inv.amount * conversionRate).toFixed(2)}</strong></p>
+                     </div>
+                     <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                       <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] uppercase font-bold tracking-wider rounded border border-emerald-500/15">Dynamic Profit Accruing</span>
+                       
+                       <span className={`flex items-center gap-1 px-2.5 py-1 text-[9px] uppercase font-bold tracking-wider rounded border ${isAboveTarget ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
+                         <TrendingUp className={`w-3 h-3 ${isAboveTarget ? '' : 'rotate-180'}`} />
+                         {isAboveTarget ? 'Above Target' : 'Below Target'}
+                       </span>
+
+                       {true ? (
+                         <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded select-none cursor-default" title="This plan is locked. Accrued profits automatically transfer upon completion.">
+                           <Lock className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                           <span>Locked ({remainingDays}d / Max 30d)</span>
+                         </div>
+                       ) : (
+                         <button onClick={() => onCancelPlan(inv.id)} className="px-3 py-1.5 text-[10px] uppercase font-bold text-rose-400 tracking-wider bg-rose-500/10 border border-rose-500/20 rounded hover:bg-rose-500/20 transition-all border-0 cursor-pointer">Cancel Plan</button>
+                       )}
+                     </div>
                    </div>
-                   <div className="flex items-center gap-4">
-                     <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] uppercase font-bold tracking-wider rounded border border-emerald-500/15">Dynamic Profit Accruing</span>
-                     {true ? (
-                       <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded select-none cursor-default" title="This plan is locked. Accrued profits automatically transfer upon completion.">
-                         <Lock className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                         <span>Locked ({remainingDays}d / Max 30d)</span>
-                       </div>
-                     ) : (
-                       <button onClick={() => onCancelPlan(inv.id)} className="px-3 py-1.5 text-[10px] uppercase font-bold text-rose-400 tracking-wider bg-rose-500/10 border border-rose-500/20 rounded hover:bg-rose-500/20 transition-all border-0 cursor-pointer">Cancel Plan</button>
-                     )}
+                   
+                   {/* Progress Bar */}
+                   <div className="w-full space-y-1.5">
+                     <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                       <span>Progress: {elapsedDays} Days</span>
+                       <span>{progressPercent.toFixed(0)}%</span>
+                     </div>
+                     <div className="w-full h-2 bg-gray-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                       <div 
+                         className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-1000 ease-out rounded-full"
+                         style={{ width: `${progressPercent}%` }}
+                       />
+                     </div>
                    </div>
                  </div>
                );
