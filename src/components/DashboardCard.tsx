@@ -300,22 +300,30 @@ export default function DashboardCard({
     if (!pullingRef.current) return;
     const currentY = e.touches[0].clientY;
     const diff = currentY - touchStartRef.current;
+    
     if (diff > 0) {
+      // Pulling down (dragging page down)
       const distance = Math.min(80, Math.pow(diff, 0.85));
-      setPullDistance(distance);
-      if (distance >= 50) {
-        setPullStatus('ready');
-      } else {
-        setPullStatus('pulling');
+      if (Math.abs(pullDistance - distance) > 1) {
+        setPullDistance(distance);
+      }
+      const nextStatus = distance >= 50 ? 'ready' : 'pulling';
+      if (pullStatus !== nextStatus) {
+        setPullStatus(nextStatus);
       }
     } else {
-      setPullDistance(0);
-      setPullStatus('idle');
+      // Dragging up to scroll down: immediately abort pull-to-refresh to avoid re-render locks!
+      pullingRef.current = false;
+      if (pullDistance !== 0) setPullDistance(0);
+      if (pullStatus !== 'idle') setPullStatus('idle');
     }
   };
 
   const handleTouchEnd = async () => {
-    if (!pullingRef.current) return;
+    if (!pullingRef.current) {
+      pullingRef.current = false;
+      return;
+    }
     pullingRef.current = false;
     if (pullStatus === 'ready') {
       setPullStatus('refreshing');
@@ -1252,7 +1260,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
 
   return (
     <div 
-      className={`${theme === 'dark' ? 'dark bg-[#08080c] text-[#E5E7EB]' : 'bg-[#FAFCFA] text-slate-800'} w-full max-w-5xl mx-auto md:rounded-[32px] md:border-2 md:border-gray-200/50 dark:md:border-white/5 md:shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:md:shadow-[0_20px_50px_rgba(0,0,0,0.55)] overflow-hidden font-sans relative transition-all duration-300 shadow-sm`}
+      className={`${theme === 'dark' ? 'dark bg-[#08080c] text-[#E5E7EB]' : 'bg-[#FAFCFA] text-slate-800'} w-full max-w-5xl mx-auto md:rounded-[32px] md:border-2 md:border-gray-200/50 dark:md:border-white/5 md:shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:md:shadow-[0_20px_50px_rgba(0,0,0,0.55)] overflow-visible md:overflow-hidden flex flex-col font-sans relative transition-all duration-300 shadow-sm`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
