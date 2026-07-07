@@ -4459,21 +4459,35 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   { d: 5, amt: 120 },
                   { d: 6, amt: 150 },
                   { d: 7, amt: 250 },
-                ].map((item, idx) => (
-                  <div 
-                    key={item.d}
-                    className="p-2 rounded-xl border border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/40 text-center flex flex-col gap-1 hover:border-emerald-500/25 transition-all"
-                  >
-                    <span className="text-[8px] font-black uppercase text-slate-400 dark:text-white/30">Day {item.d}</span>
-                    <span className="text-[10px] font-extrabold text-slate-800 dark:text-white">₨ {item.amt}</span>
-                    <button
-                      onClick={() => handleClaimDailyDividend(idx, item.amt)}
-                      className="mt-1 py-1 rounded bg-emerald-500 text-[7px] text-white font-black uppercase tracking-wider border-0 cursor-pointer select-none"
+                ].map((item, idx) => {
+                  const day = idx + 1;
+                  const isClaimed = userProfile.claimStreak && userProfile.claimStreak >= day;
+                  const isNext = userProfile.claimStreak === idx;
+                  const lastClaimed = userProfile.lastClaimedAt ? new Date(userProfile.lastClaimedAt) : null;
+                  const now = new Date();
+                  const nextClaimTime = lastClaimed ? new Date(lastClaimed.getTime() + 24 * 60 * 60 * 1000) : null;
+                  const canClaim = isNext && (!lastClaimed || (now.getTime() - lastClaimed.getTime()) >= 24 * 60 * 60 * 1000);
+                  const timeLeft = nextClaimTime ? Math.max(0, nextClaimTime.getTime() - now.getTime()) : 0;
+                  const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+                  const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                  
+                  return (
+                    <div 
+                      key={item.d}
+                      className={`p-2 rounded-xl border ${isClaimed ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/40'} text-center flex flex-col gap-1 hover:border-emerald-500/25 transition-all`}
                     >
-                      Claim
-                    </button>
-                  </div>
-                ))}
+                      <span className="text-[8px] font-black uppercase text-slate-400 dark:text-white/30">Day {item.d}</span>
+                      <span className="text-[10px] font-extrabold text-slate-800 dark:text-white">₨ {item.amt}</span>
+                      <button
+                        onClick={() => canClaim && handleClaimDailyDividend(idx, item.amt)}
+                        disabled={!canClaim}
+                        className={`mt-1 py-1 rounded text-[7px] text-white font-black uppercase tracking-wider border-0 cursor-pointer select-none ${isClaimed ? 'bg-emerald-600' : canClaim ? 'bg-emerald-500' : 'bg-gray-400 cursor-not-allowed'}`}
+                      >
+                        {isClaimed ? 'Claimed' : canClaim ? 'Claim' : `${hoursLeft}h ${minutesLeft}m`}
+                      </button>
+                    </div>
+                  );
+                })}
                 
                 {/* Day 7 Elite Gift box */}
                 <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 text-white text-center flex flex-col gap-1 justify-center relative overflow-hidden shadow-sm">
@@ -4867,56 +4881,58 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
       </AnimatePresence>
 
       {/* 📱 STICKY BOTTOM NAVIGATION BAR (Screenshot style: Home, Funding, FAQ, Profile) */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-5xl mx-auto bg-white/95 dark:bg-[#131B2E]/95 backdrop-blur-md border-t border-gray-100 dark:border-white/5 py-2.5 px-3 flex items-center justify-around z-40 select-none shadow-[0_-5px_30px_rgba(0,0,0,0.15)] md:rounded-t-3xl">
-        <button 
-          onClick={() => setActiveTab('overview')}
-          className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'overview' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
-        >
-          <Home className="w-5 h-5" />
-          <span className="text-[9px] uppercase tracking-wider">Home</span>
-        </button>
+      {activeTab === 'overview' && (
+        <div className="fixed bottom-0 left-0 right-0 max-w-5xl mx-auto bg-white/95 dark:bg-[#131B2E]/95 backdrop-blur-md border-t border-gray-100 dark:border-white/5 py-2.5 px-3 flex items-center justify-around z-40 select-none shadow-[0_-5px_30px_rgba(0,0,0,0.15)] md:rounded-t-3xl">
+          <button 
+            onClick={() => setActiveTab('overview')}
+            className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'overview' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-[9px] uppercase tracking-wider">Home</span>
+          </button>
 
-        <button 
-          onClick={() => setActiveTab('funding')}
-          className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'funding' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
-        >
-          <Wallet className="w-5 h-5" />
-          <span className="text-[9px] uppercase tracking-wider font-sans">Funding</span>
-        </button>
+          <button 
+            onClick={() => setActiveTab('funding')}
+            className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'funding' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
+          >
+            <Wallet className="w-5 h-5" />
+            <span className="text-[9px] uppercase tracking-wider font-sans">Funding</span>
+          </button>
 
-        {/* Floating Quick Actions Plus Trigger */}
-        <button 
-          onClick={() => setShowQuickActionsDrawer(true)}
-          className="flex flex-col items-center justify-center -mt-6 w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-[0_4px_20px_rgba(16,185,129,0.4)] border-4 border-white dark:border-[#131B2E] cursor-pointer transition-transform hover:scale-110 active:scale-95 z-50 group"
-          title="Quick Actions"
-        >
-          <Plus className="w-5 h-5 text-white transition-transform group-hover:rotate-90 duration-300" />
-        </button>
+          {/* Floating Quick Actions Plus Trigger */}
+          <button 
+            onClick={() => setShowQuickActionsDrawer(true)}
+            className="flex flex-col items-center justify-center -mt-6 w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-[0_4px_20px_rgba(16,185,129,0.4)] border-4 border-white dark:border-[#131B2E] cursor-pointer transition-transform hover:scale-110 active:scale-95 z-50 group"
+            title="Quick Actions"
+          >
+            <Plus className="w-5 h-5 text-white transition-transform group-hover:rotate-90 duration-300" />
+          </button>
 
-        <button 
-          onClick={() => setActiveTab('faq')}
-          className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'faq' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
-        >
-          <HelpCircle className="w-5 h-5" />
-          <span className="text-[9px] uppercase tracking-wider font-sans">FAQ</span>
-        </button>
+          <button 
+            onClick={() => setActiveTab('faq')}
+            className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'faq' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
+          >
+            <HelpCircle className="w-5 h-5" />
+            <span className="text-[9px] uppercase tracking-wider font-sans">FAQ</span>
+          </button>
 
-        <button 
-          onClick={() => setActiveTab('settings')}
-          className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'settings' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
-        >
-          <User className="w-5 h-5" />
-          <span className="text-[9px] uppercase tracking-wider font-sans">Profile</span>
-        </button>
+          <button 
+            onClick={() => setActiveTab('settings')}
+            className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'settings' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
+          >
+            <User className="w-5 h-5" />
+            <span className="text-[9px] uppercase tracking-wider font-sans">Profile</span>
+          </button>
 
-        <button 
-          onClick={() => setActiveTab('security')}
-          className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'security' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
-        >
-          <ShieldCheck className="w-5 h-5" />
-          <span className="text-[9px] uppercase tracking-wider font-sans">Security</span>
-        </button>
-      </div>
+          <button 
+            onClick={() => setActiveTab('security')}
+            className={`flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-all ${activeTab === 'security' ? 'text-emerald-500 scale-105 font-bold font-sans' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-sans'}`}
+          >
+            <ShieldCheck className="w-5 h-5" />
+            <span className="text-[9px] uppercase tracking-wider font-sans">Security</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
