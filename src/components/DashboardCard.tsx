@@ -4452,7 +4452,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                 Daily Stake Dividend Rewards Calendar
               </p>
 
-              {/* 7 Day Calendar Cards */}
+              {/* 7 Day Calendar Cards + VIP */}
               <div className="grid grid-cols-4 gap-2 text-left">
                 {[
                   { d: 1, amt: 30 },
@@ -4462,6 +4462,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   { d: 5, amt: 120 },
                   { d: 6, amt: 150 },
                   { d: 7, amt: 250 },
+                  { d: 8, amt: 500, isVip: true },
                 ].map((item, idx) => {
                   const day = idx + 1;
                   const isClaimed = userProfile.claimStreak > idx;
@@ -4470,6 +4471,10 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   const now = new Date();
                   const canClaim = isNext && (!lastClaimed || (now.getTime() - lastClaimed.getTime()) >= 24 * 60 * 60 * 1000);
                   
+                  // VIP Logic
+                  const isVipDay = item.isVip;
+                  const isVipLocked = isVipDay && !hasDeposited;
+
                   // Calculate time remaining for next claim (if not claimable)
                   let timeLeft = 0;
                   if (!canClaim && lastClaimed) {
@@ -4479,6 +4484,43 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
                   const secondsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
                   
+                  if (isVipDay) {
+                      return (
+                        <div 
+                          key={item.d}
+                          className={`p-2 rounded-xl border col-span-4 ${isClaimed ? 'border-amber-500/25 bg-amber-500/5' : 'border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/40'} text-center flex flex-col gap-2`}
+                        >
+                          <span className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">VIP Daily Reward</span>
+                          {isVipLocked ? (
+                              <div className="space-y-2">
+                                  <p className="text-[10px] text-slate-500 font-bold uppercase">🔒 DEPOSIT TO UNLOCK VIP REWARDS</p>
+                                  <p className="text-[9px] text-slate-400">Complete your first deposit to unlock VIP Daily Rewards and continue earning exclusive rewards.</p>
+                                  <button 
+                                      onClick={() => {
+                                          setShowDepositSheet(true);
+                                          setActiveTabLocal('funding');
+                                      }}
+                                      className="py-1.5 px-4 rounded-lg bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest cursor-pointer border-0"
+                                  >
+                                      💳 Deposit Now
+                                  </button>
+                              </div>
+                          ) : (
+                              <>
+                                  <span className="text-[12px] font-extrabold text-slate-800 dark:text-white">₨ {item.amt}</span>
+                                  <button
+                                      onClick={() => canClaim && onClaimDailyReward(idx, item.amt)}
+                                      disabled={!canClaim || isClaimed}
+                                      className={`py-1.5 rounded text-[9px] text-white font-black uppercase tracking-wider border-0 cursor-pointer ${isClaimed ? 'bg-amber-600' : canClaim ? 'bg-amber-500' : 'bg-gray-400 cursor-not-allowed'}`}
+                                  >
+                                      {isClaimed ? 'Claimed' : canClaim ? 'Claim' : `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`}
+                                  </button>
+                              </>
+                          )}
+                        </div>
+                      );
+                  }
+
                   return (
                     <div 
                       key={item.d}
@@ -4496,22 +4538,6 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                     </div>
                   );
                 })}
-                
-                {/* VIP Daily Rewards Section */}
-                <div className="col-span-4 mt-2 pt-2 border-t border-gray-150 dark:border-white/5">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-white mb-2">VIP Daily Rewards</h4>
-                  {userProfile.claimStreak >= 7 ? (
-                    hasDeposited ? (
-                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest">VIP Reward Unlocked!</p>
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">Deposit to unlock VIP Daily Rewards.</p>
-                    )
-                  ) : (
-                    <p className="text-[10px] text-slate-400 dark:text-white/30 font-bold uppercase tracking-widest">Complete 7-Day Streak first.</p>
-                  )}
-                </div>
               </div>
 
               <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium leading-relaxed">
