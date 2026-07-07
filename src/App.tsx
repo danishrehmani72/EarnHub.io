@@ -1821,16 +1821,7 @@ export default function App() {
             FAQ
           </button>
 
-          {isAdminUser && (
-            <button 
-              type="button"
-              onClick={() => handleNavClick('admin')}
-              className="transition-all pb-1 cursor-pointer flex items-center gap-1.5 bg-transparent border-0 text-blue-400 font-black hover:brightness-125 focus:outline-none"
-            >
-              <ShieldCheck className="w-4 h-4 text-blue-400 animate-pulse" />
-              Admin Panel
-            </button>
-          )}
+
 
           <span className="text-blue-400/85 hover:text-white transition-all cursor-default flex items-center gap-1.5 ml-2" title="Live Google Cloud Firestore Connection Active">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -1982,20 +1973,7 @@ export default function App() {
                   <span className="text-[9px] bg-white/5 px-2 py-0.5 rounded text-white/40 uppercase tracking-wider font-bold">Info</span>
                 </motion.button>
 
-                {isAdminUser && (
-                  <motion.button 
-                    variants={mobileItemVariants}
-                    type="button"
-                    onClick={() => handleNavClick('admin')}
-                    className="py-3 px-4 rounded-xl text-left flex items-center justify-between border border-blue-500/30 bg-blue-600/5 transition-all cursor-pointer text-blue-400 font-black hover:brightness-110"
-                  >
-                    <span className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-blue-400 animate-pulse" />
-                      Governance Admin Console
-                    </span>
-                    <span className="text-[9px] bg-blue-600/10 px-2.5 py-0.5 rounded text-blue-400 border border-blue-500/20 uppercase tracking-widest font-black">Core</span>
-                  </motion.button>
-                )}
+
 
                 <motion.div 
                   variants={mobileItemVariants}
