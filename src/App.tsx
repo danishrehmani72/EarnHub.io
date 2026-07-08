@@ -1332,7 +1332,7 @@ export default function App() {
   };
 
   // Claim account daily rewards in database
-  const handleClaimDailyReward = async (dayIndex: number | null, amount: number) => {
+  const handleClaimDailyReward = async (dayIndex: number | null, amount: number, giftCode?: string) => {
     if (!currentUid || !userProfile) return;
     
     const now = new Date();
@@ -1346,6 +1346,14 @@ export default function App() {
         }
     }
 
+    // Gift code validation
+    if (giftCode) {
+      if (userProfile.usedGiftCodes?.includes(giftCode)) {
+        addToast("This gift code has already been redeemed on your account.", "error");
+        return;
+      }
+    }
+
     try {
       const userRef = doc(db, 'users', currentUid);
       
@@ -1353,6 +1361,11 @@ export default function App() {
         dailyBonusEarnings: Number(((userProfile.dailyBonusEarnings || 0) + amount).toFixed(2)),
         updatedAt: serverTimestamp()
       };
+
+      if (giftCode) {
+        const currentUsedCodes = userProfile.usedGiftCodes || [];
+        updateData.usedGiftCodes = [...currentUsedCodes, giftCode];
+      }
 
       if (dayIndex !== null) {
         const currentStreak = userProfile.claimStreak || 0;

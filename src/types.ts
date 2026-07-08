@@ -34,6 +34,7 @@ export interface UserProfile {
   browserInfo?: string;
   email?: string;
   emailVerified?: boolean;
+  usedGiftCodes?: string[];
 }
 
 export interface DepositLog {

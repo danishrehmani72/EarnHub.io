@@ -90,7 +90,7 @@ export default function AdminPanel({
   virtualDays,
   globalSettings
 }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'security' | 'tasks'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'security' | 'tasks' | 'users'>('dashboard');
   const [activeChartTab, setActiveChartTab] = useState<'revenue' | 'users' | 'activity'>('revenue');
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [txSearchText, setTxSearchText] = useState('');
@@ -259,6 +259,32 @@ export default function AdminPanel({
     }
   };
 
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<any>(null);
+  const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
+  const [newBonusAmount, setNewBonusAmount] = useState<string>('');
+
+  const handleUpdateUserBalance = async () => {
+    if (!selectedUserForEdit) return;
+    const amount = parseFloat(newBonusAmount);
+    if (isNaN(amount)) {
+      onAddToast("Please enter a valid numeric amount.", "error");
+      return;
+    }
+
+    try {
+      const userRef = doc(db, 'users', selectedUserForEdit.id);
+      await updateDoc(userRef, {
+        dailyBonusEarnings: amount,
+        updatedAt: serverTimestamp()
+      });
+      onAddToast("User balance matrix adjusted successfully.", "success");
+      setIsUserEditModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      onAddToast("Security update failed: " + err.message, "error");
+    }
+  };
+
   return (
     <div className="space-y-6 w-full text-left font-sans">
       
@@ -283,6 +309,13 @@ export default function AdminPanel({
               className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === 'dashboard' ? 'bg-blue-600 text-black font-extrabold' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
             >
               Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('users')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === 'users' ? 'bg-blue-600 text-black font-extrabold' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+            >
+              Users
             </button>
             <button
               type="button"
@@ -319,6 +352,73 @@ export default function AdminPanel({
         <SecurityAudit 
           users={allUsers}
         />
+      ) : activeTab === 'users' ? (
+        <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 space-y-6 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="space-y-1">
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-400 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Member Directory & Audit
+              </h4>
+              <p className="text-[9px] text-white/40 font-medium">Manage user profiles and manually adjust balance matrices</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/[0.01]">
+                  <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-white/30">Member ID</th>
+                  <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-white/30">Email</th>
+                  <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-white/30">Daily Earnings</th>
+                  <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-white/30">Status</th>
+                  <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-white/30 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.03]">
+                {allUsers.length > 0 ? (
+                  allUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <img src={user.avatar ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.avatar}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.userId}`} className="w-7 h-7 rounded-lg bg-white/5" alt="Avatar" />
+                          <span className="text-[11px] font-bold text-white font-mono">{user.userId}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-[10px] font-mono text-white/50">{user.email || 'No email'}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-black text-emerald-400">${(user.dailyBonusEarnings || 0).toFixed(2)}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${user.blocked ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                          {user.blocked ? 'Banned' : 'Active'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => {
+                            setSelectedUserForEdit(user);
+                            setNewBonusAmount((user.dailyBonusEarnings || 0).toString());
+                            setIsUserEditModalOpen(true);
+                          }}
+                          className="px-4 py-1.5 bg-white/5 hover:bg-blue-600 hover:text-black text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer border border-white/10"
+                        >
+                          Adjust
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-white/20 uppercase tracking-widest text-[9px]">No users found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       ) : activeTab === 'tasks' ? (
         <div className="space-y-6">
           {/* TASK MANAGEMENT SECTION */}
@@ -1073,6 +1173,62 @@ export default function AdminPanel({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* USER EDIT MODAL */}
+      {isUserEditModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#0A0A0A] border-2 border-blue-500/30 rounded-3xl p-8 max-w-md w-full space-y-6 shadow-[0_0_50px_rgba(59,130,246,0.15)]"
+          >
+            <div className="space-y-2">
+              <h3 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-blue-400" />
+                Adjust Balance Matrix
+              </h3>
+              <p className="text-[10px] text-white/40 font-medium">Modifying daily earnings for member <span className="text-blue-400">@{selectedUserForEdit?.userId}</span></p>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase text-white/50 tracking-widest">New Daily Earnings ($)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400 font-bold">$</span>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    value={newBonusAmount}
+                    onChange={(e) => setNewBonusAmount(e.target.value)}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-xs text-white outline-none focus:border-blue-500/50"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-4 flex gap-3">
+                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[9px] text-amber-500/80 leading-relaxed font-medium">This manual adjustment directly updates the user's profit ledger. This action is audited and irreversible.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button 
+                onClick={() => setIsUserEditModalOpen(false)}
+                className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white/60 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleUpdateUserBalance}
+                className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-black text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-lg shadow-blue-500/20"
+              >
+                Commit Adjustment
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

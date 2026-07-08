@@ -489,6 +489,7 @@ export default function RegistrationCard({ referredBy, referredSource, inviterNa
         updatedAt: serverTimestamp(),
         password: password, // lowercase DB key
         security_pin: "0000", // lowercase DB key
+        usedGiftCodes: [],
       });
 
       // 3. Store authentication credentials securely in the private secrets subcollection doc

@@ -118,7 +118,7 @@ interface DashboardCardProps {
   maturedBalance?: number;
   onAddToast: (message: string, type: 'success' | 'error', sound?: any) => void;
   userProfile?: any;
-  onClaimDailyReward?: (dayIndex: number, amount: number) => Promise<void>;
+  onClaimDailyReward?: (dayIndex: number | null, amount: number, giftCode?: string) => Promise<void>;
   virtualDays?: number;
   activeTab?: 'overview' | 'funding' | 'faq' | 'settings' | 'security';
   onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq' | 'settings' | 'security') => void;
@@ -531,6 +531,11 @@ export default function DashboardCard({
       return;
     }
     
+    if (userProfile?.usedGiftCodes?.includes(code)) {
+      onAddToast("You have already redeemed this gift code.", "error");
+      return;
+    }
+
     let prizePKR = 0;
     if (code === 'MINDS2026') {
       prizePKR = 140; // $0.5
@@ -545,7 +550,7 @@ export default function DashboardCard({
     setShowGiftModal(false);
     
     if (onClaimDailyReward) {
-      onClaimDailyReward(null, prizePKR / 280);
+      onClaimDailyReward(null, prizePKR / 280, code);
     }
     playSound('new_referral');
     onAddToast(`🎉 Promo code applied! ₨ ${prizePKR} credited successfully.`, "success");
