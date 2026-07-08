@@ -1648,8 +1648,6 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                   {/* Shortcut 4: Portfolios */}
                   <button
                     onClick={() => {
-                      const el = document.getElementById('deposit-section') || document.getElementById('live-wallet-balance-card');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
                       onAddToast('Scroll down to discover and lock investment portfolios below!', 'success');
                     }}
                     className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white dark:bg-[#0f1016] border border-gray-150/80 dark:border-white/5 hover:border-emerald-500/20 hover:bg-emerald-500/5 dark:hover:bg-[#22C55E]/5 cursor-pointer transition-all active:scale-95"

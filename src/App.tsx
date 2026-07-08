@@ -1394,9 +1394,18 @@ export default function App() {
     setShowAdminModal(false);
   };
 
+  // Centralized scroll function to ensure pages open from the top
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Support for iOS/Android legacy browsers
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+
   // Handle click on top navbar or mobile drawer menu items
   const handleNavClick = (target: 'deposit' | 'withdraw' | 'helpline' | 'faq' | 'dashboard' | 'admin' | 'settings' | 'security') => {
     setMobileMenuOpen(false); // Close mobile drawer if open
+    scrollToTop(); // Force scroll to top on every navigation
     
     if (target === 'admin') {
       setShowAdminModal(true);
@@ -1418,7 +1427,6 @@ export default function App() {
       
       const regEl = document.getElementById('registration-container');
       if (regEl) {
-        regEl.scrollIntoView({ behavior: 'smooth' });
         // Visual indicator border glow
         regEl.classList.add('ring-2', 'ring-blue-500/50');
         setTimeout(() => regEl.classList.remove('ring-2', 'ring-blue-500/50'), 2500);
@@ -1429,40 +1437,16 @@ export default function App() {
     // Interactive updates if user is Onboarded / Registered
     if (target === 'dashboard') {
       setDashboardTab('overview');
-      setTimeout(() => {
-        const el = document.getElementById('dashboard-container');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
     } else if (target === 'settings') {
       setDashboardTab('settings');
-      setTimeout(() => {
-        const el = document.getElementById('dashboard-container');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
     } else if (target === 'security') {
       setDashboardTab('security');
-      setTimeout(() => {
-        const el = document.getElementById('dashboard-container');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
     } else if (target === 'deposit') {
       setDashboardTab('funding');
-      setTimeout(() => {
-        const el = document.getElementById('deposit-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 200);
     } else if (target === 'withdraw') {
       setDashboardTab('funding');
-      setTimeout(() => {
-        const el = document.getElementById('withdraw-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 200);
     } else if (target === 'faq') {
       setDashboardTab('faq');
-      setTimeout(() => {
-        const el = document.getElementById('faq-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 200);
     }
   };
 
@@ -2087,7 +2071,7 @@ export default function App() {
                     <div className="flex flex-wrap items-center gap-4 pt-2">
                       <button 
                         onClick={() => {
-                          document.getElementById('registration-container')?.scrollIntoView({ behavior: 'smooth' });
+                          scrollToTop();
                         }}
                         className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600 bg-[length:200%_auto] hover:bg-right text-white font-bold text-xs uppercase tracking-widest hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-500 cursor-pointer border-0 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
                       >
