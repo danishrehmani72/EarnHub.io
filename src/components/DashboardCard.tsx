@@ -47,9 +47,13 @@ import {
   Play,
   ArrowLeft,
   MoreVertical,
-  Plus
+  Plus,
+  Image as ImageIcon,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
+import { db } from '../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -63,7 +67,7 @@ import {
   Legend
 } from 'recharts';
 import { FaqSection } from './FaqSection';
-import { ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog } from '../types';
+import { ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog, Task, TaskSubmission } from '../types';
 import { AvatarIcon, getAvatarConfig, AVATAR_PRESETS } from '../lib/avatars';
 
 import { PlanMatrix } from './PlanMatrix';
@@ -120,6 +124,8 @@ interface DashboardCardProps {
   onActiveTabChange?: (tab: 'overview' | 'funding' | 'faq' | 'settings' | 'security') => void;
   onUpdateProfile?: (newName: string, newAvatar: string) => Promise<void>;
   dailyRewardLogs?: DailyRewardLog[];
+  tasks?: Task[];
+  taskSubmissions?: TaskSubmission[];
   onRefresh?: () => Promise<void>;
   globalSettings?: {
     yieldMultiplier: number;
@@ -156,6 +162,8 @@ export default function DashboardCard({
   onActiveTabChange,
   onUpdateProfile,
   dailyRewardLogs = [],
+  tasks = [],
+  taskSubmissions = [],
   onRefresh,
   globalSettings,
   theme: themeProp,
@@ -208,6 +216,78 @@ export default function DashboardCard({
     }
     return [];
   });
+
+  // TASK SYSTEM STATE
+  const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+  const [selectedTaskForSubmission, setSelectedTaskForSubmission] = useState<Task | null>(null);
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(0 as any); // Initialize with null but use any to avoid type issues if needed
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const handleOpenTask = (task: Task) => {
+    setSelectedTaskForSubmission(task);
+    window.open(task.link, '_blank');
+  };
+
+  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        onAddToast("Screenshot must be less than 5MB.", "error");
+        return;
+      }
+      setScreenshotFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshotPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmitTask = async () => {
+    if (!selectedTaskForSubmission || !screenshotFile || !userProfile) return;
+    setIsSubmittingTask(true);
+    setUploadProgress(10);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(screenshotFile as any);
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        setUploadProgress(50);
+        
+        try {
+          await addDoc(collection(db, 'task_submissions'), {
+            userId,
+            username: userProfile.name,
+            taskId: selectedTaskForSubmission.id,
+            taskTitle: selectedTaskForSubmission.title,
+            reward: selectedTaskForSubmission.reward,
+            screenshot: base64data,
+            status: 'Pending',
+            submissionTime: serverTimestamp()
+          });
+          
+          setUploadProgress(100);
+          onAddToast("Task submitted successfully! Awaiting review.", "success");
+          setSelectedTaskForSubmission(null);
+          setScreenshotFile(null);
+          setScreenshotPreview(null);
+        } catch (err) {
+          console.error(err);
+          onAddToast("Failed to submit task.", "error");
+        } finally {
+          setIsSubmittingTask(false);
+          setUploadProgress(0);
+        }
+      };
+    } catch (err) {
+      console.error(err);
+      onAddToast("Error processing screenshot.", "error");
+      setIsSubmittingTask(false);
+      setUploadProgress(0);
+    }
+  };
 
   const [isMuted, setIsMuted] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -4383,57 +4463,150 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
               </p>
 
               {/* Task Items list */}
-              <div className="space-y-3 overflow-y-auto max-h-72 pr-1 hide-scrollbar text-left">
-                {[
-                  { id: 'youtube_sub', label: 'Subscribe Official Channel', reward: 100, link: 'https://youtube.com', platform: 'YouTube', color: 'from-red-500 to-rose-600' },
-                  { id: 'telegram_join', label: 'Join Telegram Community', reward: 100, link: 'https://telegram.org', platform: 'Telegram', color: 'from-[#24A1DE] to-[#229ED9]' },
-                  { id: 'tiktok_follow', label: 'Follow MindSpace on TikTok', reward: 150, link: 'https://tiktok.com', platform: 'TikTok', color: 'from-[#010101] to-[#25F4EE]' },
-                  { id: 'tutorial_watch', label: 'Watch 60s Staking Guide', reward: 200, link: 'https://youtube.com', platform: 'Video', color: 'from-amber-500 to-orange-600' },
-                ].map((task) => {
-                  const isCompleted = completedTasks.includes(task.id);
-                  const isVerifying = verifyingTaskId === task.id;
-                  
-                  return (
-                    <div 
-                      key={task.id}
-                      className="p-3.5 rounded-xl border border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/40 flex flex-col gap-3 transition-all"
+              <div className="space-y-3 overflow-y-auto max-h-[70vh] pr-1 hide-scrollbar text-left">
+                {selectedTaskForSubmission ? (
+                  /* SUBMISSION VIEW */
+                  <div className="space-y-4 animate-fade-in">
+                    <button 
+                      onClick={() => {
+                        setSelectedTaskForSubmission(null);
+                        setScreenshotFile(null);
+                        setScreenshotPreview(null);
+                      }}
+                      className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-500 hover:text-blue-400 transition-colors mb-2 cursor-pointer"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded bg-gradient-to-r ${task.color} text-white`}>
-                            {task.platform}
-                          </span>
-                          <span className="text-xs font-bold text-slate-800 dark:text-white">{task.label}</span>
-                        </div>
-                        <span className="text-xs font-black text-emerald-500">₨ {task.reward}</span>
+                      <ChevronLeft className="w-4 h-4" />
+                      Back to Task List
+                    </button>
+                    
+                    <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                         <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${
+                           selectedTaskForSubmission.platform === 'YouTube' ? 'bg-red-500 text-white' :
+                           selectedTaskForSubmission.platform === 'TikTok' ? 'bg-white text-black' :
+                           'bg-blue-600 text-white'
+                         }`}>
+                           {selectedTaskForSubmission.platform}
+                         </span>
+                         <h4 className="text-xs font-black text-white">{selectedTaskForSubmission.title}</h4>
                       </div>
-
-                      {isVerifying ? (
-                        <div className="space-y-1.5 pt-1">
-                          <div className="flex justify-between text-[9px] font-mono text-slate-500 dark:text-white/40">
-                            <span>Verifying task completion...</span>
-                            <span>{taskProgress}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-gray-150 dark:bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${taskProgress}%` }} />
-                          </div>
-                        </div>
-                      ) : isCompleted ? (
-                        <div className="text-[10px] text-emerald-500 font-black uppercase flex items-center gap-1.5 pt-1 select-none">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          <span>Ledger Credited Successfully</span>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleTaskClick(task.id, task.link, task.reward)}
-                          className="w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] uppercase tracking-widest cursor-pointer transition-all border-0 shadow-sm"
-                        >
-                          Unlock Task (Rs. {task.reward})
-                        </button>
-                      )}
+                      <p className="text-[10px] text-white/40 leading-relaxed">{selectedTaskForSubmission.description}</p>
                     </div>
-                  );
-                })}
+
+                    <div className="space-y-4">
+                       <div className="space-y-2">
+                         <p className="text-[9px] font-black uppercase text-white/50 tracking-wider">Step 1: Open Task & Complete</p>
+                         <button
+                           onClick={() => handleOpenTask(selectedTaskForSubmission)}
+                           className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-black font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-500/10 flex items-center justify-center gap-2 cursor-pointer"
+                         >
+                           <ExternalLink className="w-3.5 h-3.5" />
+                           Open Task Link
+                         </button>
+                       </div>
+
+                       <div className="space-y-3 pt-2">
+                         <p className="text-[9px] font-black uppercase text-white/50 tracking-wider">Step 2: Upload Proof Screenshot</p>
+                         
+                         {screenshotPreview ? (
+                           <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-black aspect-video group">
+                             <img src={screenshotPreview} alt="Preview" className="w-full h-full object-contain" />
+                             <button 
+                               onClick={() => {
+                                 setScreenshotFile(null);
+                                 setScreenshotPreview(null);
+                               }}
+                               className="absolute top-2 right-2 w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                             >
+                               ✕
+                             </button>
+                           </div>
+                         ) : (
+                           <label className="block w-full border-2 border-dashed border-white/10 rounded-2xl p-8 hover:border-blue-500/30 transition-all cursor-pointer text-center group">
+                             <input 
+                               type="file" 
+                               accept="image/*" 
+                               onChange={handleScreenshotChange}
+                               className="hidden" 
+                             />
+                             <div className="space-y-2">
+                               <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mx-auto text-white/30 group-hover:text-blue-400 transition-colors">
+                                 <Upload className="w-5 h-5" />
+                               </div>
+                               <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Select Screenshot</p>
+                               <p className="text-[8px] text-white/20 uppercase font-mono">JPG, PNG, JPEG (MAX 5MB)</p>
+                             </div>
+                           </label>
+                         )}
+                       </div>
+
+                       <button
+                         onClick={handleSubmitTask}
+                         disabled={!screenshotFile || isSubmittingTask}
+                         className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-30 disabled:hover:bg-emerald-500 text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-emerald-500/10 mt-2 cursor-pointer"
+                       >
+                         {isSubmittingTask ? `Uploading ${uploadProgress}%...` : "Submit for Verification"}
+                       </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* TASK LIST VIEW */
+                  <div className="space-y-3">
+                    {tasks && tasks.filter(t => t.status === 'Active').length > 0 ? (
+                      tasks.filter(t => t.status === 'Active').map((task) => {
+                        const submission = taskSubmissions.find(s => s.taskId === task.id && s.userId === userId);
+                        const isCompleted = submission?.status === 'Approved';
+                        const isPending = submission?.status === 'Pending';
+                        
+                        return (
+                          <div 
+                            key={task.id}
+                            className="p-4 rounded-2xl border border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/40 flex flex-col gap-3 transition-all hover:border-blue-500/20"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${
+                                  task.platform === 'YouTube' ? 'bg-red-500 text-white' :
+                                  task.platform === 'TikTok' ? 'bg-white text-black' :
+                                  'bg-blue-600 text-white'
+                                }`}>
+                                  {task.platform}
+                                </span>
+                                <span className="text-xs font-black text-slate-800 dark:text-white line-clamp-1">{task.title}</span>
+                              </div>
+                              <span className="text-xs font-black text-emerald-500 shrink-0">+${task.reward.toFixed(2)}</span>
+                            </div>
+
+                            <p className="text-[9px] text-slate-500 dark:text-white/30 line-clamp-1">{task.description}</p>
+
+                            {isCompleted ? (
+                              <div className="text-[9px] text-emerald-500 font-black uppercase flex items-center gap-1.5 pt-1">
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                <span>Reward Credited</span>
+                              </div>
+                            ) : isPending ? (
+                              <div className="text-[9px] text-amber-500 font-black uppercase flex items-center gap-1.5 pt-1">
+                                <Clock className="w-3.5 h-3.5 animate-pulse" />
+                                <span>Awaiting Review</span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setSelectedTaskForSubmission(task)}
+                                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-black font-black text-[9px] uppercase tracking-widest cursor-pointer transition-all border-0 shadow-lg shadow-blue-500/10"
+                              >
+                                View Task Details
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="py-12 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-2xl">
+                        <p className="text-[9px] text-slate-400 dark:text-white/20 uppercase tracking-[0.2em] font-black">No Active Tasks Available</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           </>

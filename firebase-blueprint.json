@@ -156,9 +156,55 @@
         }
       },
       "required": ["id", "amount", "streak", "timestamp", "createdAt"]
+    },
+    "Task": {
+      "title": "Social Media Task",
+      "description": "A task created by admin for users to complete on social media platforms.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "platform": { "type": "string", "enum": ["YouTube", "TikTok", "Facebook"] },
+        "link": { "type": "string" },
+        "reward": { "type": "number" },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "platform", "link", "reward", "status"]
+    },
+    "TaskSubmission": {
+      "title": "Task Submission",
+      "description": "A user's submission for a social media task with screenshot verification.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "taskId": { "type": "string" },
+        "taskTitle": { "type": "string" },
+        "platform": { "type": "string" },
+        "reward": { "type": "number" },
+        "screenshot": { "type": "string", "description": "Base64 encoded image or storage URL." },
+        "status": { "type": "string", "enum": ["Pending", "Approved", "Rejected"] },
+        "submissionTime": { "type": "string", "format": "date-time" },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "reviewedBy": { "type": "string" },
+        "rejectionReason": { "type": "string" }
+      },
+      "required": ["id", "userId", "taskId", "screenshot", "status", "submissionTime"]
     }
   },
   "firestore": {
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Social media tasks managed by admin."
+    },
+    "/task_submissions/{submissionId}": {
+      "schema": "TaskSubmission",
+      "description": "User task completions awaiting review."
+    },
     "/users/{userId}": {
       "schema": "User",
       "description": "Individual premium member dashboard configurations and balances."

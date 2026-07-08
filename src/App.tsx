@@ -21,7 +21,7 @@ import {
   getDocsFromServer
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './lib/firebase';
-import { UserProfile, ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog } from './types';
+import { UserProfile, ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog, Task, TaskSubmission } from './types';
 import RegistrationCard from './components/RegistrationCard';
 import DashboardCard from './components/DashboardCard';
 import ReferralHistory from './components/ReferralHistory';
@@ -151,6 +151,8 @@ export default function App() {
   const [withdrawals, setWithdrawals] = useState<WithdrawalLog[]>([]);
   const [investments, setInvestments] = useState<UserPlan[]>([]);
   const [dailyRewardLogs, setDailyRewardLogs] = useState<DailyRewardLog[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskSubmissions, setTaskSubmissions] = useState<TaskSubmission[]>([]);
   const [referredBy, setReferredBy] = useState<string | null>(null);
   const [referredSource, setReferredSource] = useState<string | null>(null);
   const [inviterName, setInviterName] = useState<string | null>(null);
@@ -858,6 +860,60 @@ export default function App() {
     };
   }, [currentUid]);
 
+  // Real-time tasks listener (Everyone can see active tasks)
+  useEffect(() => {
+    const tasksRef = collection(db, 'tasks');
+    const tasksQuery = query(tasksRef, orderBy('createdAt', 'desc'));
+    
+    const unsubTasks = onSnapshot(tasksQuery, (snapshot) => {
+      const list: Task[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({ ...data, id: docSnap.id } as Task);
+      });
+      setTasks(list);
+    }, (error) => {
+      console.warn("Tasks snapshot fallback:", error);
+    });
+
+    return () => unsubTasks();
+  }, []);
+
+  // Real-time task submissions listener
+  useEffect(() => {
+    if (!currentUid || !userProfile) return;
+
+    // Admin sees ALL submissions, User sees only THEIR submissions
+    const isAdminUser = [
+      "danishrehmani72@gmail.com",
+      "admin@gmail.com",
+      "superadmin@apexcapital.test",
+      "superadmin@earnhub.com"
+    ].includes(userProfile.email?.toLowerCase().trim()) || userProfile?.userId === 'adminmoneymind';
+
+    let submissionsQuery;
+    const submissionsRef = collection(db, 'task_submissions');
+    
+    if (isAdminUser) {
+      submissionsQuery = query(submissionsRef, orderBy('submissionTime', 'desc'));
+    } else {
+      submissionsQuery = query(submissionsRef, where('userId', '==', currentUid), orderBy('submissionTime', 'desc'));
+    }
+
+    const unsubSubmissions = onSnapshot(submissionsQuery, (snapshot) => {
+      const list: TaskSubmission[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({ ...data, id: docSnap.id } as TaskSubmission);
+      });
+      setTaskSubmissions(list);
+    }, (error) => {
+      console.warn("Submissions snapshot fallback:", error);
+    });
+
+    return () => unsubSubmissions();
+  }, [currentUid, userProfile]);
+
   // Handle URL invitation referral links
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1510,6 +1566,9 @@ export default function App() {
   const approvedDeposits = approvedDepositsList.reduce((sum, d) => sum + d.amount, 0);
   const approvedWithdrawals = withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + w.amount, 0);
   const dailyBonusEarnings = userProfile?.dailyBonusEarnings !== undefined ? userProfile.dailyBonusEarnings : 0;
+  const approvedTaskRewards = taskSubmissions
+    .filter(s => s.status === 'Approved' && s.userId === currentUid)
+    .reduce((sum, s) => sum + (s.reward || 0), 0);
 
   // Calculate real-time profit accrued on each investment
   const nowTime = Date.now();
@@ -1616,7 +1675,7 @@ export default function App() {
     .filter(i => i.status === 'active')
     .reduce((sum, i) => sum + i.amount, 0);
 
-  const balance = signupBonus + referralEarnings + approvedDeposits - approvedWithdrawals + dailyBonusEarnings + investmentProfits - activeInvestmentsSum;
+  const balance = signupBonus + referralEarnings + approvedDeposits - approvedWithdrawals + dailyBonusEarnings + investmentProfits + approvedTaskRewards - activeInvestmentsSum;
 
   if (userProfile?.blocked) {
     const handleSandboxUnblock = async () => {
@@ -2392,6 +2451,8 @@ export default function App() {
                 globalSettings={globalSettings}
                 theme={theme}
                 setTheme={setTheme}
+                tasks={tasks}
+                taskSubmissions={taskSubmissions}
               />
               <ReferralHistory logs={logs} userId={currentUid || ''} walletBalance={balance} theme={theme} />
             </div>
@@ -2617,6 +2678,8 @@ export default function App() {
               <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
                 <AdminPanel 
                   onAddToast={addToast} 
+                  tasks={tasks}
+                  taskSubmissions={taskSubmissions}
                   currentUserId={currentUid || 'anonymous-operator'} 
                   isBypassed={isSuperAdminBypassed}
                   onLockBypass={handleLockBypass}

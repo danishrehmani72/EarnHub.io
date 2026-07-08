@@ -63,6 +63,48 @@ service cloud.firestore {
         && log.timestamp.size() <= 64;
     }
 
+    function isValidTask(task) {
+      return task.keys().hasAll(['id', 'title', 'platform', 'link', 'reward', 'status'])
+        && task.id is string
+        && task.title is string
+        && task.platform in ['YouTube', 'TikTok', 'Facebook']
+        && task.link is string
+        && task.reward is number
+        && task.status in ['Active', 'Inactive'];
+    }
+
+    function isValidTaskSubmission(sub) {
+      return sub.keys().hasAll(['id', 'userId', 'taskId', 'screenshot', 'status', 'submissionTime'])
+        && sub.id is string
+        && sub.userId is string
+        && sub.taskId is string
+        && sub.screenshot is string
+        && sub.status in ['Pending', 'Approved', 'Rejected']
+        && sub.submissionTime is string;
+    }
+
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'danishrehmani72@gmail.com' ||
+        request.auth.token.email == 'admin@gmail.com' ||
+        request.auth.uid == 'adminmoneymind'
+      );
+    }
+
+    // ----------------- TASKS ROOT COLLECTION -----------------
+    match /tasks/{taskId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ----------------- TASK SUBMISSIONS ROOT COLLECTION -----------------
+    match /task_submissions/{submissionId} {
+      allow list, get: if request.auth != null && (isAdmin() || (resource != null && resource.data.userId == request.auth.uid));
+      allow create: if request.auth != null && isValidTaskSubmission(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     // Helper to validate ReferralLog schema representing a referral commission
     function isValidReferralLog(log) {
       return log.keys().hasAll(['id', 'timestamp', 'amount', 'refereeId', 'refereeName', 'createdAt'])

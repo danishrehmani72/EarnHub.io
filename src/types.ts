@@ -74,3 +74,31 @@ export interface DailyRewardLog {
   timestamp: string;
   createdAt: any;
 }
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  platform: 'YouTube' | 'TikTok' | 'Facebook';
+  link: string;
+  reward: number;
+  expiryDate?: any;
+  status: 'Active' | 'Inactive';
+  createdAt: any;
+}
+
+export interface TaskSubmission {
+  id: string;
+  userId: string;
+  username: string;
+  taskId: string;
+  taskTitle: string;
+  platform: string;
+  reward: number;
+  screenshot: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  submissionTime: any;
+  reviewedAt?: any;
+  reviewedBy?: any;
+  rejectionReason?: string;
+}
