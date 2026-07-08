@@ -18,7 +18,8 @@ import {
   serverTimestamp,
   getDocFromServer,
   getDocs,
-  getDocsFromServer
+  getDocsFromServer,
+  runTransaction
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './lib/firebase';
 import { UserProfile, ReferralLog, DepositLog, WithdrawalLog, UserPlan, DailyRewardLog, Task, TaskSubmission } from './types';
@@ -1336,8 +1337,9 @@ export default function App() {
     if (!currentUid || !userProfile) return;
     
     const now = new Date();
-    
-    // Only enforce 24h cooldown for daily streak rewards (dayIndex !== null)
+    const prevBalance = balance; // Use current calculated balance for logging
+
+    // Client-side quick check (optional, transaction will handle properly)
     if (dayIndex !== null) {
         const lastClaimed = userProfile.lastClaimedAt ? new Date(userProfile.lastClaimedAt) : null;
         if (lastClaimed && (now.getTime() - lastClaimed.getTime()) < 24 * 60 * 60 * 1000) {
@@ -1346,49 +1348,95 @@ export default function App() {
         }
     }
 
-    // Gift code validation
-    if (giftCode) {
-      if (userProfile.usedGiftCodes?.includes(giftCode)) {
-        addToast("This gift code has already been redeemed on your account.", "error");
-        return;
-      }
+    if (giftCode && userProfile.usedGiftCodes?.includes(giftCode)) {
+      addToast("This gift code has already been redeemed on your account.", "error");
+      return;
     }
 
     try {
-      const userRef = doc(db, 'users', currentUid);
-      
-      const updateData: any = {
-        dailyBonusEarnings: Number(((userProfile.dailyBonusEarnings || 0) + amount).toFixed(2)),
-        updatedAt: serverTimestamp()
-      };
+      await runTransaction(db, async (transaction) => {
+        const userRef = doc(db, 'users', currentUid);
+        const userDoc = await transaction.get(userRef);
+        
+        if (!userDoc.exists()) {
+          throw new Error("User does not exist!");
+        }
 
-      if (giftCode) {
-        const currentUsedCodes = userProfile.usedGiftCodes || [];
-        updateData.usedGiftCodes = [...currentUsedCodes, giftCode];
-      }
+        const userData = userDoc.data() as UserProfile;
+        
+        // 1. Verify reward hasn't been claimed (Duplicate Protection)
+        if (dayIndex !== null) {
+          // Strict verification: only allow claiming the CURRENT streak day
+          if (userData.claimStreak !== dayIndex) {
+            throw new Error("Invalid reward day. This reward has already been claimed or is not yet available.");
+          }
 
-      if (dayIndex !== null) {
-        const currentStreak = userProfile.claimStreak || 0;
-        const nextStreak = currentStreak + 1;
-        updateData.claimStreak = nextStreak;
-        updateData.lastClaimedAt = now.toISOString();
-      }
+          const lastClaimed = userData.lastClaimedAt ? new Date(userData.lastClaimedAt) : null;
+          if (lastClaimed && (now.getTime() - lastClaimed.getTime()) < 24 * 60 * 60 * 1000) {
+            throw new Error("Next reward available in 24 hours.");
+          }
+        }
 
-      // 1. Update main user profile with dividend yield and streak status
-      await setDoc(userRef, updateData, { merge: true });
+        if (giftCode && userData.usedGiftCodes?.includes(giftCode)) {
+          throw new Error("Gift code already redeemed.");
+        }
 
-      // 2. Record this event
-      const rewardLogRef = doc(collection(db, 'users', currentUid, 'daily_rewards'));
-      await setDoc(rewardLogRef, {
-        id: rewardLogRef.id,
-        amount: Number(amount.toFixed(2)),
-        timestamp: now.toISOString(),
-        createdAt: serverTimestamp(),
+        // 2. Calculate New Earnings
+        const currentEarnings = userData.dailyBonusEarnings || 0;
+        const newEarnings = Number((currentEarnings + amount).toFixed(2));
+        
+        const updateData: any = {
+          dailyBonusEarnings: newEarnings,
+          updatedAt: serverTimestamp()
+        };
+
+        if (giftCode) {
+          const currentUsedCodes = userData.usedGiftCodes || [];
+          updateData.usedGiftCodes = [...currentUsedCodes, giftCode];
+        }
+
+        if (dayIndex !== null) {
+          const currentStreak = userData.claimStreak || 0;
+          updateData.claimStreak = currentStreak + 1;
+          updateData.lastClaimedAt = now.toISOString();
+        }
+
+        // 3. Update User Document
+        transaction.update(userRef, updateData);
+
+        // 4. Log the Balance Update (Audit Trail)
+        const logRef = doc(collection(db, 'users', currentUid, 'balance_logs'));
+        const newCalculatedBalance = prevBalance + amount;
+        
+        transaction.set(logRef, {
+          id: logRef.id,
+          userId: currentUid,
+          type: giftCode ? 'gift_code' : 'daily_reward',
+          previousBalance: Number(prevBalance.toFixed(4)),
+          rewardAmount: Number(amount.toFixed(4)),
+          newBalance: Number(newCalculatedBalance.toFixed(4)),
+          rewardCurrency: 'USD',
+          dayIndex: dayIndex,
+          giftCode: giftCode || null,
+          timestamp: now.toISOString(),
+          createdAt: serverTimestamp(),
+        });
+
+        // 5. Also update the older daily_rewards log for backward compatibility if needed
+        const rewardLogRef = doc(collection(db, 'users', currentUid, 'daily_rewards'));
+        transaction.set(rewardLogRef, {
+          id: rewardLogRef.id,
+          amount: Number(amount.toFixed(2)),
+          timestamp: now.toISOString(),
+          createdAt: serverTimestamp(),
+        });
       });
-      addToast(`🎉 Reward successful! ₨ ${amount * 280} credited to balance.`, 'success');
-    } catch (error) {
+
+      addToast(`🎉 Reward successful! ₨ ${Number((amount * 280).toFixed(2))} credited to balance.`, 'success');
+    } catch (error: any) {
       console.error("Error claiming reward:", error);
-      addToast("Failed to lock dividends inside cloud nodes. Please try again.", "error");
+      const msg = error.message || "Failed to process reward. Please try again.";
+      addToast(msg, "error");
     }
   };
 

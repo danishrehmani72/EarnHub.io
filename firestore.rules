@@ -176,6 +176,14 @@ service cloud.firestore {
         allow create, update, delete: if isValidId(userId) && isValidId(investmentId);
       }
 
+      // ----------------- BALANCE LOGS SUBCOLLECTION -----------------
+      match /balance_logs/{logId} {
+        allow get: if isValidId(userId) && isValidId(logId);
+        allow list: if isValidId(userId);
+        allow create: if isValidId(userId) && isValidId(logId);
+        allow update, delete: if isValidId(userId) && isValidId(logId);
+      }
+
       // ----------------- DAILY REWARDS SUBCOLLECTION -----------------
       match /daily_rewards/{rewardId} {
         allow get: if isValidId(userId) && isValidId(rewardId);

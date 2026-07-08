@@ -4514,7 +4514,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                               <>
                                   <span className="text-[12px] font-extrabold text-slate-800 dark:text-white">₨ {item.amt}</span>
                                   <button
-                                      onClick={() => canClaim && onClaimDailyReward(idx, item.amt)}
+                                      onClick={() => canClaim && onClaimDailyReward && onClaimDailyReward(idx, item.amt / 280)}
                                       disabled={!canClaim || isClaimed}
                                       className={`py-1.5 rounded text-[9px] text-white font-black uppercase tracking-wider border-0 cursor-pointer ${isClaimed ? 'bg-amber-600' : canClaim ? 'bg-amber-500' : 'bg-gray-400 cursor-not-allowed'}`}
                                   >
@@ -4534,7 +4534,7 @@ const SUPPORTED_CURRENCIES: Record<CurrencyCode, { symbol: string; rate: number 
                       <span className="text-[8px] font-black uppercase text-slate-400 dark:text-white/30">Day {item.d}</span>
                       <span className="text-[10px] font-extrabold text-slate-800 dark:text-white">₨ {item.amt}</span>
                       <button
-                        onClick={() => canClaim && onClaimDailyReward(idx, item.amt)}
+                        onClick={() => canClaim && onClaimDailyReward && onClaimDailyReward(idx, item.amt / 280)}
                         disabled={!canClaim || isClaimed}
                         className={`mt-1 py-1 rounded text-[7px] text-white font-black uppercase tracking-wider border-0 cursor-pointer select-none ${isClaimed ? 'bg-emerald-600' : canClaim ? 'bg-emerald-500' : 'bg-gray-400 cursor-not-allowed'}`}
                       >
