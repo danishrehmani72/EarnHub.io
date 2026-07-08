@@ -216,6 +216,30 @@ export default function DashboardCard({
     return false;
   });
 
+  // Fix: Reset scroll position to top on navigation/tab change or modal open
+  useEffect(() => {
+    // Scroll window to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // For iOS/Android browser compatibility
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [
+    activeTabLocal, 
+    activeTabProp,
+    showDepositSheet, 
+    showWithdrawSheet, 
+    showSpinModal, 
+    showTasksModal, 
+    showDailyBonusModal, 
+    showGiftModal, 
+    showLeaderboardModal,
+    showNotificationModal,
+    showFaqModal,
+    showQuickActionsDrawer,
+    showWithdrawalProgressModal
+  ]);
+
   const toggleMuted = () => {
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
